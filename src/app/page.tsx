@@ -61,10 +61,12 @@ export default function Home() {
     setIsDialogOpen(true);
   };
   
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    // Delay resetting template to avoid form flicker
-    setTimeout(() => setEditingTemplate(undefined), 300);
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      // Delay resetting template to avoid form flicker
+      setTimeout(() => setEditingTemplate(undefined), 300);
+    }
   }
 
   const filteredTransactions = useMemo(() => {
@@ -110,7 +112,7 @@ export default function Home() {
             onTransactionAdd={addTransaction}
             initialData={editingTemplate}
           >
-            <Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               เพิ่มธุรกรรม
             </Button>
