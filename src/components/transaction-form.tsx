@@ -43,6 +43,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
     defaultValues: {
       type: 'expense',
       date: new Date(),
+      details: '',
       ...initialData,
     },
   });
