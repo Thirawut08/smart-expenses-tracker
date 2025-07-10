@@ -11,7 +11,7 @@ import type { Transaction } from '@/lib/types';
 import { accounts, thaiMonths } from '@/lib/data';
 import type { TransactionFormValues } from '@/components/transaction-form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Notes } from '@/components/notes';
+import { MonthInfoTable } from '@/components/month-info-table';
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -94,7 +94,7 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-5">
           <div className="lg:col-span-2 flex flex-col gap-8">
             <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-            <Notes />
+            <MonthInfoTable />
           </div>
           <div className="lg:col-span-3">
             <TransactionsTable transactions={filteredTransactions} />

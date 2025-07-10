@@ -46,3 +46,18 @@ export const thaiMonths = [
   { value: 10, label: 'พฤศจิกายน' },
   { value: 11, label: 'ธันวาคม' },
 ];
+
+export const monthDetails = [
+    { order: 1, engFull: 'January', engAbbr: 'Jan.', thaiFull: 'มกราคม', thaiAbbr: 'ม.ค' },
+    { order: 2, engFull: 'February', engAbbr: 'Feb.', thaiFull: 'กุมภาพันธ์', thaiAbbr: 'ก.พ' },
+    { order: 3, engFull: 'March', engAbbr: 'Mar.', thaiFull: 'มีนาคม', thaiAbbr: 'มี.ค' },
+    { order: 4, engFull: 'April', engAbbr: 'Apr.', thaiFull: 'เมษายน', thaiAbbr: 'เม.ย' },
+    { order: 5, engFull: 'May', engAbbr: 'May', thaiFull: 'พฤษภาคม', thaiAbbr: 'พ.ค' },
+    { order: 6, engFull: 'June', engAbbr: 'Jun.', thaiFull: 'มิถุนายน', thaiAbbr: 'มิ.ย' },
+    { order: 7, engFull: 'July', engAbbr: 'Jul.', thaiFull: 'กรกฎาคม', thaiAbbr: 'ก.ค' },
+    { order: 8, engFull: 'August', engAbbr: 'Aug.', thaiFull: 'สิงหาคม', thaiAbbr: 'ส.ค' },
+    { order: 9, engFull: 'September', engAbbr: 'Sept.', thaiFull: 'กันยายน', thaiAbbr: 'ก.ย' },
+    { order: 10, engFull: 'October', engAbbr: 'Oct.', thaiFull: 'ตุลาคม', thaiAbbr: 'ต.ค' },
+    { order: 11, engFull: 'November', engAbbr: 'Nov.', thaiFull: 'พฤศจิกายน', thaiAbbr: 'พ.ย' },
+    { order: 12, engFull: 'December', engAbbr: 'Dec.', thaiFull: 'ธันวาคม', thaiAbbr: 'ธ.ค' },
+];
