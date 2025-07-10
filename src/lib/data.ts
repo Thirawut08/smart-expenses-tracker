@@ -1,6 +1,7 @@
 import type { Account } from './types';
 
 export const accounts: Account[] = [
+  { id: '16', name: 'เงินสด', accountNumber: 'เงินสด' },
   { id: '1', name: 'KBANK', accountNumber: 'KBANK' },
   { id: '2', name: 'SCB', accountNumber: 'SCB' },
   { id: '3', name: 'Kept', accountNumber: 'Kept' },
