@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionDialog } from '@/components/add-transaction-dialog';
@@ -17,6 +17,9 @@ import { TransactionTemplates } from '@/components/transaction-templates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
+const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
+const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
+
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -26,6 +29,51 @@ export default function Home() {
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const { toast } = useToast();
+
+  // Load data from localStorage on initial render
+  useEffect(() => {
+    try {
+      const storedTransactions = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+      if (storedTransactions) {
+        const parsedTransactions = JSON.parse(storedTransactions).map((t: any) => ({
+          ...t,
+          date: new Date(t.date), // Convert date string back to Date object
+        }));
+        setTransactions(parsedTransactions);
+      }
+
+      const storedTemplates = localStorage.getItem(TEMPLATES_STORAGE_KEY);
+      if (storedTemplates) {
+        setTemplates(JSON.parse(storedTemplates));
+      }
+    } catch (error) {
+      console.error("Failed to load data from localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "เกิดข้อผิดพลาดในการโหลดข้อมูล",
+        description: "ไม่สามารถโหลดข้อมูลธุรกรรมที่บันทึกไว้ได้",
+      });
+    }
+  }, [toast]);
+
+  // Save transactions to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+    } catch (error) {
+      console.error("Failed to save transactions to localStorage", error);
+    }
+  }, [transactions]);
+
+  // Save templates to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+    } catch (error) {
+      console.error("Failed to save templates to localStorage", error);
+    }
+  }, [templates]);
+
 
   const handleSaveTransaction = (data: TransactionFormValues, saveAsTemplate: boolean) => {
     const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
@@ -49,7 +97,7 @@ export default function Home() {
       };
       setTransactions(prev =>
         prev.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
-          .sort((a, b) => b.date.getTime() - a.date.getTime())
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       );
       toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${data.purpose}" เรียบร้อยแล้ว` });
 
@@ -67,7 +115,7 @@ export default function Home() {
         recipient: data.recipient,
       };
       
-      setTransactions(prev => [...prev, newTransaction].sort((a, b) => b.date.getTime() - a.date.getTime()));
+      setTransactions(prev => [...prev, newTransaction].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
       toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการ "${data.purpose}" เรียบร้อยแล้ว` });
     }
     
@@ -132,7 +180,7 @@ export default function Home() {
     if (selectedMonth === 'all') {
       return transactions;
     }
-    return transactions.filter(t => t.date.getMonth().toString() === selectedMonth);
+    return transactions.filter(t => new Date(t.date).getMonth().toString() === selectedMonth);
   }, [transactions, selectedMonth]);
 
   const currentMonthLabel = useMemo(() => {
