@@ -31,6 +31,7 @@ export function TimePicker({ date, setDate }: TimePickerProps) {
           value={date ? new Time(date.getHours(), date.getMinutes()) : null}
           onChange={handleTimeChange}
           locale="th-TH"
+          hourCycle={24}
         />
       </div>
     </div>
