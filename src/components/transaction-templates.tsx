@@ -10,13 +10,6 @@ interface TransactionTemplatesProps {
   onUseTemplate: (template: Template) => void;
 }
 
-const currencyFormatter = new Intl.NumberFormat('th-TH', {
-  style: 'currency',
-  currency: 'THB',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
 export function TransactionTemplates({ templates, onUseTemplate }: TransactionTemplatesProps) {
   return (
     <Card>
@@ -38,8 +31,9 @@ export function TransactionTemplates({ templates, onUseTemplate }: TransactionTe
               >
                 <p className="font-semibold">{template.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {currencyFormatter.format(template.amount)} - {template.accountNumber}
+                  {template.purpose} - {template.accountNumber}
                 </p>
+                 {template.details && <p className="text-xs text-muted-foreground/80 truncate">"{template.details}"</p>}
               </Button>
             ))}
           </div>

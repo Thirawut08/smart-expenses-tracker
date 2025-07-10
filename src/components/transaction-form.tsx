@@ -22,7 +22,7 @@ import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 
-const formSchema = z.object({
+export const transactionFormSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
   accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
@@ -33,7 +33,7 @@ const formSchema = z.object({
   details: z.string().optional(),
 });
 
-export type TransactionFormValues = z.infer<typeof formSchema>;
+export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
 
 interface TransactionFormProps {
   initialData?: Partial<TransactionFormValues & { validationResult?: string }>;
@@ -44,12 +44,21 @@ interface TransactionFormProps {
 
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(formSchema),
+  
+  // Create a version of the schema for the form that allows amount and date to be optional,
+  // which is useful when using a template.
+  const formSchema = transactionFormSchema.extend({
+    amount: transactionFormSchema.shape.amount.optional(),
+    date: transactionFormSchema.shape.date.optional(),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(transactionFormSchema), // Still validate against the strict schema on submit
     defaultValues: {
       type: 'expense',
-      date: new Date(),
+      date: initialData?.date === undefined ? new Date() : initialData.date,
       ...initialData,
+      amount: initialData?.amount === undefined ? undefined : initialData.amount,
       details: initialData?.details ?? '',
       sender: initialData?.sender ?? '',
       recipient: initialData?.recipient ?? '',
@@ -108,7 +117,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <FormItem>
                   <FormLabel>จำนวนเงิน</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} />
+                    <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

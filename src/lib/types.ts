@@ -1,4 +1,5 @@
-import type { TransactionFormValues } from "@/components/transaction-form";
+import type { z } from 'zod';
+import type { transactionFormSchema } from "@/components/transaction-form";
 
 export interface Account {
   id: string;
@@ -18,7 +19,15 @@ export interface Transaction {
   details?: string;
 }
 
-export type Template = TransactionFormValues & {
+export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
+
+export type Template = {
   id: string;
   name: string;
+  type: 'income' | 'expense';
+  accountNumber: string;
+  purpose: string;
+  sender?: string;
+  recipient?: string;
+  details?: string;
 };

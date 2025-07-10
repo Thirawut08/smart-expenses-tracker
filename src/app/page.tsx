@@ -75,7 +75,12 @@ export default function Home() {
       const newTemplate: Template = {
         id: new Date().toISOString() + Math.random(),
         name: `${data.purpose} (${data.type === 'income' ? 'รายรับ' : 'รายจ่าย'})`,
-        ...data
+        type: data.type,
+        accountNumber: data.accountNumber,
+        purpose: data.purpose,
+        sender: data.sender,
+        recipient: data.recipient,
+        details: data.details,
       };
       setTemplates(prev => [...prev, newTemplate]);
       toast({ title: "บันทึกเทมเพลตสำเร็จ", description: `เทมเพลต "${newTemplate.name}" ถูกสร้างแล้ว` });
@@ -147,7 +152,11 @@ export default function Home() {
       };
     }
     if (editingTemplate) {
-      return editingTemplate;
+      return {
+        ...editingTemplate,
+        amount: undefined, // Let user fill this
+        date: undefined, // Let user fill this
+      };
     }
     return undefined;
   }
