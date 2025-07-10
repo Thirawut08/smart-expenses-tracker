@@ -25,7 +25,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function MonthlyStats({ transactions }: { transactions: Transaction[] }) {
+export function MonthlyStats({ transactions, monthLabel }: { transactions: Transaction[], monthLabel: string }) {
   const { chartData, totalIncome, totalExpense, totalNet } = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return { chartData: [], totalIncome: 0, totalExpense: 0, totalNet: 0 };
@@ -49,12 +49,14 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
       totalNet: income - expense,
     };
   }, [transactions]);
+
+  const cardTitle = `ภาพรวม (${monthLabel})`;
   
   if (transactions.length === 0) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>ภาพรวมทั้งหมด</CardTitle>
+                <CardTitle>{cardTitle}</CardTitle>
                 <CardDescription>ไม่มีข้อมูลสำหรับแสดงสถิติ</CardDescription>
             </CardHeader>
             <CardContent>
@@ -71,7 +73,7 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>ภาพรวมทั้งหมด</CardTitle>
+        <CardTitle>{cardTitle}</CardTitle>
         <CardDescription>สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionDialog } from '@/components/add-transaction-dialog';
@@ -8,12 +8,14 @@ import { MonthlyStats } from '@/components/monthly-stats';
 import { TransactionsTable } from '@/components/transactions-table';
 import { LedgerAiHeader } from '@/components/ledger-ai-header';
 import type { Transaction } from '@/lib/types';
-import { accounts } from '@/lib/data';
+import { accounts, thaiMonths } from '@/lib/data';
 import type { TransactionFormValues } from '@/components/transaction-form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
 
   const addTransaction = (data: TransactionFormValues) => {
     const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
@@ -40,13 +42,43 @@ export default function Home() {
     );
     setIsDialogOpen(false);
   };
+  
+  const filteredTransactions = useMemo(() => {
+    if (selectedMonth === 'all') {
+      return transactions;
+    }
+    return transactions.filter(t => t.date.getMonth().toString() === selectedMonth);
+  }, [transactions, selectedMonth]);
+
+  const currentMonthLabel = useMemo(() => {
+    if (selectedMonth === 'all') {
+      return 'ทั้งหมด';
+    }
+    const month = thaiMonths.find(m => m.value === parseInt(selectedMonth, 10));
+    return month ? month.label : 'ทั้งหมด';
+  }, [selectedMonth]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <LedgerAiHeader />
       <main className="flex-1 container mx-auto p-4 md:p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold font-headline">แดชบอร์ด</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold font-headline">แดชบอร์ด</h1>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="เลือกเดือน" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทุกเดือน</SelectItem>
+                {thaiMonths.map(month => (
+                  <SelectItem key={month.value} value={month.value.toString()}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <AddTransactionDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
@@ -60,10 +92,10 @@ export default function Home() {
         </div>
         <div className="grid gap-8 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <MonthlyStats transactions={transactions} />
+            <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
           </div>
           <div className="lg:col-span-3">
-            <TransactionsTable transactions={transactions} />
+            <TransactionsTable transactions={filteredTransactions} />
           </div>
         </div>
       </main>
