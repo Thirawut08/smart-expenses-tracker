@@ -49,10 +49,10 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     defaultValues: {
       type: 'expense',
       date: new Date(),
-      details: '',
-      sender: '',
-      recipient: '',
       ...initialData,
+      details: initialData?.details ?? '',
+      sender: initialData?.sender ?? '',
+      recipient: initialData?.recipient ?? '',
     },
   });
 
