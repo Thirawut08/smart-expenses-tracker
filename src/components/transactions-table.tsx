@@ -25,6 +25,9 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <TableHead className="w-[100px]">ประเภท</TableHead>
               <TableHead>วันที่</TableHead>
               <TableHead>บัญชี</TableHead>
+              <TableHead>วัตถุประสงค์</TableHead>
+              <TableHead>ผู้จ่าย</TableHead>
+              <TableHead>ผู้รับ</TableHead>
               <TableHead>รายละเอียด</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
             </TableRow>
@@ -49,10 +52,11 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                 <TableCell>
                   <div className="font-medium">{transaction.account.name}</div>
                 </TableCell>
+                <TableCell>{transaction.purpose}</TableCell>
+                <TableCell>{transaction.payer}</TableCell>
+                <TableCell>{transaction.payee}</TableCell>
                 <TableCell>
-                    <div className="font-medium">{transaction.purpose}</div>
-                    <div className="text-sm text-muted-foreground">จาก: {transaction.payer} ไปยัง: {transaction.payee}</div>
-                    {transaction.details && <div className="text-sm text-muted-foreground italic">"{transaction.details}"</div>}
+                  {transaction.details && <div className="text-sm text-muted-foreground italic">"{transaction.details}"</div>}
                 </TableCell>
                 <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500'}`}>
                   {currencyFormatter.format(Math.abs(transaction.amount))}
