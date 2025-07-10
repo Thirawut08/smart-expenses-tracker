@@ -13,4 +13,5 @@ export interface Transaction {
   amount: number;
   date: Date;
   type: 'income' | 'expense';
+  details?: string;
 }

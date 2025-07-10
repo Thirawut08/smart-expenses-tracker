@@ -34,6 +34,7 @@ export default function Home() {
           amount: data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount),
           date: data.date,
           type: data.type,
+          details: data.details,
         },
       ].sort((a, b) => b.date.getTime() - a.date.getTime())
     );

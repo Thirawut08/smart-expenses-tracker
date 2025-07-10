@@ -17,6 +17,7 @@ import { th } from 'date-fns/locale';
 import { accounts, purposes } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
@@ -26,6 +27,7 @@ const formSchema = z.object({
   payee: z.string().min(1, 'ผู้รับเงินเป็นสิ่งจำเป็น'),
   amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+  details: z.string().optional(),
 });
 
 export type TransactionFormValues = z.infer<typeof formSchema>;
@@ -185,6 +187,20 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="details"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>รายละเอียด</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม (ถ้ามี)" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
