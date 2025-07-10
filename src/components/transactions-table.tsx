@@ -4,14 +4,22 @@ import { Badge } from '@/components/ui/badge';
 import type { Transaction } from '@/lib/types';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { TrendingUp, TrendingDown, Ban } from 'lucide-react';
+import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Button } from './ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
 });
 
-export function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+interface TransactionsTableProps {
+  transactions: Transaction[];
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
+}
+
+export function TransactionsTable({ transactions, onEdit, onDelete }: TransactionsTableProps) {
   return (
     <Card>
       <CardHeader>
@@ -30,6 +38,7 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <TableHead>ผู้รับ</TableHead>
               <TableHead>รายละเอียด</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
+              <TableHead className="w-[50px] text-center">การดำเนินการ</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -56,10 +65,30 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                 <TableCell>{transaction.sender || '-'}</TableCell>
                 <TableCell>{transaction.recipient || '-'}</TableCell>
                 <TableCell>
-                  {transaction.details && <div className="text-sm text-muted-foreground italic">"{transaction.details}"</div>}
+                  {transaction.details ? <div className="text-sm text-muted-foreground italic max-w-xs truncate">"{transaction.details}"</div> : '-'}
                 </TableCell>
                 <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500'}`}>
                   {currencyFormatter.format(Math.abs(transaction.amount))}
+                </TableCell>
+                <TableCell className="text-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">เปิดเมนู</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        <span>แก้ไข</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDelete(transaction)} className="text-red-600 focus:text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span>ลบ</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}

@@ -11,15 +11,16 @@ type AddTransactionDialogProps = {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTransactionAdd: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
+  onSave: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
   initialData?: Partial<TransactionFormValues>;
+  isEditing?: boolean;
 };
 
 type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
-export function AddTransactionDialog({ children, open, onOpenChange, onTransactionAdd, initialData }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
-  const [activeTab, setActiveTab] = useState(initialData ? 'manual' : 'slip');
+  const [activeTab, setActiveTab] = useState('manual');
   
   useEffect(() => {
     if (extractedData) {
@@ -28,14 +29,17 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
   }, [extractedData]);
   
   useEffect(() => {
-    // If initialData is provided (from a template), switch to manual tab
+    // If initialData is provided (from a template or editing), switch to manual tab
     if (initialData) {
       setActiveTab('manual');
+    } else {
+      // Default to slip uploader for new transactions
+      setActiveTab('slip');
     }
   }, [initialData]);
 
   const handleFormSubmit = (values: TransactionFormValues, saveAsTemplate: boolean) => {
-    onTransactionAdd(values, saveAsTemplate);
+    onSave(values, saveAsTemplate);
     handleClose();
   }
   
@@ -54,24 +58,31 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
     onOpenChange(isOpen);
   }
 
+  const getDialogTitle = () => {
+    if (isEditing) return 'แก้ไขธุรกรรม';
+    if (initialData) return 'ใช้เทมเพลต';
+    return 'เพิ่มธุรกรรมใหม่';
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>{initialData ? 'ใช้เทมเพลต' : 'เพิ่มธุรกรรมใหม่'}</DialogTitle>
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
-            <TabsTrigger value="slip">อัปโหลดสลิป</TabsTrigger>
+            <TabsTrigger value="manual" disabled={!initialData && !!extractedData}>กรอกข้อมูลเอง</TabsTrigger>
+            <TabsTrigger value="slip" disabled={isEditing || !!initialData?.purpose}>อัปโหลดสลิป</TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
             <TransactionForm
               key={JSON.stringify(initialData) || 'manual-form'}
               initialData={initialData}
               onSubmit={handleFormSubmit}
-              isTemplate={!!initialData}
+              isEditing={isEditing}
+              isTemplate={!!initialData?.purpose && !isEditing}
             />
           </TabsContent>
           <TabsContent value="slip">

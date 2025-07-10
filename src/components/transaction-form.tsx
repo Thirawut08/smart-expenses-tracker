@@ -38,10 +38,11 @@ export type TransactionFormValues = z.infer<typeof formSchema>;
 interface TransactionFormProps {
   initialData?: Partial<TransactionFormValues & { validationResult?: string }>;
   onSubmit: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
+  isEditing?: boolean;
   isTemplate?: boolean;
 }
 
-export function TransactionForm({ initialData, onSubmit, isTemplate = false }: TransactionFormProps) {
+export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
@@ -247,7 +248,7 @@ export function TransactionForm({ initialData, onSubmit, isTemplate = false }: T
             )}
           />
           
-          {!isTemplate && (
+          {!(isEditing || isTemplate) && (
             <div className="flex items-center space-x-2 pt-2">
               <Switch id="save-template" checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} />
               <Label htmlFor="save-template">บันทึกเป็นเทมเพลต</Label>
@@ -255,7 +256,7 @@ export function TransactionForm({ initialData, onSubmit, isTemplate = false }: T
           )}
 
           <Button type="submit" className="w-full">
-            {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}
+            {isEditing ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}
           </Button>
         </form>
       </Form>
