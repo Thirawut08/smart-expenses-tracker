@@ -37,6 +37,8 @@ export default function Home() {
           date: data.date,
           type: data.type,
           details: data.details,
+          sender: data.sender,
+          recipient: data.recipient,
         },
       ].sort((a, b) => b.date.getTime() - a.date.getTime())
     );

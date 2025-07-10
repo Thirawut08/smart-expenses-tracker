@@ -11,5 +11,7 @@ export interface Transaction {
   amount: number;
   date: Date;
   type: 'income' | 'expense';
+  sender?: string;
+  recipient?: string;
   details?: string;
 }

@@ -26,6 +26,8 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
               <TableHead>วันที่</TableHead>
               <TableHead>บัญชี</TableHead>
               <TableHead>วัตถุประสงค์</TableHead>
+              <TableHead>ผู้จ่าย</TableHead>
+              <TableHead>ผู้รับ</TableHead>
               <TableHead>รายละเอียด</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
             </TableRow>
@@ -51,6 +53,8 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                   <div className="font-medium">{transaction.account.name}</div>
                 </TableCell>
                 <TableCell>{transaction.purpose}</TableCell>
+                <TableCell>{transaction.sender || '-'}</TableCell>
+                <TableCell>{transaction.recipient || '-'}</TableCell>
                 <TableCell>
                   {transaction.details && <div className="text-sm text-muted-foreground italic">"{transaction.details}"</div>}
                 </TableCell>

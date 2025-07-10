@@ -1,3 +1,4 @@
+
 // This file is machine-generated - edit at your own risk!
 
 'use server';
@@ -24,9 +25,11 @@ export type ExtractTransactionDetailsInput = z.infer<typeof ExtractTransactionDe
 
 const ExtractTransactionDetailsOutputSchema = z.object({
   accountNumber: z.string().describe('The account number of the transaction.'),
-  purpose: z.string().describe('The purpose of the transaction.'),
+  purpose: z.string().optional().describe('The purpose of the transaction.'),
   amount: z.number().describe('The amount of the transaction.'),
   date: z.string().describe('The date of the transaction in ISO format (YYYY-MM-DD).'),
+  sender: z.string().optional().describe("The sender's name."),
+  recipient: z.string().optional().describe("The recipient's name."),
 });
 export type ExtractTransactionDetailsOutput = z.infer<typeof ExtractTransactionDetailsOutputSchema>;
 
@@ -52,6 +55,8 @@ Extract the following information:
 - Purpose: The purpose of the transaction.
 - Amount: The amount of the transaction. Always output as a number.
 - Date: The date of the transaction. Always output in ISO format (YYYY-MM-DD).
+- Sender: The sender's name.
+- Recipient: The recipient's name.
 
 Here is the transfer slip image:
 

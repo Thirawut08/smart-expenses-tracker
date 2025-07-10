@@ -67,11 +67,13 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
                 key={JSON.stringify(extractedData)}
                 initialData={{
                   accountNumber: '',
-                  purpose: '',
+                  purpose: extractedData.purpose || '',
                   amount: extractedData.amount,
                   date: new Date(extractedData.date),
                   type: 'expense',
-                  validationResult: extractedData.validationResult
+                  validationResult: extractedData.validationResult,
+                  sender: extractedData.sender,
+                  recipient: extractedData.recipient,
                 }}
                 onSubmit={handleFormSubmit}
               />
