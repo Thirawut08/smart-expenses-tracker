@@ -5,16 +5,17 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { format } from 'date-fns';
+import { th } from 'date-fns/locale';
 import { useMemo } from 'react';
 import { BarChartIcon } from 'lucide-react';
 
 const chartConfig = {
   income: {
-    label: 'Income',
+    label: 'รายรับ',
     color: 'hsl(var(--chart-1))',
   },
   expense: {
-    label: 'Expense',
+    label: 'รายจ่าย',
     color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
@@ -27,7 +28,7 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
 
     transactions.forEach(t => {
       const monthKey = format(t.date, 'yyyy-MM');
-      const monthLabel = format(t.date, 'MMM yyyy');
+      const monthLabel = format(t.date, 'MMM yyyy', { locale: th });
 
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = { month: monthLabel, income: 0, expense: 0 };
@@ -47,14 +48,14 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Monthly Overview</CardTitle>
-                <CardDescription>No data available to display statistics.</CardDescription>
+                <CardTitle>ภาพรวมรายเดือน</CardTitle>
+                <CardDescription>ไม่มีข้อมูลสำหรับแสดงสถิติ</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground bg-muted/30 rounded-lg">
                     <BarChartIcon className="w-16 h-16 mb-4" />
-                    <h3 className="text-xl font-semibold">No Statistics Yet</h3>
-                    <p>Add some transactions to see your monthly breakdown.</p>
+                    <h3 className="text-xl font-semibold">ยังไม่มีสถิติ</h3>
+                    <p>เพิ่มธุรกรรมเพื่อดูรายละเอียดรายเดือนของคุณ</p>
                 </div>
             </CardContent>
         </Card>
@@ -64,15 +65,15 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Monthly Overview</CardTitle>
-        <CardDescription>A summary of your income and expenses per month.</CardDescription>
+        <CardTitle>ภาพรวมรายเดือน</CardTitle>
+        <CardDescription>สรุปรายรับและรายจ่ายของคุณในแต่ละเดือน</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[350px] w-full">
           <ResponsiveContainer>
             <BarChart data={data} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} />
-              <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `$${value / 1000}k`} />
+              <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `${value / 1000}k`} />
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" />}

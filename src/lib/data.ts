@@ -17,3 +17,17 @@ export const accounts: Account[] = [
   { id: '15', name: 'Dime FCD', accountNumber: 'Dime FCD' },
   { id: '16', name: 'Dime! USD', accountNumber: 'Dime! USD' },
 ];
+
+export const purposes: string[] = [
+  'อาหาร',
+  'เดินทาง',
+  'ชอปปิง',
+  'บันเทิง',
+  'ค่าที่พัก',
+  'ค่าสาธารณูปโภค',
+  'สุขภาพ',
+  'การศึกษา',
+  'ลงทุน',
+  'เงินเดือน',
+  'อื่นๆ'
+];

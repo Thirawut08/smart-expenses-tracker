@@ -13,17 +13,19 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
-import { accounts } from '@/lib/data';
+import { th } from 'date-fns/locale';
+import { accounts, purposes } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { TimePicker } from './time-picker';
 
 const formSchema = z.object({
-  type: z.enum(['income', 'expense'], { required_error: 'Please select a transaction type.' }),
-  accountNumber: z.string({ required_error: 'Please select an account.' }).min(1, 'Please select an account.'),
-  purpose: z.string().min(1, 'Purpose is required.'),
-  payer: z.string().min(1, 'Payer is required.'),
-  payee: z.string().min(1, 'Payee is required.'),
-  amount: z.coerce.number().positive('Amount must be a positive number.'),
-  date: z.date({ required_error: 'A date is required.' }),
+  type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
+  accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+  purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
+  payer: z.string().min(1, 'ผู้จ่ายเป็นสิ่งจำเป็น'),
+  payee: z.string().min(1, 'ผู้รับเงินเป็นสิ่งจำเป็น'),
+  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
 });
 
 export type TransactionFormValues = z.infer<typeof formSchema>;
@@ -48,7 +50,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
       {initialData?.validationResult && (
         <Alert variant="default" className="mb-4 bg-accent/10 border-accent/20">
           <AlertCircle className="h-4 w-4 !text-accent" />
-          <AlertTitle className="text-accent">AI Validation Summary</AlertTitle>
+          <AlertTitle className="text-accent">สรุปการตรวจสอบโดย AI</AlertTitle>
           <AlertDescription className="text-accent/80">
             {initialData.validationResult}
           </AlertDescription>
@@ -61,7 +63,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
             name="type"
             render={({ field }) => (
               <FormItem className="space-y-3">
-                <FormLabel>Transaction Type</FormLabel>
+                <FormLabel>ประเภทธุรกรรม</FormLabel>
                 <FormControl>
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -70,11 +72,11 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
                   >
                     <FormItem className="flex items-center space-x-2 space-y-0">
                       <FormControl><RadioGroupItem value="expense" /></FormControl>
-                      <FormLabel className="font-normal">Expense</FormLabel>
+                      <FormLabel className="font-normal">รายจ่าย</FormLabel>
                     </FormItem>
                     <FormItem className="flex items-center space-x-2 space-y-0">
                       <FormControl><RadioGroupItem value="income" /></FormControl>
-                      <FormLabel className="font-normal">Income</FormLabel>
+                      <FormLabel className="font-normal">รายรับ</FormLabel>
                     </FormItem>
                   </RadioGroup>
                 </FormControl>
@@ -89,7 +91,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel>จำนวนเงิน</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="0.00" {...field} />
                   </FormControl>
@@ -102,7 +104,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
+                  <FormLabel>วันที่และเวลา</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -113,19 +115,23 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                          {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
+                        locale={th}
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
                         disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                         initialFocus
                       />
+                      <div className="p-2 border-t border-border">
+                        <TimePicker date={field.value} setDate={field.onChange} />
+                      </div>
                     </PopoverContent>
                   </Popover>
                   <FormMessage />
@@ -139,11 +145,11 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
             name="accountNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Account</FormLabel>
+                <FormLabel>บัญชี</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select an account" />
+                      <SelectValue placeholder="เลือกบัญชี" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -164,10 +170,21 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
             name="purpose"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Purpose</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g. Dinner with friends" {...field} />
-                </FormControl>
+                <FormLabel>วัตถุประสงค์</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="เลือกวัตถุประสงค์" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {purposes.map(purpose => (
+                      <SelectItem key={purpose} value={purpose}>
+                        {purpose}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -179,9 +196,9 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="payer"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Payer</FormLabel>
+                  <FormLabel>ผู้จ่าย</FormLabel>
                   <FormControl>
-                    <Input placeholder="Who paid?" {...field} />
+                    <Input placeholder="ใครจ่าย?" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -192,9 +209,9 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="payee"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Payee</FormLabel>
+                  <FormLabel>ผู้รับ</FormLabel>
                   <FormControl>
-                    <Input placeholder="Who received?" {...field} />
+                    <Input placeholder="ใครได้รับ?" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,7 +220,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
           </div>
 
           <Button type="submit" className="w-full">
-            {initialData ? 'Save Changes' : 'Add Transaction'}
+            {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}
           </Button>
         </form>
       </Form>

@@ -7,7 +7,7 @@ import { AddTransactionDialog } from '@/components/add-transaction-dialog';
 import { MonthlyStats } from '@/components/monthly-stats';
 import { TransactionsTable } from '@/components/transactions-table';
 import { LedgerAiHeader } from '@/components/ledger-ai-header';
-import type { Transaction, Account } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import { accounts } from '@/lib/data';
 import type { TransactionFormValues } from '@/components/transaction-form';
 
@@ -45,7 +45,7 @@ export default function Home() {
       <LedgerAiHeader />
       <main className="flex-1 container mx-auto p-4 md:p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
+          <h1 className="text-3xl font-bold font-headline">แดชบอร์ด</h1>
           <AddTransactionDialog
             open={isDialogOpen}
             onOpenChange={setIsDialogOpen}
@@ -53,7 +53,7 @@ export default function Home() {
           >
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add Transaction
+              เพิ่มธุรกรรม
             </Button>
           </AddTransactionDialog>
         </div>

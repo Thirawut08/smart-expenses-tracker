@@ -20,8 +20,8 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
     if (file.size > 4 * 1024 * 1024) { // 4MB limit for Gemini
         toast({
             variant: "destructive",
-            title: "File too large",
-            description: "Please upload an image smaller than 4MB.",
+            title: "ไฟล์ใหญ่เกินไป",
+            description: "กรุณาอัปโหลดรูปภาพขนาดไม่เกิน 4MB",
         });
         return;
     }
@@ -50,8 +50,8 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
         console.error("AI processing error:", error);
         toast({
           variant: "destructive",
-          title: "Extraction Failed",
-          description: "Could not read slip details. The image might be unclear. Please try again or enter manually.",
+          title: "การดึงข้อมูลล้มเหลว",
+          description: "ไม่สามารถอ่านรายละเอียดสลิปได้ รูปภาพอาจไม่ชัดเจน กรุณาลองอีกครั้งหรือป้อนข้อมูลด้วยตนเอง",
         });
       } finally {
         setIsLoading(false);
@@ -62,8 +62,8 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
     reader.onerror = () => {
       toast({
           variant: "destructive",
-          title: "File Read Error",
-          description: "Could not read the selected file.",
+          title: "ข้อผิดพลาดในการอ่านไฟล์",
+          description: "ไม่สามารถอ่านไฟล์ที่เลือกได้",
       });
       setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
       {isLoading ? (
         <>
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-muted-foreground">Reading your slip, please wait...</p>
+          <p className="text-muted-foreground">กำลังอ่านสลิปของคุณ กรุณารอสักครู่...</p>
         </>
       ) : (
         <label
@@ -84,9 +84,9 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
           <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
             <UploadCloud className="w-10 h-10 mb-3 text-muted-foreground" />
             <p className="mb-2 text-sm text-muted-foreground">
-              <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+              <span className="font-semibold text-primary">คลิกเพื่ออัปโหลด</span> หรือลากแล้ววาง
             </p>
-            <p className="text-xs text-muted-foreground">PNG, JPG or JPEG (MAX. 4MB)</p>
+            <p className="text-xs text-muted-foreground">PNG, JPG หรือ JPEG (สูงสุด 4MB)</p>
           </div>
           <input id="slip-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
         </label>

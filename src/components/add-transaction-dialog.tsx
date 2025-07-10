@@ -51,12 +51,12 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Add a new transaction</DialogTitle>
+          <DialogTitle>เพิ่มธุรกรรมใหม่</DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            <TabsTrigger value="slip">Upload Slip</TabsTrigger>
+            <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
+            <TabsTrigger value="slip">อัปโหลดสลิป</TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
             <TransactionForm onSubmit={handleFormSubmit} />
@@ -67,7 +67,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
                 key={JSON.stringify(extractedData)}
                 initialData={{
                   accountNumber: '',
-                  purpose: extractedData.purpose,
+                  purpose: '',
                   payer: extractedData.payer,
                   payee: extractedData.payee,
                   amount: extractedData.amount,
