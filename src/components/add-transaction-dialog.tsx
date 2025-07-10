@@ -11,23 +11,31 @@ type AddTransactionDialogProps = {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTransactionAdd: (data: TransactionFormValues) => void;
+  onTransactionAdd: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
+  initialData?: Partial<TransactionFormValues>;
 };
 
 type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
-export function AddTransactionDialog({ children, open, onOpenChange, onTransactionAdd }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ children, open, onOpenChange, onTransactionAdd, initialData }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
-  const [activeTab, setActiveTab] = useState('manual');
+  const [activeTab, setActiveTab] = useState(initialData ? 'manual' : 'slip');
   
   useEffect(() => {
     if (extractedData) {
       setActiveTab('slip');
     }
   }, [extractedData]);
+  
+  useEffect(() => {
+    // If initialData is provided (from a template), switch to manual tab
+    if (initialData) {
+      setActiveTab('manual');
+    }
+  }, [initialData]);
 
-  const handleFormSubmit = (values: TransactionFormValues) => {
-    onTransactionAdd(values);
+  const handleFormSubmit = (values: TransactionFormValues, saveAsTemplate: boolean) => {
+    onTransactionAdd(values, saveAsTemplate);
     handleClose();
   }
   
@@ -51,7 +59,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>เพิ่มธุรกรรมใหม่</DialogTitle>
+          <DialogTitle>{initialData ? 'ใช้เทมเพลต' : 'เพิ่มธุรกรรมใหม่'}</DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -59,7 +67,12 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
             <TabsTrigger value="slip">อัปโหลดสลิป</TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
-            <TransactionForm onSubmit={handleFormSubmit} />
+            <TransactionForm
+              key={JSON.stringify(initialData) || 'manual-form'}
+              initialData={initialData}
+              onSubmit={handleFormSubmit}
+              isTemplate={!!initialData}
+            />
           </TabsContent>
           <TabsContent value="slip">
             {extractedData ? (
@@ -71,9 +84,9 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
                   amount: extractedData.amount,
                   date: new Date(extractedData.date),
                   type: 'expense',
-                  validationResult: extractedData.validationResult,
                   sender: extractedData.sender,
                   recipient: extractedData.recipient,
+                  validationResult: extractedData.validationResult,
                 }}
                 onSubmit={handleFormSubmit}
               />

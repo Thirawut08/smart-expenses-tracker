@@ -18,6 +18,8 @@ import { accounts, purposes } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { useState } from 'react';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
@@ -34,10 +36,12 @@ export type TransactionFormValues = z.infer<typeof formSchema>;
 
 interface TransactionFormProps {
   initialData?: Partial<TransactionFormValues & { validationResult?: string }>;
-  onSubmit: (data: TransactionFormValues) => void;
+  onSubmit: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
+  isTemplate?: boolean;
 }
 
-export function TransactionForm({ initialData, onSubmit }: TransactionFormProps) {
+export function TransactionForm({ initialData, onSubmit, isTemplate = false }: TransactionFormProps) {
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,6 +53,10 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
       ...initialData,
     },
   });
+
+  const handleSubmit = (data: TransactionFormValues) => {
+    onSubmit(data, saveAsTemplate);
+  }
 
   return (
     <>
@@ -62,7 +70,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
         </Alert>
       )}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
           <FormField
             control={form.control}
             name="type"
@@ -201,9 +209,9 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="sender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ผู้จ่าย</FormLabel>
+                  <FormLabel>ผู้จ่าย (ถ้ามี)</FormLabel>
                   <FormControl>
-                    <Input placeholder="ชื่อผู้จ่าย (ถ้ามี)" {...field} />
+                    <Input placeholder="ชื่อผู้จ่าย" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -214,9 +222,9 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               name="recipient"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>ผู้รับ</FormLabel>
+                  <FormLabel>ผู้รับ (ถ้ามี)</FormLabel>
                   <FormControl>
-                    <Input placeholder="ชื่อผู้รับ (ถ้ามี)" {...field} />
+                    <Input placeholder="ชื่อผู้รับ" {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -229,14 +237,21 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
             name="details"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>รายละเอียด</FormLabel>
+                <FormLabel>รายละเอียด (ถ้ามี)</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม (ถ้ามี)" {...field} />
+                  <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
+          {!isTemplate && (
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch id="save-template" checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} />
+              <Label htmlFor="save-template">บันทึกเป็นเทมเพลต</Label>
+            </div>
+          )}
 
           <Button type="submit" className="w-full">
             {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}

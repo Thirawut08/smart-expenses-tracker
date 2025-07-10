@@ -1,3 +1,5 @@
+import type { TransactionFormValues } from "@/components/transaction-form";
+
 export interface Account {
   id: string;
   name: string;
@@ -15,3 +17,8 @@ export interface Transaction {
   recipient?: string;
   details?: string;
 }
+
+export type Template = TransactionFormValues & {
+  id: string;
+  name: string;
+};
