@@ -23,8 +23,6 @@ const formSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
   accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
-  payer: z.string().min(1, 'ผู้จ่ายเป็นสิ่งจำเป็น'),
-  payee: z.string().min(1, 'ผู้รับเงินเป็นสิ่งจำเป็น'),
   amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
   details: z.string().optional(),
@@ -206,35 +204,6 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
               </FormItem>
             )}
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="payer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ผู้จ่าย</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ใครจ่าย?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="payee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ผู้รับ</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ใครได้รับ?" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
           <Button type="submit" className="w-full">
             {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}

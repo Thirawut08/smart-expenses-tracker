@@ -39,8 +39,6 @@ export function SlipUploader({ onExtractionComplete }: SlipUploaderProps) {
         const validation = await validateExtractedTransactionDetails({
           account: extractedDetails.accountNumber,
           purpose: extractedDetails.purpose,
-          payer: extractedDetails.payer,
-          payee: extractedDetails.payee,
           amount: String(extractedDetails.amount),
         });
         

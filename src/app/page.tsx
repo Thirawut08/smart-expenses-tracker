@@ -33,8 +33,6 @@ export default function Home() {
           id: new Date().toISOString() + Math.random(),
           account: selectedAccount,
           purpose: data.purpose,
-          payer: data.payer,
-          payee: data.payee,
           amount: data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount),
           date: data.date,
           type: data.type,

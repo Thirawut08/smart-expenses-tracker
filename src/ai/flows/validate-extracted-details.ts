@@ -14,8 +14,6 @@ import {z} from 'genkit';
 const ValidateExtractedTransactionDetailsInputSchema = z.object({
   account: z.string().describe('The account number.'),
   purpose: z.string().describe('The purpose of the transaction.'),
-  payer: z.string().describe('The payer of the transaction.'),
-  payee: z.string().describe('The payee of the transaction.'),
   amount: z.string().describe('Transaction amount.'),
 });
 
@@ -47,8 +45,6 @@ const validateExtractedTransactionDetailsPrompt = ai.definePrompt({
 
   Account: {{{account}}}
   Purpose: {{{purpose}}}
-  Payer: {{{payer}}}
-  Payee: {{{payee}}}
   Amount: {{{amount}}}
 
   Provide a concise summary of your findings, focusing on potential issues that require user attention.

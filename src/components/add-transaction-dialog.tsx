@@ -68,8 +68,6 @@ export function AddTransactionDialog({ children, open, onOpenChange, onTransacti
                 initialData={{
                   accountNumber: '',
                   purpose: '',
-                  payer: extractedData.payer,
-                  payee: extractedData.payee,
                   amount: extractedData.amount,
                   date: new Date(extractedData.date),
                   type: 'expense',

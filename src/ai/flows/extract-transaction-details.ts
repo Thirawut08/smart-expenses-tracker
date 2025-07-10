@@ -25,8 +25,6 @@ export type ExtractTransactionDetailsInput = z.infer<typeof ExtractTransactionDe
 const ExtractTransactionDetailsOutputSchema = z.object({
   accountNumber: z.string().describe('The account number of the transaction.'),
   purpose: z.string().describe('The purpose of the transaction.'),
-  payer: z.string().describe('The payer of the transaction.'),
-  payee: z.string().describe('The payee of the transaction.'),
   amount: z.number().describe('The amount of the transaction.'),
   date: z.string().describe('The date of the transaction in ISO format (YYYY-MM-DD).'),
 });
@@ -52,8 +50,6 @@ Considerations:
 Extract the following information:
 - Account Number: The account number of the transaction.
 - Purpose: The purpose of the transaction.
-- Payer: The payer of the transaction.
-- Payee: The payee of the transaction.
 - Amount: The amount of the transaction. Always output as a number.
 - Date: The date of the transaction. Always output in ISO format (YYYY-MM-DD).
 
