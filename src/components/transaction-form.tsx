@@ -20,6 +20,7 @@ import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
+import { Label } from '@/components/ui/label';
 
 const formSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
