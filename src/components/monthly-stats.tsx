@@ -2,12 +2,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { format } from 'date-fns';
-import { th } from 'date-fns/locale';
 import { useMemo } from 'react';
-import { BarChartIcon } from 'lucide-react';
+import { PieChartIcon } from 'lucide-react';
+
+const currencyFormatter = new Intl.NumberFormat('th-TH', {
+  style: 'currency',
+  currency: 'THB',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+});
 
 const chartConfig = {
   income: {
@@ -21,41 +26,42 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function MonthlyStats({ transactions }: { transactions: Transaction[] }) {
-  const data = useMemo(() => {
-    if (!transactions || transactions.length === 0) return [];
+  const { chartData, totalIncome, totalExpense, totalNet } = useMemo(() => {
+    if (!transactions || transactions.length === 0) {
+      return { chartData: [], totalIncome: 0, totalExpense: 0, totalNet: 0 };
+    }
     
-    const monthlyData: { [key: string]: { month: string; income: number; expense: number } } = {};
+    const income = transactions
+      .filter(t => t.type === 'income')
+      .reduce((acc, t) => acc + t.amount, 0);
 
-    transactions.forEach(t => {
-      const monthKey = format(t.date, 'yyyy-MM');
-      const monthLabel = format(t.date, 'MMM yyyy', { locale: th });
+    const expense = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { month: monthLabel, income: 0, expense: 0 };
-      }
-
-      if (t.type === 'income') {
-        monthlyData[monthKey].income += t.amount;
-      } else {
-        monthlyData[monthKey].expense += Math.abs(t.amount);
-      }
-    });
-
-    return Object.values(monthlyData).sort((a,b) => a.month.localeCompare(b.month));
+    return {
+      chartData: [
+        { name: 'รายรับ', value: income, fill: 'var(--color-income)' },
+        { name: 'รายจ่าย', value: expense, fill: 'var(--color-expense)' },
+      ],
+      totalIncome: income,
+      totalExpense: expense,
+      totalNet: income - expense,
+    };
   }, [transactions]);
   
-  if (data.length === 0) {
+  if (transactions.length === 0) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>ภาพรวมรายเดือน</CardTitle>
+                <CardTitle>ภาพรวมทั้งหมด</CardTitle>
                 <CardDescription>ไม่มีข้อมูลสำหรับแสดงสถิติ</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground bg-muted/30 rounded-lg">
-                    <BarChartIcon className="w-16 h-16 mb-4" />
+                <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground bg-muted/30 rounded-lg">
+                    <PieChartIcon className="w-16 h-16 mb-4" />
                     <h3 className="text-xl font-semibold">ยังไม่มีสถิติ</h3>
-                    <p>เพิ่มธุรกรรมเพื่อดูรายละเอียดรายเดือนของคุณ</p>
+                    <p>เพิ่มธุรกรรมเพื่อดูภาพรวมของคุณ</p>
                 </div>
             </CardContent>
         </Card>
@@ -65,24 +71,47 @@ export function MonthlyStats({ transactions }: { transactions: Transaction[] }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>ภาพรวมรายเดือน</CardTitle>
-        <CardDescription>สรุปรายรับและรายจ่ายของคุณในแต่ละเดือน</CardDescription>
+        <CardTitle>ภาพรวมทั้งหมด</CardTitle>
+        <CardDescription>สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[350px] w-full">
+      <CardContent className="flex flex-col items-center justify-center">
+        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
           <ResponsiveContainer>
-            <BarChart data={data} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-              <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={10} />
-              <YAxis tickLine={false} axisLine={false} tickMargin={10} tickFormatter={(value) => `${value / 1000}k`} />
+            <PieChart>
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
+                content={<ChartTooltipContent hideLabel />}
               />
-              <Bar dataKey="income" fill="var(--color-income)" radius={4} />
-              <Bar dataKey="expense" fill="var(--color-expense)" radius={4} />
-            </BarChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={60}
+                strokeWidth={5}
+              >
+                 {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+              </Pie>
+            </PieChart>
           </ResponsiveContainer>
         </ChartContainer>
+        <div className="mt-4 flex flex-col items-center text-center">
+            <span className="text-sm text-muted-foreground">คงเหลือสุทธิ</span>
+            <span className={`text-2xl font-bold ${totalNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {currencyFormatter.format(totalNet)}
+            </span>
+        </div>
+        <div className="w-full flex justify-around mt-4 text-sm">
+            <div className="text-center">
+                <span className="text-muted-foreground">รายรับทั้งหมด</span>
+                <p className="font-semibold text-green-600">{currencyFormatter.format(totalIncome)}</p>
+            </div>
+            <div className="text-center">
+                <span className="text-muted-foreground">รายจ่ายทั้งหมด</span>
+                <p className="font-semibold text-red-600">{currencyFormatter.format(totalExpense)}</p>
+            </div>
+        </div>
       </CardContent>
     </Card>
   );

@@ -58,9 +58,13 @@ export default function Home() {
             </Button>
           </AddTransactionDialog>
         </div>
-        <div className="grid gap-8">
-          <MonthlyStats transactions={transactions} />
-          <TransactionsTable transactions={transactions} />
+        <div className="grid gap-8 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <MonthlyStats transactions={transactions} />
+          </div>
+          <div className="lg:col-span-3">
+            <TransactionsTable transactions={transactions} />
+          </div>
         </div>
       </main>
     </div>
