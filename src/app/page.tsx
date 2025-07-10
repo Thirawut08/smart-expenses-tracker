@@ -91,15 +91,20 @@ export default function Home() {
             </Button>
           </AddTransactionDialog>
         </div>
-        <div className="grid gap-8 lg:grid-cols-5">
-          <div className="lg:col-span-2 flex flex-col gap-8">
-            <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-            <MonthInfoTable />
-          </div>
-          <div className="lg:col-span-3">
-            <TransactionsTable transactions={filteredTransactions} />
-          </div>
+        
+        <div className="grid gap-8 mb-8 md:grid-cols-2 lg:grid-cols-5">
+            <div className="md:col-span-1 lg:col-span-2">
+                <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+            </div>
+            <div className="md:col-span-1 lg:col-span-3">
+                <MonthInfoTable />
+            </div>
         </div>
+
+        <div>
+          <TransactionsTable transactions={filteredTransactions} />
+        </div>
+        
       </main>
     </div>
   );
