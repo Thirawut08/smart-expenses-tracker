@@ -149,7 +149,7 @@ export function TransactionForm({ initialData, onSubmit }: TransactionFormProps)
                   <SelectContent>
                     {accounts.map(account => (
                       <SelectItem key={account.id} value={account.accountNumber}>
-                        {account.name} - {account.accountNumber}
+                        {account.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -47,7 +47,6 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
                 <TableCell>{format(transaction.date, 'MMM d, yyyy')}</TableCell>
                 <TableCell>
                   <div className="font-medium">{transaction.account.name}</div>
-                  <div className="text-sm text-muted-foreground">{transaction.account.accountNumber}</div>
                 </TableCell>
                 <TableCell>{transaction.payee}</TableCell>
                 <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500'}`}>
