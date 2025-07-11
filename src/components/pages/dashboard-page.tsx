@@ -7,7 +7,6 @@ import { thaiMonths, investmentAccountNames } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
-import { InvestmentPortfolioChart } from '@/components/investment-portfolio-chart';
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
@@ -56,9 +55,8 @@ export function DashboardPage() {
       <div className="grid gap-8">
         <div className="grid md:grid-cols-2 gap-8">
           <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-          <InvestmentPortfolioChart transactions={transactions}/>
+          <AccountBalances transactions={transactions} />
         </div>
-        <AccountBalances transactions={transactions} />
         <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
       </div>
     </div>
