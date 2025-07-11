@@ -40,7 +40,10 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
     transactions.forEach(t => {
       if (investmentAccountNames.includes(t.account.name)) {
         const currentBalance = investmentBalances.get(t.account.name) ?? 0;
-        investmentBalances.set(t.account.name, currentBalance + t.amount);
+        // For investments, we usually care about the net positive value.
+        // Expenses in investment accounts are typically buying assets, thus increasing portfolio value.
+        // We'll treat all amounts as positive contributions to the balance for this chart.
+        investmentBalances.set(t.account.name, currentBalance + Math.abs(t.amount));
       }
     });
 
@@ -120,6 +123,9 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
                   const radius = 12 + innerRadius + (outerRadius - innerRadius);
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);
                   const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  const totalValue = chartData.reduce((acc, curr) => acc + curr.value, 0);
+                  const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
+
 
                   return (
                     <text
@@ -129,7 +135,7 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
                       textAnchor={x > cx ? 'start' : 'end'}
                       dominantBaseline="central"
                     >
-                      {chartData[index].name} ({((value / chartData.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(0)}%)
+                      {chartData[index].name} ({percentage.toFixed(0)}%)
                     </text>
                   );
                 }}
