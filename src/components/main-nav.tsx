@@ -20,9 +20,9 @@ export function MainNav() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex items-center h-16">
           <Link href="/" className="flex items-center gap-3 mr-8">
-            <Wallet className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold font-headline tracking-tight">
-              Ledger AI
+            <Wallet className="h-7 w-7 text-primary" />
+            <h1 className="text-xl font-bold font-headline tracking-tight">
+              Smart Expense Tracker
             </h1>
           </Link>
           <nav className="flex items-center gap-2">
