@@ -71,15 +71,6 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
   return (
     <>
-      {initialData?.validationResult && (
-        <Alert variant="default" className="mb-4 bg-accent/10 border-accent/20">
-          <AlertCircle className="h-4 w-4 !text-accent" />
-          <AlertTitle className="text-accent">สรุปการตรวจสอบโดย AI</AlertTitle>
-          <AlertDescription className="text-accent/80">
-            {initialData.validationResult}
-          </AlertDescription>
-        </Alert>
-      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
           <FormField
