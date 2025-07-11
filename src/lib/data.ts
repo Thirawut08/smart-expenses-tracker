@@ -28,6 +28,11 @@ export const investmentAccountNames = [
     'Bybit'
 ];
 
+export const savingAccountNames = [
+    'Kept',
+    'Money Plus'
+];
+
 export const purposes: string[] = [
   'อาหาร',
   'เดินทาง',
