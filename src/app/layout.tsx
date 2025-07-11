@@ -2,6 +2,20 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { MainNav } from '@/components/main-nav';
+import { Inter, Noto_Sans_Thai } from 'next/font/google';
+import { cn } from '@/lib/utils';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ['thai'],
+  variable: '--font-noto-sans-thai',
+  weight: ['400', '500', '600', '700'],
+});
+
 
 export const metadata: Metadata = {
   title: 'Ledger AI',
@@ -14,12 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></link>
-      </head>
+    <html lang="th" className={cn(inter.variable, notoSansThai.variable)}>
+      <head />
       <body className="font-body antialiased">
         <div className="flex flex-col min-h-screen bg-background">
           <MainNav />

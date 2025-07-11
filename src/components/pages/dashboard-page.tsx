@@ -30,12 +30,12 @@ export function DashboardPage() {
   }, [selectedMonth]);
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold font-headline">แดชบอร์ด</h1>
+              <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] font-semibold">
                   <SelectValue placeholder="เลือกเดือน" />
                 </SelectTrigger>
                 <SelectContent>
@@ -50,8 +50,8 @@ export function DashboardPage() {
             </div>
           </div>
           
-      <div className="grid gap-8">
-        <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
           <AccountBalances transactions={transactions} />
         </div>
