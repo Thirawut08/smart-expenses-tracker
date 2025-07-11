@@ -44,13 +44,11 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                 <TableCell>
                   {transaction.type === 'income' ? (
                     <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
-                      <TrendingUp className="mr-1 h-3 w-3" />
-                      รายรับ
+                      <TrendingUp className="h-3 w-3" />
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">
-                      <TrendingDown className="mr-1 h-3 w-3" />
-                      รายจ่าย
+                      <TrendingDown className="h-3 w-3" />
                     </Badge>
                   )}
                 </TableCell>
