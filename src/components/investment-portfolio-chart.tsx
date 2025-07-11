@@ -1,47 +1,20 @@
 'use client';
 
-import { Pie, PieChart, ResponsiveContainer, Cell, Legend, Tooltip } from 'recharts';
+import { useMemo } from 'react';
+import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from './ui/chart';
+import type { Transaction } from '@/lib/types';
+import { accounts, investmentAccountNames } from '@/lib/data';
+import { PieChart as PieChartIcon } from 'lucide-react';
 
-const chartData = [
-  { name: 'BitKub', value: 800, fill: 'hsl(var(--chart-1))' },
-  { name: 'Make Saving', value: 1500, fill: 'hsl(var(--chart-2))' },
-  { name: 'KBANK Port', value: 2300, fill: 'hsl(var(--chart-3))' },
-  { name: 'JITTA ETF', value: 4800, fill: 'hsl(var(--chart-4))' },
-  { name: 'JITTA Ranking', value: 4900, fill: 'hsl(var(--chart-5))' },
-  { name: 'KGI Port', value: 3100, fill: 'hsl(var(--chart-1))' },
+const chartColors = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
 ];
-
-const chartConfig = {
-  value: {
-    label: 'Value',
-  },
-  BitKub: {
-    label: 'BitKub',
-    color: 'hsl(var(--chart-1))',
-  },
-  'Make Saving': {
-    label: 'Make Saving',
-    color: 'hsl(var(--chart-2))',
-  },
-  'KBANK Port': {
-    label: 'KBANK Port',
-    color: 'hsl(var(--chart-3))',
-  },
-  'JITTA ETF': {
-    label: 'JITTA ETF',
-    color: 'hsl(var(--chart-4))',
-  },
-  'JITTA Ranking': {
-    label: 'JITTA Ranking',
-    color: 'hsl(var(--chart-5))',
-  },
-  'KGI Port': {
-    label: 'KGI Port',
-    color: 'hsl(var(--chart-1))',
-  },
-} satisfies ChartConfig;
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -50,8 +23,66 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
   maximumFractionDigits: 0,
 });
 
+interface InvestmentPortfolioChartProps {
+    transactions: Transaction[];
+}
 
-export function InvestmentPortfolioChart() {
+export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioChartProps) {
+  const { chartData, chartConfig } = useMemo(() => {
+    const investmentBalances = new Map<string, number>();
+
+    // Initialize investment accounts with 0 balance
+    investmentAccountNames.forEach(accName => {
+      investmentBalances.set(accName, 0);
+    });
+
+    // Calculate balances from transactions
+    transactions.forEach(t => {
+      if (investmentAccountNames.includes(t.account.name)) {
+        const currentBalance = investmentBalances.get(t.account.name) ?? 0;
+        investmentBalances.set(t.account.name, currentBalance + t.amount);
+      }
+    });
+
+    const data = Array.from(investmentBalances.entries())
+      .filter(([, balance]) => balance > 0) // Only show accounts with a positive balance
+      .map(([name, value], index) => ({
+        name,
+        value,
+        fill: chartColors[index % chartColors.length],
+      }));
+
+    const config: ChartConfig = data.reduce((acc, item) => {
+      acc[item.name] = {
+        label: item.name,
+        color: item.fill,
+      };
+      return acc;
+    }, {} as ChartConfig);
+
+    config.value = { label: 'Value' };
+
+    return { chartData: data, chartConfig: config };
+  }, [transactions]);
+  
+  if (chartData.length === 0) {
+      return (
+        <Card>
+            <CardHeader>
+                <CardTitle>สัดส่วนการลงทุน</CardTitle>
+                <CardDescription>ภาพรวมสัดส่วนของพอร์ตการออมและการลงทุนทั้งหมด</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground bg-muted/30 rounded-lg">
+                    <PieChartIcon className="w-16 h-16 mb-4" />
+                    <h3 className="text-xl font-semibold">ยังไม่มีข้อมูลการลงทุน</h3>
+                    <p>เพิ่มธุรกรรมในบัญชีลงทุนเพื่อดูสัดส่วนของคุณ</p>
+                </div>
+            </CardContent>
+        </Card>
+      )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -98,7 +129,7 @@ export function InvestmentPortfolioChart() {
                       textAnchor={x > cx ? 'start' : 'end'}
                       dominantBaseline="central"
                     >
-                      {chartData[index].name} ({((value / chartData.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(1)}%)
+                      {chartData[index].name} ({((value / chartData.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(0)}%)
                     </text>
                   );
                 }}
