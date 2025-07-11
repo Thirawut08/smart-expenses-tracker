@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/', label: 'แดชบอร์ด' },
-  { href: '/transactions', label: 'ธุรกรรมทั้งหมด' },
+  { href: '/transactions', label: 'ธุรกรรมทั่วไป' },
   { href: '/investments', label: 'การลงทุน' },
 ];
 
