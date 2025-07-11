@@ -30,7 +30,8 @@ export const investmentAccountNames = [
 
 export const savingAccountNames = [
     'Kept',
-    'Money Plus'
+    'Money Plus',
+    'Dime FCD'
 ];
 
 export const purposes: string[] = [
