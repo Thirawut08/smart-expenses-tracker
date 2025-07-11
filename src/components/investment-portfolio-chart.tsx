@@ -31,18 +31,25 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
   const { chartData, chartConfig, totalValue } = useMemo(() => {
     const investmentBalances = new Map<string, number>();
 
+    // Initialize all investment accounts with a balance of 0
+    investmentAccountNames.forEach(accName => {
+        investmentBalances.set(accName, 0);
+    });
+
     const investmentTransactions = transactions.filter(t => 
-        investmentAccountNames.includes(t.account.name) && t.amount > 0
+        investmentAccountNames.includes(t.account.name)
     );
 
+    // Calculate the net balance for each investment account
     investmentTransactions.forEach(t => {
         const currentBalance = investmentBalances.get(t.account.name) ?? 0;
+        // The amount is already positive for income and negative for expense
         investmentBalances.set(t.account.name, currentBalance + t.amount);
     });
 
     const data = Array.from(investmentBalances.entries())
       .map(([name, value]) => ({ name, value }))
-      .filter(item => item.value > 0)
+      .filter(item => item.value > 0) // Only show accounts with a positive balance in the chart
       .map((item, index) => ({
         ...item,
         fill: chartColors[index % chartColors.length],
