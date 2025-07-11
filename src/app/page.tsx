@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Card } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { InvestmentStats } from '@/components/investment-stats';
 
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
@@ -305,14 +306,11 @@ export default function Home() {
           </div>
           
           <div className="grid gap-8 mb-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
-                <div className="lg:col-span-2">
-                    <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-                </div>
-                <div className="lg:col-span-3">
-                    <AccountBalances transactions={transactions} />
-                </div>
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+               <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+               <InvestmentStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
             </div>
+            <AccountBalances transactions={transactions} />
             <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
             <Collapsible open={isMonthInfoOpen} onOpenChange={setIsMonthInfoOpen}>
               <Card>

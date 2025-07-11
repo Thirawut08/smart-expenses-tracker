@@ -19,6 +19,15 @@ export const accounts: Account[] = [
   { id: '15', name: 'Dime! USD', accountNumber: 'Dime! USD' },
 ];
 
+export const investmentAccountNames = [
+    'Dime FCD',
+    'Webull',
+    'Dime! USD',
+    'Dime!',
+    'Binance TH',
+    'Bybit'
+];
+
 export const purposes: string[] = [
   'อาหาร',
   'เดินทาง',
