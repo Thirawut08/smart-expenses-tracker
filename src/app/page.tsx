@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { PlusCircle, FileDown } from 'lucide-react';
+import { PlusCircle, FileDown, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionDialog } from '@/components/add-transaction-dialog';
 import { MonthlyStats } from '@/components/monthly-stats';
@@ -17,6 +17,9 @@ import { TransactionTemplates } from '@/components/transaction-templates';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Card } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
 const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
@@ -29,6 +32,7 @@ export default function Home() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [isMonthInfoOpen, setIsMonthInfoOpen] = useState(false);
   const { toast } = useToast();
 
   // Load data from localStorage on initial render
@@ -310,7 +314,25 @@ export default function Home() {
                 </div>
             </div>
             <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
-            <MonthInfoTable />
+            <Collapsible open={isMonthInfoOpen} onOpenChange={setIsMonthInfoOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <div className="flex justify-between items-center p-6 cursor-pointer">
+                    <div className="flex flex-col space-y-1.5">
+                      <h3 className="text-2xl font-semibold leading-none tracking-tight">ข้อมูลเดือน</h3>
+                      <p className="text-sm text-muted-foreground">ตารางแสดงชื่อเดือนและตัวย่อต่างๆ (กดเพื่อเปิด/ปิด)</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-9 p-0">
+                      <ChevronsUpDown className="h-4 w-4" />
+                      <span className="sr-only">Toggle</span>
+                    </Button>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <MonthInfoTable />
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </div>
 
           <div>
