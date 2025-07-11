@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const ValidateExtractedTransactionDetailsInputSchema = z.object({
   account: z.string().describe('The account number.'),
-  purpose: z.string().describe('The purpose of the transaction.'),
+  purpose: z.string().optional().describe('The purpose of the transaction.'),
   amount: z.string().describe('Transaction amount.'),
 });
 
@@ -44,7 +44,7 @@ const validateExtractedTransactionDetailsPrompt = ai.definePrompt({
   Highlight any discrepancies or missing information that the user should review and correct.
 
   Account: {{{account}}}
-  Purpose: {{{purpose}}}
+  Purpose: {{#if purpose}}{{{purpose}}}{{else}}N/A{{/if}}
   Amount: {{{amount}}}
 
   Provide a concise summary of your findings, focusing on potential issues that require user attention.
