@@ -14,12 +14,12 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { accounts, purposes } from '@/lib/data';
+import { accounts, purposes, investmentAccountNames, savingAccountNames } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 
 export const transactionFormSchema = z.object({
@@ -45,15 +45,13 @@ interface TransactionFormProps {
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   
-  // Create a version of the schema for the form that allows amount and date to be optional,
-  // which is useful when using a template.
   const formSchema = transactionFormSchema.extend({
     amount: transactionFormSchema.shape.amount.optional(),
     date: transactionFormSchema.shape.date.optional(),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(transactionFormSchema), // Still validate against the strict schema on submit
+    resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       type: 'expense',
       date: initialData?.date === undefined ? new Date() : initialData.date,
@@ -64,6 +62,39 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       recipient: initialData?.recipient ?? '',
     },
   });
+
+  const selectedAccountNumber = form.watch('accountNumber');
+
+  const availablePurposes = useMemo(() => {
+    const selectedAccount = accounts.find(acc => acc.accountNumber === selectedAccountNumber);
+    if (selectedAccount) {
+      if (investmentAccountNames.includes(selectedAccount.name)) {
+        return ['ลงทุน'];
+      }
+      if (savingAccountNames.includes(selectedAccount.name)) {
+        return ['ออมทรัพย์'];
+      }
+    }
+    return purposes;
+  }, [selectedAccountNumber]);
+  
+  useEffect(() => {
+    const selectedAccount = accounts.find(acc => acc.accountNumber === selectedAccountNumber);
+    if (selectedAccount) {
+      if (investmentAccountNames.includes(selectedAccount.name)) {
+        form.setValue('purpose', 'ลงทุน', { shouldValidate: true });
+      } else if (savingAccountNames.includes(selectedAccount.name)) {
+        form.setValue('purpose', 'ออมทรัพย์', { shouldValidate: true });
+      } else {
+        // If the current purpose is not in the general list, clear it.
+        const currentPurpose = form.getValues('purpose');
+        if (currentPurpose && !purposes.includes(currentPurpose)) {
+            form.setValue('purpose', '', { shouldValidate: true });
+        }
+      }
+    }
+  }, [selectedAccountNumber, form]);
+
 
   const handleSubmit = (data: TransactionFormValues) => {
     onSubmit(data, saveAsTemplate);
@@ -186,14 +217,14 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             render={({ field }) => (
               <FormItem>
                 <FormLabel>วัตถุประสงค์</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="เลือกวัตถุประสงค์" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {purposes.map(purpose => (
+                    {availablePurposes.map(purpose => (
                       <SelectItem key={purpose} value={purpose}>
                         {purpose}
                       </SelectItem>

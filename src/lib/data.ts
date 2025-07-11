@@ -4,8 +4,8 @@ export const accounts: Account[] = [
   { id: '6', name: 'Binance TH', accountNumber: 'Binance TH' },
   { id: '5', name: 'Bybit', accountNumber: 'Bybit' },
   { id: '4', name: 'Dime!', accountNumber: 'Dime!' },
+  { id: '14', name: 'Dime! FCD', accountNumber: 'Dime! FCD' },
   { id: '15', name: 'Dime! USD', accountNumber: 'Dime! USD' },
-  { id: '14', name: 'Dime FCD', accountNumber: 'Dime FCD' },
   { id: '10', name: 'GSB', accountNumber: 'GSB' },
   { id: '1', name: 'KBANK', accountNumber: 'KBANK' },
   { id: '3', name: 'Kept', accountNumber: 'Kept' },
@@ -20,7 +20,7 @@ export const accounts: Account[] = [
 ];
 
 export const investmentAccountNames = [
-    'Dime FCD',
+    'Dime! FCD',
     'Webull',
     'Dime! USD',
     'Dime!',
@@ -31,7 +31,7 @@ export const investmentAccountNames = [
 export const savingAccountNames = [
     'Kept',
     'Money Plus',
-    'Dime FCD'
+    'Dime! FCD'
 ];
 
 export const purposes: string[] = [
@@ -44,6 +44,7 @@ export const purposes: string[] = [
   'สุขภาพ',
   'การศึกษา',
   'ลงทุน',
+  'ออมทรัพย์',
   'เงินเดือน',
   'อื่นๆ'
 ];
