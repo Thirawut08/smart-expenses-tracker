@@ -5,7 +5,7 @@ import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ChartConfig, ChartContainer, ChartTooltipContent } from './ui/chart';
 import type { Transaction } from '@/lib/types';
-import { accounts, investmentAccountNames } from '@/lib/data';
+import { investmentAccountNames } from '@/lib/data';
 import { PieChart as PieChartIcon } from 'lucide-react';
 
 const chartColors = [
@@ -31,27 +31,25 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
   const { chartData, chartConfig } = useMemo(() => {
     const investmentBalances = new Map<string, number>();
 
-    // Initialize investment accounts with 0 balance
+    // Initialize investment accounts with 0 balance from the list of all possible investment accounts
     investmentAccountNames.forEach(accName => {
       investmentBalances.set(accName, 0);
     });
 
-    // Calculate balances from transactions
+    // Calculate balances from transactions.
+    // Income adds to balance, Expense subtracts. The raw amount is already signed.
     transactions.forEach(t => {
       if (investmentAccountNames.includes(t.account.name)) {
         const currentBalance = investmentBalances.get(t.account.name) ?? 0;
-        // For investments, we usually care about the net positive value.
-        // Expenses in investment accounts are typically buying assets, thus increasing portfolio value.
-        // We'll treat all amounts as positive contributions to the balance for this chart.
-        investmentBalances.set(t.account.name, currentBalance + Math.abs(t.amount));
+        investmentBalances.set(t.account.name, currentBalance + t.amount);
       }
     });
 
     const data = Array.from(investmentBalances.entries())
-      .filter(([, balance]) => balance > 0) // Only show accounts with a positive balance
-      .map(([name, value], index) => ({
-        name,
-        value,
+      .map(([name, value]) => ({ name, value }))
+      .filter(item => item.value > 0) // Only show accounts with a positive balance in the portfolio
+      .map((item, index) => ({
+        ...item,
         fill: chartColors[index % chartColors.length],
       }));
 
@@ -62,8 +60,6 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
       };
       return acc;
     }, {} as ChartConfig);
-
-    config.value = { label: 'Value' };
 
     return { chartData: data, chartConfig: config };
   }, [transactions]);
