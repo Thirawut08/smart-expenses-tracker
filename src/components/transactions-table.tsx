@@ -27,13 +27,13 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
           {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">ประเภท</TableHead>
-              <TableHead>วันที่</TableHead>
+              <TableHead className="w-[100px]"></TableHead>
               <TableHead>บัญชี</TableHead>
+              <TableHead>วันที่</TableHead>
+              <TableHead>รายละเอียด</TableHead>
               <TableHead>วัตถุประสงค์</TableHead>
               <TableHead>ผู้จ่าย</TableHead>
               <TableHead>ผู้รับ</TableHead>
-              <TableHead>รายละเอียด</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
               <TableHead className="w-[50px] text-center"></TableHead>
             </TableRow>
@@ -52,16 +52,16 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell>{format(transaction.date, 'd MMM yyyy, HH:mm', { locale: th })}</TableCell>
                 <TableCell>
                   <div className="font-medium">{transaction.account.name}</div>
+                </TableCell>
+                <TableCell>{format(transaction.date, 'd MMM yyyy, HH:mm', { locale: th })}</TableCell>
+                <TableCell>
+                  {transaction.details ? <div className="text-sm text-muted-foreground italic max-w-xs truncate">"{transaction.details}"</div> : '-'}
                 </TableCell>
                 <TableCell>{transaction.purpose}</TableCell>
                 <TableCell>{transaction.sender || '-'}</TableCell>
                 <TableCell>{transaction.recipient || '-'}</TableCell>
-                <TableCell>
-                  {transaction.details ? <div className="text-sm text-muted-foreground italic max-w-xs truncate">"{transaction.details}"</div> : '-'}
-                </TableCell>
                 <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500'}`}>
                   {currencyFormatter.format(Math.abs(transaction.amount))}
                 </TableCell>
