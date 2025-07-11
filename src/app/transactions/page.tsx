@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { PlusCircle, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AddTransactionDialog } from '@/components/add-transaction-dialog';
@@ -9,6 +9,7 @@ import { useLedger } from '@/hooks/use-ledger';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function TransactionsPage() {
   const {
@@ -27,6 +28,14 @@ export default function TransactionsPage() {
   } = useLedger();
 
   const { toast } = useToast();
+  
+  const incomeTransactions = useMemo(() => {
+    return transactions.filter(t => t.type === 'income');
+  }, [transactions]);
+  
+  const expenseTransactions = useMemo(() => {
+    return transactions.filter(t => t.type === 'expense');
+  }, [transactions]);
 
   const handleExportToCsv = () => {
     if (transactions.length === 0) {
@@ -100,11 +109,33 @@ export default function TransactionsPage() {
           </div>
         </div>
         
-        <TransactionsTable 
-          transactions={transactions}
-          onEdit={handleEditTransaction}
-          onDelete={handleDeleteRequest}
-        />
+        <div className="grid grid-cols-1 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>รายรับ</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <TransactionsTable 
+                        transactions={incomeTransactions}
+                        onEdit={handleEditTransaction}
+                        onDelete={handleDeleteRequest}
+                    />
+                </CardContent>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>รายจ่าย</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <TransactionsTable 
+                        transactions={expenseTransactions}
+                        onEdit={handleEditTransaction}
+                        onDelete={handleDeleteRequest}
+                    />
+                </CardContent>
+            </Card>
+        </div>
       </div>
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <AlertDialogContent>

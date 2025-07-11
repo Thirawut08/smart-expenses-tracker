@@ -1,5 +1,4 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Transaction } from '@/lib/types';
 import { format } from 'date-fns';
@@ -20,14 +19,12 @@ interface TransactionsTableProps {
 }
 
 export function TransactionsTable({ transactions, onEdit, onDelete }: TransactionsTableProps) {
+  const tableType = transactions.length > 0 ? transactions[0].type : 'expense';
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>ธุรกรรมล่าสุด</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div>
         <Table>
-          {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม เริ่มเพิ่มได้เลย!</TableCaption>}
+          {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">ประเภท</TableHead>
@@ -97,11 +94,10 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
         {transactions.length === 0 && (
           <div className="flex flex-col items-center justify-center text-center p-12 text-muted-foreground">
             <Ban className="w-16 h-16 mb-4" />
-            <h3 className="text-xl font-semibold">ไม่พบธุรกรรม</h3>
+            <h3 className="text-xl font-semibold">ไม่พบธุรกรรม{tableType === 'income' ? 'รายรับ' : 'รายจ่าย'}</h3>
             <p>คลิก "เพิ่มธุรกรรม" เพื่อบันทึกรายการแรกของคุณ</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
