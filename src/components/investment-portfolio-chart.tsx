@@ -28,16 +28,13 @@ interface InvestmentPortfolioChartProps {
 }
 
 export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioChartProps) {
-  const { chartData, chartConfig } = useMemo(() => {
+  const { chartData, chartConfig, totalValue } = useMemo(() => {
     const investmentBalances = new Map<string, number>();
 
-    // Initialize investment accounts with 0 balance from the list of all possible investment accounts
     investmentAccountNames.forEach(accName => {
       investmentBalances.set(accName, 0);
     });
-
-    // Calculate balances from transactions.
-    // Income adds to balance, Expense subtracts. The raw amount is already signed.
+    
     transactions.forEach(t => {
       if (investmentAccountNames.includes(t.account.name)) {
         const currentBalance = investmentBalances.get(t.account.name) ?? 0;
@@ -47,7 +44,7 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
 
     const data = Array.from(investmentBalances.entries())
       .map(([name, value]) => ({ name, value }))
-      .filter(item => item.value > 0) // Only show accounts with a positive balance in the portfolio
+      .filter(item => item.value > 0)
       .map((item, index) => ({
         ...item,
         fill: chartColors[index % chartColors.length],
@@ -61,7 +58,9 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
       return acc;
     }, {} as ChartConfig);
 
-    return { chartData: data, chartConfig: config };
+    const calculatedTotalValue = data.reduce((acc, curr) => acc + curr.value, 0);
+
+    return { chartData: data, chartConfig: config, totalValue: calculatedTotalValue };
   }, [transactions]);
   
   if (chartData.length === 0) {
@@ -119,7 +118,6 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
                   const radius = 12 + innerRadius + (outerRadius - innerRadius);
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);
                   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                  const totalValue = chartData.reduce((acc, curr) => acc + curr.value, 0);
                   const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
 
 
