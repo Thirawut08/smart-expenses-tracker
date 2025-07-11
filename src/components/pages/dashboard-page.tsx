@@ -3,10 +3,11 @@
 import { useState, useMemo } from 'react';
 import { MonthlyStats } from '@/components/monthly-stats';
 import { useLedger } from '@/hooks/use-ledger';
-import { thaiMonths } from '@/lib/data';
+import { thaiMonths, investmentAccountNames } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
+import { InvestmentStats } from '@/components/investment-stats';
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
@@ -18,6 +19,10 @@ export function DashboardPage() {
     }
     return transactions.filter(t => new Date(t.date).getMonth().toString() === selectedMonth);
   }, [transactions, selectedMonth]);
+
+  const investmentTransactions = useMemo(() => {
+    return transactions.filter(t => investmentAccountNames.includes(t.account.name));
+  }, [transactions]);
 
   const currentMonthLabel = useMemo(() => {
     if (selectedMonth === 'all') {
@@ -49,7 +54,10 @@ export function DashboardPage() {
           </div>
           
       <div className="grid gap-8">
-        <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+        <div className="grid md:grid-cols-2 gap-8">
+          <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+          <InvestmentStats transactions={investmentTransactions} />
+        </div>
         <AccountBalances transactions={transactions} />
         <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
       </div>
