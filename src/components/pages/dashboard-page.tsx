@@ -9,6 +9,9 @@ import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
 import { MonthInfoTable } from '@/components/month-info-table';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { InvestmentChart } from '@/components/investment-chart';
+import { SavingsChart } from '@/components/savings-chart';
+
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
@@ -51,11 +54,17 @@ export function DashboardPage() {
           </div>
           
       <div className="grid gap-6">
-        <div className="grid md:grid-cols-2 gap-6">
-          <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-          <AccountBalances transactions={transactions} />
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-2">
+            <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+          </div>
+          <InvestmentChart transactions={transactions} />
+          <SavingsChart transactions={transactions} />
         </div>
-        <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+         <div className="grid md:grid-cols-2 gap-6">
+          <AccountBalances transactions={transactions} />
+          <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+        </div>
         <Card>
             <CardHeader>
                 <CardTitle>ข้อมูลเดือน</CardTitle>
