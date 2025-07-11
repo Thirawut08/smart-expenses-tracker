@@ -7,6 +7,8 @@ import { thaiMonths } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
+import { MonthInfoTable } from '@/components/month-info-table';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
@@ -54,6 +56,15 @@ export function DashboardPage() {
           <AccountBalances transactions={transactions} />
         </div>
         <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+        <Card>
+            <CardHeader>
+                <CardTitle>ข้อมูลเดือน</CardTitle>
+                <CardDescription>
+                    ตารางแสดงรายละเอียดของเดือนต่างๆ
+                </CardDescription>
+            </CardHeader>
+            <MonthInfoTable />
+        </Card>
       </div>
     </div>
   );
