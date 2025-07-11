@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LabelList } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { investmentAccountNames } from '@/lib/data';
 import { TrendingUp } from 'lucide-react';
@@ -78,7 +78,7 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
         <CardDescription>สัดส่วนยอดเงินคงเหลือในบัญชีลงทุน</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">
-        <ChartContainer config={{}} className="mx-auto aspect-square h-[200px]">
+        <ChartContainer config={{}} className="mx-auto aspect-square h-[250px]">
           <ResponsiveContainer>
             <PieChart>
               <ChartTooltip
@@ -89,12 +89,20 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={50}
+                innerRadius="30%"
+                outerRadius="60%"
                 strokeWidth={5}
               >
                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
+                 <LabelList
+                    dataKey="name"
+                    position="outside"
+                    offset={15}
+                    className="fill-foreground font-medium"
+                    formatter={(value: string) => value}
+                  />
               </Pie>
             </PieChart>
           </ResponsiveContainer>

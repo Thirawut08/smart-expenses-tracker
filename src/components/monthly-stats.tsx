@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, LabelList } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { useMemo } from 'react';
 import { PieChartIcon } from 'lucide-react';
@@ -82,18 +82,24 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
             <PieChart>
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent hideLabel />}
+                content={<ChartTooltipContent hideLabel formatter={(value, name) => `${name}: ${currencyFormatter.format(value as number)}`} />}
               />
               <Pie
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={60}
+                innerRadius="30%"
+                outerRadius="60%"
                 strokeWidth={5}
               >
                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
+                  <LabelList
+                    dataKey="value"
+                    className="fill-foreground font-medium"
+                    formatter={(value: number) => currencyFormatter.format(value)}
+                  />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
