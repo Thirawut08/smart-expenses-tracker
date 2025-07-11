@@ -17,7 +17,7 @@ export function MainNav() {
   const pathname = usePathname();
 
   return (
-    <header className="bg-card border-b sticky top-0 z-40">
+    <header className="bg-card border-b sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex items-center h-16">
           <Link href="/" className="flex items-center gap-3 mr-8">
@@ -32,8 +32,9 @@ export function MainNav() {
                 key={item.href}
                 asChild
                 variant={pathname === item.href ? 'secondary' : 'ghost'}
-                className={cn('font-semibold text-muted-foreground', {
-                  'text-primary': pathname === item.href
+                className={cn('font-semibold', {
+                  'text-foreground': pathname === item.href,
+                  'text-muted-foreground': pathname !== item.href
                 })}
               >
                 <Link href={item.href}>{item.label}</Link>
