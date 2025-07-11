@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { PieChart, Pie, Cell, ResponsiveContainer, LabelList } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { useMemo } from 'react';
 import { PieChartIcon } from 'lucide-react';
@@ -91,15 +91,36 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
                 innerRadius="30%"
                 outerRadius="60%"
                 strokeWidth={5}
+                label={({
+                  cx,
+                  cy,
+                  midAngle,
+                  innerRadius,
+                  outerRadius,
+                  value,
+                  index,
+                }) => {
+                  const RADIAN = Math.PI / 180
+                  const radius = 25 + innerRadius + (outerRadius - innerRadius)
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      className="fill-muted-foreground text-xs"
+                      textAnchor={x > cx ? "start" : "end"}
+                      dominantBaseline="central"
+                    >
+                      {currencyFormatter.format(value as number)}
+                    </text>
+                  )
+                }}
               >
                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
-                  <LabelList
-                    dataKey="value"
-                    className="fill-foreground font-medium"
-                    formatter={(value: number) => currencyFormatter.format(value)}
-                  />
               </Pie>
             </PieChart>
           </ResponsiveContainer>

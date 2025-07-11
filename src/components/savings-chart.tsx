@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { PieChart, Pie, Cell, ResponsiveContainer, LabelList } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { savingAccountNames } from '@/lib/data';
 import { PiggyBank } from 'lucide-react';
@@ -83,7 +83,7 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
             <PieChart>
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent formatter={(value) => currencyFormatter.format(value as number)} />}
+                content={<ChartTooltipContent formatter={(value, name) => `${name}: ${currencyFormatter.format(value as number)}`} hideLabel />}
               />
               <Pie
                 data={chartData}
@@ -92,17 +92,36 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
                 innerRadius="30%"
                 outerRadius="60%"
                 strokeWidth={5}
+                label={({
+                  cx,
+                  cy,
+                  midAngle,
+                  innerRadius,
+                  outerRadius,
+                  value,
+                  index,
+                }) => {
+                  const RADIAN = Math.PI / 180
+                  const radius = 25 + innerRadius + (outerRadius - innerRadius)
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      className="fill-muted-foreground text-xs"
+                      textAnchor={x > cx ? "start" : "end"}
+                      dominantBaseline="central"
+                    >
+                      {currencyFormatter.format(value as number)}
+                    </text>
+                  )
+                }}
               >
                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
-                   <LabelList
-                    dataKey="name"
-                    position="outside"
-                    offset={15}
-                    className="fill-foreground font-medium"
-                    formatter={(value: string) => value}
-                  />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
