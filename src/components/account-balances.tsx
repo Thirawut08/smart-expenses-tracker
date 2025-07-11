@@ -79,7 +79,7 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
 
     const sortedBalances = Array.from(balances.entries())
       .map(([name, balance]) => ({ name, balance }))
-      .sort((a, b) => b.balance - a.balance);
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     const total = sortedBalances.reduce((sum, acc) => sum + acc.balance, 0);
     
