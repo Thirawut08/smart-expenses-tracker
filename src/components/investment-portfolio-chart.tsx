@@ -28,10 +28,12 @@ interface InvestmentPortfolioChartProps {
 }
 
 export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioChartProps) {
-  const { chartData, chartConfig } = useMemo(() => {
+  const { chartData, chartConfig, totalValue } = useMemo(() => {
     const investmentBalances = new Map<string, number>();
 
-    const investmentTransactions = transactions.filter(t => investmentAccountNames.includes(t.account.name));
+    const investmentTransactions = transactions.filter(t => 
+        investmentAccountNames.includes(t.account.name) && t.amount > 0
+    );
 
     investmentTransactions.forEach(t => {
         const currentBalance = investmentBalances.get(t.account.name) ?? 0;
@@ -45,6 +47,8 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
         ...item,
         fill: chartColors[index % chartColors.length],
       }));
+      
+    const value = data.reduce((acc, curr) => acc + curr.value, 0);
 
     const config: ChartConfig = data.reduce((acc, item) => {
       acc[item.name] = {
@@ -54,7 +58,7 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
       return acc;
     }, {} as ChartConfig);
 
-    return { chartData: data, chartConfig: config };
+    return { chartData: data, chartConfig: config, totalValue: value };
   }, [transactions]);
   
   if (chartData.length === 0) {
@@ -74,8 +78,6 @@ export function InvestmentPortfolioChart({ transactions }: InvestmentPortfolioCh
         </Card>
       )
   }
-
-  const totalValue = useMemo(() => chartData.reduce((acc, curr) => acc + curr.value, 0), [chartData]);
 
   return (
     <Card>
