@@ -1,22 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronsUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { MonthlyStats } from '@/components/monthly-stats';
 import { useLedger } from '@/hooks/use-ledger';
 import { thaiMonths } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
-import { Card } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { InvestmentStats } from '@/components/investment-stats';
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [isMonthInfoOpen, setIsMonthInfoOpen] = useState(false);
 
   const filteredTransactions = useMemo(() => {
     if (selectedMonth === 'all') {
@@ -55,10 +49,7 @@ export function DashboardPage() {
           </div>
           
       <div className="grid gap-8">
-        <div className="grid lg:grid-cols-2 gap-8">
-            <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-            <InvestmentStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-        </div>
+        <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
         <AccountBalances transactions={transactions} />
         <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
       </div>
