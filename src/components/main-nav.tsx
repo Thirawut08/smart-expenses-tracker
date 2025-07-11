@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from './theme-toggle';
 
 const navItems = [
   { href: '/', label: 'แดชบอร์ด' },
@@ -39,6 +40,9 @@ export function MainNav() {
               </Button>
             ))}
           </nav>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </header>
