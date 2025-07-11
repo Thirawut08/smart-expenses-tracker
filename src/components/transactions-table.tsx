@@ -35,7 +35,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
               <TableHead>ผู้รับ</TableHead>
               <TableHead>รายละเอียด</TableHead>
               <TableHead className="text-right">จำนวนเงิน</TableHead>
-              <TableHead className="w-[50px] text-center">การดำเนินการ</TableHead>
+              <TableHead className="w-[50px] text-center"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
