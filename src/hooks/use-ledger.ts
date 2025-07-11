@@ -90,8 +90,8 @@ export function useLedger() {
         ...editingTransaction,
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount),
-        date: data.date,
+        amount: data.type === 'expense' ? -Math.abs(data.amount!) : Math.abs(data.amount!),
+        date: data.date!,
         type: data.type,
         details: data.details,
         sender: data.sender,
@@ -109,8 +109,8 @@ export function useLedger() {
         id: new Date().toISOString() + Math.random(),
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount),
-        date: data.date,
+        amount: data.type === 'expense' ? -Math.abs(data.amount!) : Math.abs(data.amount!),
+        date: data.date!,
         type: data.type,
         details: data.details,
         sender: data.sender,
@@ -167,7 +167,7 @@ export function useLedger() {
     }
   }, [transactionToDelete, toast]);
 
-  const getDialogInitialData = useMemo(() => {
+  const dialogInitialData = useMemo(() => {
     if (editingTransaction) {
       return {
         ...editingTransaction,
@@ -189,11 +189,8 @@ export function useLedger() {
     transactions,
     templates,
     isDialogOpen,
-    editingTemplate,
     editingTransaction,
     transactionToDelete,
-    isMonthInfoOpen: false, // This state can be managed per-page now
-    selectedMonth: 'all', // This state can be managed per-page now
     
     // Actions
     setIsDialogOpen,
@@ -204,7 +201,7 @@ export function useLedger() {
     handleDeleteRequest,
     confirmDelete,
     handleDialogClose,
-    getDialogInitialData,
+    dialogInitialData,
     setTransactions // Exposing for filtering if needed
   };
 }

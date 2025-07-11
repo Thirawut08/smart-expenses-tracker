@@ -20,23 +20,26 @@ type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
 export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
-  const [activeTab, setActiveTab] = useState('manual');
+  const [activeTab, setActiveTab] = useState('slip');
   
   useEffect(() => {
     if (extractedData) {
-      setActiveTab('slip');
+      setActiveTab('manual');
     }
   }, [extractedData]);
   
   useEffect(() => {
     // If initialData is provided (from a template or editing), switch to manual tab
-    if (initialData) {
+    if (initialData && !isEditing) {
       setActiveTab('manual');
-    } else {
+    } else if (isEditing) {
+      setActiveTab('manual');
+    }
+     else {
       // Default to slip uploader for new transactions
       setActiveTab('slip');
     }
-  }, [initialData]);
+  }, [initialData, isEditing]);
 
   const handleFormSubmit = (values: TransactionFormValues, saveAsTemplate: boolean) => {
     onSave(values, saveAsTemplate);
@@ -52,7 +55,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
       // Reset state on close
       setTimeout(() => {
         setExtractedData(null);
-        setActiveTab('manual');
+        setActiveTab('slip');
       }, 300);
     }
     onOpenChange(isOpen);
@@ -60,7 +63,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
 
   const getDialogTitle = () => {
     if (isEditing) return 'แก้ไขธุรกรรม';
-    if (initialData) return 'ใช้เทมเพลต';
+    if (initialData?.purpose && !initialData?.id) return 'ใช้เทมเพลต';
     return 'เพิ่มธุรกรรมใหม่';
   }
 
@@ -74,7 +77,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual" disabled={!initialData && !!extractedData}>กรอกข้อมูลเอง</TabsTrigger>
-            <TabsTrigger value="slip" disabled={isEditing || !!initialData?.purpose}>อัปโหลดสลิป</TabsTrigger>
+            <TabsTrigger value="slip" disabled={isEditing || !!(initialData?.purpose && !initialData?.id)}>อัปโหลดสลิป</TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
             <TransactionForm
@@ -82,7 +85,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
               initialData={initialData}
               onSubmit={handleFormSubmit}
               isEditing={isEditing}
-              isTemplate={!!initialData?.purpose && !isEditing}
+              isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
             />
           </TabsContent>
           <TabsContent value="slip">
@@ -97,7 +100,6 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
                   type: 'expense',
                   sender: extractedData.sender,
                   recipient: extractedData.recipient,
-                  validationResult: extractedData.validationResult,
                 }}
                 onSubmit={handleFormSubmit}
               />

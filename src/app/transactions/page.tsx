@@ -15,11 +15,10 @@ export default function TransactionsPage() {
     transactions,
     isDialogOpen,
     editingTransaction,
-    editingTemplate,
     transactionToDelete,
     handleSaveTransaction,
     handleDialogClose,
-    getDialogInitialData,
+    dialogInitialData,
     setIsDialogOpen,
     handleEditTransaction,
     handleDeleteRequest,
@@ -86,11 +85,11 @@ export default function TransactionsPage() {
               Export to CSV
             </Button>
             <AddTransactionDialog
-              key={editingTransaction?.id || editingTemplate?.id || 'new'}
+              key={editingTransaction?.id || 'new'}
               open={isDialogOpen}
               onOpenChange={handleDialogClose}
               onSave={handleSaveTransaction}
-              initialData={getDialogInitialData()}
+              initialData={dialogInitialData}
               isEditing={!!editingTransaction}
             >
               <Button onClick={() => setIsDialogOpen(true)}>
