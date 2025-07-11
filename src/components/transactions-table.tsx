@@ -27,14 +27,14 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
           {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]"></TableHead>
-              <TableHead>บัญชี</TableHead>
-              <TableHead>วันที่</TableHead>
-              <TableHead>รายละเอียด</TableHead>
-              <TableHead>วัตถุประสงค์</TableHead>
-              <TableHead>ผู้จ่าย</TableHead>
-              <TableHead>ผู้รับ</TableHead>
-              <TableHead className="text-right">จำนวนเงิน</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="min-w-[150px]">บัญชี</TableHead>
+              <TableHead className="min-w-[150px]">วันที่</TableHead>
+              <TableHead className="min-w-[200px]">รายละเอียด</TableHead>
+              <TableHead className="min-w-[120px]">วัตถุประสงค์</TableHead>
+              <TableHead className="min-w-[120px]">ผู้จ่าย</TableHead>
+              <TableHead className="min-w-[120px]">ผู้รับ</TableHead>
+              <TableHead className="text-right min-w-[120px]">จำนวนเงิน</TableHead>
               <TableHead className="w-[50px] text-center"></TableHead>
             </TableRow>
           </TableHeader>
