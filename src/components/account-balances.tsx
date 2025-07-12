@@ -7,13 +7,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Transaction } from '@/lib/types';
 import { accounts, investmentAccountNames, savingAccountNames } from '@/lib/data';
 import { WalletCards } from 'lucide-react';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
-const currencyFormatter = new Intl.NumberFormat('th-TH', {
+const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
 });
 
-const BalanceTable = ({ balances, total, noDataMessage }: { balances: {name: string, balance: number}[], total: number, noDataMessage: string }) => {
+const usdFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+});
+
+const formatCurrency = (value: number, currency: 'THB' | 'USD' | undefined) => {
+    if (currency === 'USD') {
+        return usdFormatter.format(value);
+    }
+    return thbFormatter.format(value);
+}
+
+const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name: string, balance: number, currency: 'THB' | 'USD'}[], totalInThb: number, noDataMessage: string }) => {
     if (balances.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-[150px] text-center text-muted-foreground bg-muted/30 rounded-lg">
@@ -27,9 +40,9 @@ const BalanceTable = ({ balances, total, noDataMessage }: { balances: {name: str
     return (
         <div>
             <div className="text-right mb-4">
-                <p className="text-sm text-muted-foreground">ยอดรวม</p>
-                <p className={`text-xl font-bold ${total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {currencyFormatter.format(total)}
+                <p className="text-sm text-muted-foreground">ยอดรวม (เทียบเท่า THB)</p>
+                <p className={`text-xl font-bold ${totalInThb >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {thbFormatter.format(totalInThb)}
                 </p>
             </div>
             <div className="max-h-[250px] overflow-y-auto">
@@ -45,7 +58,7 @@ const BalanceTable = ({ balances, total, noDataMessage }: { balances: {name: str
                         <TableRow key={acc.name}>
                         <TableCell className="font-medium">{acc.name}</TableCell>
                         <TableCell className={`text-right font-semibold ${acc.balance >= 0 ? '' : 'text-red-600'}`}>
-                            {currencyFormatter.format(acc.balance)}
+                            {formatCurrency(acc.balance, acc.currency)}
                         </TableCell>
                         </TableRow>
                     ))}
@@ -57,55 +70,51 @@ const BalanceTable = ({ balances, total, noDataMessage }: { balances: {name: str
 }
 
 export function AccountBalances({ transactions }: { transactions: Transaction[] }) {
+  const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
     
   const calculateBalances = (accountNames: string[]) => {
-    const balances = new Map<string, number>();
+    const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
 
     const relevantAccounts = accounts.filter(acc => accountNames.includes(acc.name));
     
     if (relevantAccounts.length === 0) {
-        return { balances: [], total: 0 };
+        return { balances: [], totalInThb: 0 };
     }
 
     relevantAccounts.forEach(acc => {
-        balances.set(acc.name, 0);
+        balances.set(acc.name, { balance: 0, currency: acc.currency });
     });
 
     transactions.forEach(t => {
       if (balances.has(t.account.name)) {
-        const currentBalance = balances.get(t.account.name) ?? 0;
+        const currentData = balances.get(t.account.name)!;
         const amount = t.type === 'income' ? t.amount : -t.amount;
-        balances.set(t.account.name, currentBalance + amount);
+        balances.set(t.account.name, { ...currentData, balance: currentData.balance + amount });
       }
     });
 
     const sortedBalances = Array.from(balances.entries())
-      .map(([name, balance]) => ({ name, balance }))
+      .map(([name, data]) => ({ name, ...data }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const total = sortedBalances.reduce((sum, acc) => sum + acc.balance, 0);
+    const totalInThb = sortedBalances.reduce((sum, acc) => {
+        const amountInThb = acc.currency === 'USD' ? acc.balance * (usdToThbRate || 0) : acc.balance;
+        return sum + amountInThb;
+    }, 0);
     
-    return { balances: sortedBalances, total };
+    return { balances: sortedBalances, totalInThb };
   };
 
-  const { balances: investmentBalances, total: totalInvestment } = useMemo(() => calculateBalances(investmentAccountNames), [transactions]);
+  const { balances: investmentBalances, totalInThb: totalInvestment } = useMemo(() => calculateBalances(investmentAccountNames), [transactions, usdToThbRate]);
   
-  const { balances: savingBalances, total: totalSaving } = useMemo(() => calculateBalances(savingAccountNames), [transactions]);
+  const { balances: savingBalances, totalInThb: totalSaving } = useMemo(() => calculateBalances(savingAccountNames), [transactions, usdToThbRate]);
   
-  const { balances: generalBalances, total: totalGeneral } = useMemo(() => {
+  const { balances: generalBalances, totalInThb: totalGeneral } = useMemo(() => {
     const generalAccountNames = accounts
         .map(a => a.name)
         .filter(name => !investmentAccountNames.includes(name) && !savingAccountNames.includes(name));
     return calculateBalances(generalAccountNames);
-  }, [transactions]);
-
-
-  const totalBalance = useMemo(() => {
-      return transactions.reduce((sum, t) => {
-        const amount = t.type === 'income' ? t.amount : -t.amount;
-        return sum + amount;
-      }, 0);
-  }, [transactions])
+  }, [transactions, usdToThbRate]);
 
   if (transactions.length === 0) {
       return (
@@ -133,6 +142,7 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
         <CardTitle>ยอดคงเหลือแต่ละบัญชี</CardTitle>
         <CardDescription>
           ยอดเงินคงเหลือแยกตามประเภทบัญชี
+          {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -143,13 +153,13 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
                 <TabsTrigger value="investment">บัญชีลงทุน</TabsTrigger>
             </TabsList>
             <TabsContent value="general" className="mt-4">
-                <BalanceTable balances={generalBalances} total={totalGeneral} noDataMessage="ไม่พบบัญชีทั่วไป" />
+                <BalanceTable balances={generalBalances} totalInThb={totalGeneral} noDataMessage="ไม่พบบัญชีทั่วไป" />
             </TabsContent>
             <TabsContent value="saving" className="mt-4">
-                <BalanceTable balances={savingBalances} total={totalSaving} noDataMessage="ไม่พบบัญชีออมทรัพย์" />
+                <BalanceTable balances={savingBalances} totalInThb={totalSaving} noDataMessage="ไม่พบบัญชีออมทรัพย์" />
             </TabsContent>
             <TabsContent value="investment" className="mt-4">
-                <BalanceTable balances={investmentBalances} total={totalInvestment} noDataMessage="ไม่พบบัญชีลงทุน" />
+                <BalanceTable balances={investmentBalances} totalInThb={totalInvestment} noDataMessage="ไม่พบบัญชีลงทุน" />
             </TabsContent>
         </Tabs>
       </CardContent>
