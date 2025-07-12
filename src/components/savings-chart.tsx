@@ -43,17 +43,22 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
       balances.set(t.account.name, currentBalance + amount);
     });
     
-    const chartData = Array.from(balances.entries())
+    const dataWithValues = Array.from(balances.entries())
       .map(([name, balance]) => ({ name, value: balance }))
-      .filter(item => item.value > 0) // Only show accounts with a positive balance
+      .filter(item => item.value !== 0)
       .sort((a, b) => b.value - a.value);
 
-    const totalSavings = chartData.reduce((sum, item) => sum + item.value, 0);
+    const chartData = dataWithValues.map(item => ({
+        ...item,
+        chartValue: Math.abs(item.value)
+    }));
+
+    const totalSavings = dataWithValues.reduce((sum, item) => sum + item.value, 0);
     
     return { chartData, totalSavings };
   }, [transactions]);
   
-  if (totalSavings === 0) {
+  if (chartData.length === 0) {
     return (
         <Card>
             <CardHeader>
@@ -83,11 +88,14 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
             <PieChart>
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent formatter={(value, name) => `${name}: ${currencyFormatter.format(value as number)}`} hideLabel />}
+                content={<ChartTooltipContent 
+                    formatter={(value, name, props) => `${props.payload.name}: ${currencyFormatter.format(props.payload.value)}`} 
+                    hideLabel 
+                />}
               />
               <Pie
                 data={chartData}
-                dataKey="value"
+                dataKey="chartValue"
                 nameKey="name"
                 innerRadius="30%"
                 outerRadius="60%"
@@ -114,7 +122,7 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
                       textAnchor={x > cx ? "start" : "end"}
                       dominantBaseline="central"
                     >
-                      {currencyFormatter.format(value as number)}
+                      {currencyFormatter.format(chartData[index].value)}
                     </text>
                   )
                 }}
@@ -128,7 +136,7 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
         </ChartContainer>
         <div className="mt-4 flex flex-col items-center text-center">
             <span className="text-sm text-muted-foreground">ยอดออมรวม</span>
-            <span className="text-2xl font-bold">
+            <span className={`text-2xl font-bold ${totalSavings >= 0 ? '' : 'text-red-600'}`}>
               {currencyFormatter.format(totalSavings)}
             </span>
         </div>
