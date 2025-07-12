@@ -89,11 +89,36 @@ export function useLedger() {
   }, []);
 
   const addPurpose = useCallback((newPurpose: string) => {
-    if (newPurpose && !purposes.includes(newPurpose) && newPurpose !== 'ลงทุน' && newPurpose !== 'ออมทรัพย์' && newPurpose !== 'อื่นๆ') {
-        const newPurposes = [...purposes, newPurpose];
-        updateAndSavePurposes(newPurposes);
+    if (!newPurpose) return;
+    const trimmedPurpose = newPurpose.trim();
+    const reservedNames = ['ลงทุน', 'ออมทรัพย์', 'อื่นๆ'];
+    
+    if (reservedNames.includes(trimmedPurpose)) {
+      toast({
+        variant: 'destructive',
+        title: 'ไม่สามารถเพิ่มได้',
+        description: `"${trimmedPurpose}" เป็นชื่อที่ระบบสงวนไว้`
+      });
+      return;
     }
-  }, [purposes, updateAndSavePurposes]);
+    
+    if (purposes.includes(trimmedPurpose)) {
+      toast({
+        variant: 'destructive',
+        title: 'ชื่อวัตถุประสงค์ซ้ำ',
+        description: `มีวัตถุประสงค์ชื่อ "${trimmedPurpose}" อยู่แล้ว`
+      });
+      return;
+    }
+
+    const newPurposes = [...purposes, trimmedPurpose];
+    updateAndSavePurposes(newPurposes);
+    toast({
+      title: 'เพิ่มวัตถุประสงค์สำเร็จ',
+      description: `"${trimmedPurpose}" ถูกเพิ่มในรายการแล้ว`
+    });
+
+  }, [purposes, updateAndSavePurposes, toast]);
   
   const editPurpose = useCallback(async (oldPurpose: string, newPurpose: string) => {
     // Re-classify transactions
@@ -177,7 +202,12 @@ export function useLedger() {
       finalData.purpose = data.customPurpose.trim();
     }
     
-    addPurpose(finalData.purpose);
+    // Add purpose only if it's new and not a reserved name. The function handles checks.
+    const reservedNames = ['ลงทุน', 'ออมทรัพย์', 'อื่นๆ'];
+    if (!purposes.includes(finalData.purpose) && !reservedNames.includes(finalData.purpose)) {
+        addPurpose(finalData.purpose);
+    }
+    
 
     if (editingTransaction) {
       // Update existing transaction
@@ -233,7 +263,7 @@ export function useLedger() {
     }
 
     handleDialogClose(false);
-  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates, addPurpose]);
+  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates, addPurpose, purposes]);
   
   const handleUseTemplate = useCallback((template: Template) => {
     setEditingTemplate(template);
@@ -289,6 +319,7 @@ export function useLedger() {
     transactionToDelete,
     
     // Actions
+    addPurpose,
     setIsDialogOpen,
     setTransactionToDelete,
     handleSaveTransaction,
