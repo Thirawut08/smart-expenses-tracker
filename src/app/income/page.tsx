@@ -1,13 +1,15 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AddIncomeForm } from '@/components/add-income-form';
 import { IncomeTable } from '@/components/income-table';
 import { useIncome } from '@/hooks/use-income';
-import { useState } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { IncomeAllocationDashboard } from '@/components/income-allocation-dashboard';
+import { USD_TO_THB_EXCHANGE_RATE } from '@/lib/data';
 
 export default function IncomePage() {
   const { 
@@ -21,6 +23,15 @@ export default function IncomePage() {
     setIsFormOpen
   } = useIncome();
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+
+  const totalIncomeInTHB = useMemo(() => {
+    return incomes.reduce((total, income) => {
+      const amountInTHB = income.account.currency === 'USD' 
+        ? income.amount * USD_TO_THB_EXCHANGE_RATE 
+        : income.amount;
+      return total + amountInTHB;
+    }, 0);
+  }, [incomes]);
 
   const handleFormSubmit = (data: { date: Date; accountNumber: string; amount: number; }) => {
     if (editingIncome) {
@@ -60,12 +71,14 @@ export default function IncomePage() {
     <>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-3xl font-bold font-headline">บันทึกรายรับ</h1>
+          <h1 className="text-3xl font-bold font-headline">บันทึกรายได้</h1>
           <Button onClick={handleAddNew}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            เพิ่มรายรับ
+            เพิ่มรายได้
           </Button>
         </div>
+
+        <IncomeAllocationDashboard totalIncome={totalIncomeInTHB} />
 
         {isFormOpen && (
           <Card>
@@ -85,8 +98,8 @@ export default function IncomePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>ประวัติรายรับ</CardTitle>
-            <CardDescription>รายการรายรับทั้งหมดที่บันทึกไว้</CardDescription>
+            <CardTitle>ประวัติรายได้</CardTitle>
+            <CardDescription>รายการรายได้ทั้งหมดที่บันทึกไว้</CardDescription>
           </CardHeader>
           <CardContent>
             <IncomeTable 
