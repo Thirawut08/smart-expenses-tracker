@@ -88,7 +88,7 @@ export function useLedger() {
   }, []);
 
   const addPurpose = useCallback((newPurpose: string) => {
-    if (newPurpose && !purposes.includes(newPurpose) && newPurpose !== 'ลงทุน' && newPurpose !== 'ออมทรัพย์') {
+    if (newPurpose && !purposes.includes(newPurpose) && newPurpose !== 'ลงทุน' && newPurpose !== 'ออมทรัพย์' && newPurpose !== 'อื่นๆ') {
         const newPurposes = [...purposes, newPurpose];
         updateAndSavePurposes(newPurposes);
     }
@@ -114,10 +114,9 @@ export function useLedger() {
         toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
         return;
     }
-
-    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
-        addPurpose(data.customPurpose);
-    }
+    
+    // The form now sends the correct purpose, so we just need to add it if it's new
+    addPurpose(data.purpose);
 
     if (editingTransaction) {
       // Update existing transaction

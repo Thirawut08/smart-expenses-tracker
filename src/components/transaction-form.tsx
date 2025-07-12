@@ -82,15 +82,15 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     const purposeSet = new Set(availablePurposes);
     if (selectedAccount) {
       if (investmentAccountNames.includes(selectedAccount.name)) {
-        purposeSet.add('ลงทุน');
         return ['ลงทุน'];
       }
       if (savingAccountNames.includes(selectedAccount.name)) {
-        purposeSet.add('ออมทรัพย์');
         return ['ออมทรัพย์'];
       }
     }
-    return Array.from(purposeSet);
+    // Ensure 'อื่นๆ' is always an option for general accounts
+    purposeSet.add('อื่นๆ');
+    return Array.from(purposeSet).sort((a,b) => a === 'อื่นๆ' ? 1 : b === 'อื่นๆ' ? -1 : a.localeCompare(b));
   }, [selectedAccount, availablePurposes]);
   
   useEffect(() => {
@@ -248,7 +248,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             render={({ field }) => (
               <FormItem>
                 <FormLabel>วัตถุประสงค์</FormLabel>
-                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!selectedAccount && (investmentAccountNames.includes(selectedAccount.name) || savingAccountNames.includes(selectedAccount.name))}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="เลือกวัตถุประสงค์" />
