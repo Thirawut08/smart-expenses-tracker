@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getUsdToThbRate } from '@/services/exchange-rate';
 import { useToast } from './use-toast';
 
 export function useExchangeRate() {
@@ -12,23 +11,25 @@ export function useExchangeRate() {
   const { toast } = useToast();
 
   const fetchRate = useCallback(async () => {
-    // No need to set loading to true on refetches, to avoid UI flicker
-    // setIsLoading(true); 
     try {
-      const fetchedRate = await getUsdToThbRate();
-      setRate(fetchedRate);
-      setError(null);
+      const res = await fetch('/api/exchange-rate');
+      const data = await res.json();
+      if (typeof data.rate === 'number') {
+        setRate(data.rate);
+        setError(null);
+      } else {
+        throw new Error('Invalid rate');
+      }
     } catch (err: any) {
-      console.error("Failed to fetch exchange rate:", err);
+      console.error('Failed to fetch exchange rate:', err);
       setError('ไม่สามารถโหลดอัตราแลกเปลี่ยนได้');
       toast({
         variant: 'destructive',
         title: 'ข้อผิดพลาด',
         description: 'ไม่สามารถโหลดอัตราแลกเปลี่ยนล่าสุดได้ จะใช้ค่าเริ่มต้นแทน',
       });
-      // Fallback to a default rate if API fails
-      if (rate === null) { // Only set fallback if there's no rate at all
-          setRate(36.50); 
+      if (rate === null) {
+        setRate(36.50);
       }
     } finally {
       setIsLoading(false);
@@ -37,8 +38,7 @@ export function useExchangeRate() {
 
   useEffect(() => {
     fetchRate(); // ดึงครั้งแรกตอน mount
-    const interval = setInterval(fetchRate, 60 * 1000); // ดึงใหม่ทุก 1 นาที
-    return () => clearInterval(interval); // ล้าง interval ตอน unmount
+    // ไม่ต้อง setInterval แล้ว เพราะฝั่ง server cache อยู่แล้ว
   }, [fetchRate]);
 
   return { rate, isLoading, error, refetch: fetchRate };
