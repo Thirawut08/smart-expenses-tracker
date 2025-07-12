@@ -37,28 +37,29 @@ export function DashboardPage() {
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[180px] font-semibold">
-                  <SelectValue placeholder="เลือกเดือน" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">ทุกเดือน</SelectItem>
-                  {thaiMonths.map(month => (
-                    <SelectItem key={month.value} value={month.value.toString()}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="w-full md:w-[220px] font-semibold">
+                <SelectValue placeholder="เลือกเดือน" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ทุกเดือน</SelectItem>
+                {thaiMonths.map(month => (
+                  <SelectItem key={month.value} value={month.value.toString()}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-            <AccountBalances transactions={transactions} />
             <div className="md:col-span-2">
-                <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+              <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
+            </div>
+            <div className="md:col-span-2">
+              <AccountBalances transactions={transactions} />
             </div>
         </div>
         <div className="grid grid-cols-1 gap-6">
@@ -66,15 +67,18 @@ export function DashboardPage() {
             <SavingsChart transactions={transactions} />
         </div>
        </div>
-        <Card>
-            <CardHeader>
-                <CardTitle>ข้อมูลเดือน</CardTitle>
-                <CardDescription>
-                    ตารางแสดงรายละเอียดของเดือนต่างๆ
-                </CardDescription>
-            </CardHeader>
-            <MonthInfoTable />
-        </Card>
+
+      <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+
+      <Card>
+          <CardHeader>
+              <CardTitle>ข้อมูลเดือน</CardTitle>
+              <CardDescription>
+                  ตารางแสดงรายละเอียดของเดือนต่างๆ
+              </CardDescription>
+          </CardHeader>
+          <MonthInfoTable />
+      </Card>
     </div>
   );
 }

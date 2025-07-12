@@ -9,7 +9,7 @@ import { ThemeToggle } from './theme-toggle';
 
 const navItems = [
   { href: '/', label: 'แดชบอร์ด' },
-  { href: '/transactions', label: 'ธุรกรรมทั่วไป' },
+  { href: '/transactions', label: 'ธุรกรรม' },
   { href: '/investments', label: 'การลงทุน' },
 ];
 
@@ -34,7 +34,7 @@ export function MainNav() {
                 variant={pathname === item.href ? 'secondary' : 'ghost'}
                 className={cn('font-semibold', {
                   'text-foreground': pathname === item.href,
-                  'text-muted-foreground': pathname !== item.href
+                  'text-muted-foreground hover:text-foreground': pathname !== item.href
                 })}
               >
                 <Link href={item.href}>{item.label}</Link>

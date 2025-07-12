@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function TransactionsPage() {
   const {
@@ -109,33 +110,33 @@ export default function TransactionsPage() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>รายรับ</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <TransactionsTable 
-                        transactions={incomeTransactions}
-                        onEdit={handleEditTransaction}
-                        onDelete={handleDeleteRequest}
-                    />
-                </CardContent>
-            </Card>
-            
-            <Card>
-                <CardHeader>
-                    <CardTitle>รายจ่าย</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <TransactionsTable 
-                        transactions={expenseTransactions}
-                        onEdit={handleEditTransaction}
-                        onDelete={handleDeleteRequest}
-                    />
-                </CardContent>
-            </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>รายการธุรกรรม</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="expense" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
+                <TabsTrigger value="income">รายรับ</TabsTrigger>
+              </TabsList>
+              <TabsContent value="expense" className="mt-4">
+                  <TransactionsTable 
+                      transactions={expenseTransactions}
+                      onEdit={handleEditTransaction}
+                      onDelete={handleDeleteRequest}
+                  />
+              </TabsContent>
+              <TabsContent value="income" className="mt-4">
+                  <TransactionsTable 
+                      transactions={incomeTransactions}
+                      onEdit={handleEditTransaction}
+                      onDelete={handleDeleteRequest}
+                  />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <AlertDialogContent>
