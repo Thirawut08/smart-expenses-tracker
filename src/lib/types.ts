@@ -33,3 +33,10 @@ export type Template = {
   recipient?: string;
   details?: string;
 };
+
+export interface Income {
+    id: string;
+    date: Date;
+    account: Account;
+    amount: number;
+}
