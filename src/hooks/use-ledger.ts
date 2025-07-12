@@ -46,24 +46,20 @@ export function useLedger() {
 
   // Save transactions to localStorage whenever they change
   useEffect(() => {
-    if (transactions.length > 0) { // Only save if there are transactions to prevent overwriting with empty array on first load
-        try {
-          localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
-        } catch (error) {
-          console.error("Failed to save transactions to localStorage", error);
-        }
+    try {
+      localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+    } catch (error) {
+      console.error("Failed to save transactions to localStorage", error);
     }
   }, [transactions]);
 
   // Save templates to localStorage whenever they change
   useEffect(() => {
-     if (templates.length > 0) { // Only save if there are templates
-        try {
-            localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
-        } catch (error) {
-            console.error("Failed to save templates to localStorage", error);
-        }
-     }
+    try {
+      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+    } catch (error) {
+      console.error("Failed to save templates to localStorage", error);
+    }
   }, [templates]);
   
   const handleDialogClose = useCallback((open: boolean) => {
@@ -90,7 +86,7 @@ export function useLedger() {
         ...editingTransaction,
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.type === 'expense' ? -Math.abs(data.amount!) : Math.abs(data.amount!),
+        amount: data.amount!,
         date: data.date!,
         type: data.type,
         details: data.details,
@@ -109,7 +105,7 @@ export function useLedger() {
         id: new Date().toISOString() + Math.random(),
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.type === 'expense' ? -Math.abs(data.amount!) : Math.abs(data.amount!),
+        amount: data.amount!,
         date: data.date!,
         type: data.type,
         details: data.details,
@@ -171,7 +167,6 @@ export function useLedger() {
     if (editingTransaction) {
       return {
         ...editingTransaction,
-        amount: Math.abs(editingTransaction.amount),
         accountNumber: editingTransaction.account.accountNumber,
       };
     }

@@ -64,7 +64,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                 <TableCell>{transaction.sender || '-'}</TableCell>
                 <TableCell>{transaction.recipient || '-'}</TableCell>
                 <TableCell className={cn('text-right font-medium', transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                  {currencyFormatter.format(transaction.amount)}
+                  {currencyFormatter.format(transaction.type === 'income' ? transaction.amount : -transaction.amount)}
                 </TableCell>
                 <TableCell className="text-center">
                   <DropdownMenu>
