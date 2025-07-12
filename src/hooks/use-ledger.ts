@@ -47,6 +47,7 @@ export function useLedger() {
         setPurposes(JSON.parse(storedPurposes));
       } else {
         setPurposes(defaultPurposes);
+        localStorage.setItem(PURPOSES_STORAGE_KEY, JSON.stringify(defaultPurposes));
       }
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -93,6 +94,62 @@ export function useLedger() {
         updateAndSavePurposes(newPurposes);
     }
   }, [purposes, updateAndSavePurposes]);
+  
+  const editPurpose = useCallback(async (oldPurpose: string, newPurpose: string) => {
+    // Re-classify transactions
+     try {
+        const response = await fetch('/api/reclassify-transactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transactions, oldPurpose, newPurpose }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to reclassify');
+
+        updateAndSaveTransactions(data.updatedTransactions.map((t:any) => ({...t, date: new Date(t.date)})));
+    } catch (error) {
+        console.error("Failed to re-classify transactions:", error);
+        toast({ variant: 'destructive', title: 'เกิดข้อผิดพลาดในการอัปเดตธุรกรรม' });
+        return; // Stop if transaction update fails
+    }
+    
+    // Update purpose list
+    const newPurposes = purposes.map(p => p === oldPurpose ? newPurpose : p);
+    updateAndSavePurposes(newPurposes);
+
+  }, [purposes, updateAndSavePurposes, transactions, updateAndSaveTransactions, toast]);
+
+  const removePurpose = useCallback(async (purposeToRemove: string, action?: 'reclassify' | 'deleteAll') => {
+      // Re-classify or delete transactions if needed
+      if (action) {
+         try {
+            const response = await fetch('/api/reclassify-transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    transactions, 
+                    oldPurpose: purposeToRemove, 
+                    newPurpose: 'อื่นๆ',
+                    deleteTransactions: action === 'deleteAll'
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to update transactions');
+
+            updateAndSaveTransactions(data.updatedTransactions.map((t:any) => ({...t, date: new Date(t.date)})));
+        } catch (error) {
+            console.error("Failed to update transactions:", error);
+            toast({ variant: 'destructive', title: 'เกิดข้อผิดพลาดในการอัปเดตธุรกรรม' });
+            return;
+        }
+      }
+
+      // Remove purpose from list
+      const newPurposes = purposes.filter(p => p !== purposeToRemove);
+      updateAndSavePurposes(newPurposes);
+      toast({ variant: 'destructive', title: 'ลบวัตถุประสงค์สำเร็จ' });
+
+  }, [purposes, updateAndSavePurposes, transactions, updateAndSaveTransactions, toast]);
 
 
   const handleDialogClose = useCallback((open: boolean) => {
@@ -115,15 +172,19 @@ export function useLedger() {
         return;
     }
     
-    // The form now sends the correct purpose, so we just need to add it if it's new
-    addPurpose(data.purpose);
+    const finalData = { ...data };
+    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
+      finalData.purpose = data.customPurpose.trim();
+    }
+    
+    addPurpose(finalData.purpose);
 
     if (editingTransaction) {
       // Update existing transaction
       const updatedTransaction: Transaction = {
         ...editingTransaction,
         account: selectedAccount,
-        purpose: data.purpose,
+        purpose: finalData.purpose,
         amount: data.amount,
         date: data.date,
         type: data.type,
@@ -136,14 +197,14 @@ export function useLedger() {
         transactions.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
       );
 
-      toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${data.purpose}" เรียบร้อยแล้ว` });
+      toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${finalData.purpose}" เรียบร้อยแล้ว` });
 
     } else {
       // Add new transaction
       const newTransaction: Transaction = {
         id: new Date().toISOString() + Math.random(),
         account: selectedAccount,
-        purpose: data.purpose,
+        purpose: finalData.purpose,
         amount: data.amount,
         date: data.date,
         type: data.type,
@@ -153,19 +214,19 @@ export function useLedger() {
       };
       
       updateAndSaveTransactions([...transactions, newTransaction]);
-      toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการ "${data.purpose}" เรียบร้อยแล้ว` });
+      toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการ "${finalData.purpose}" เรียบร้อยแล้ว` });
     }
     
     if (saveAsTemplate && !editingTransaction) {
       const newTemplate: Template = {
         id: new Date().toISOString() + Math.random(),
-        name: `${data.purpose} (${data.type === 'income' ? 'รายรับ' : 'รายจ่าย'})`,
-        type: data.type,
-        accountNumber: data.accountNumber,
-        purpose: data.purpose,
-        sender: data.sender,
-        recipient: data.recipient,
-        details: data.details,
+        name: `${finalData.purpose} (${finalData.type === 'income' ? 'รายรับ' : 'รายจ่าย'})`,
+        type: finalData.type,
+        accountNumber: finalData.accountNumber,
+        purpose: finalData.purpose,
+        sender: finalData.sender,
+        recipient: finalData.recipient,
+        details: finalData.details,
       };
       updateAndSaveTemplates([...templates, newTemplate]);
       toast({ title: "บันทึกเทมเพลตสำเร็จ", description: `เทมเพลต "${newTemplate.name}" ถูกสร้างแล้ว` });
@@ -237,5 +298,7 @@ export function useLedger() {
     confirmDelete,
     handleDialogClose,
     dialogInitialData,
+    editPurpose,
+    removePurpose,
   };
 }

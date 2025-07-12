@@ -1,0 +1,15 @@
+'use client';
+import { ManagePurposes } from '@/components/manage-purposes';
+
+export default function SettingsPage() {
+    
+  return (
+    <div className="space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 className="text-3xl font-bold font-headline">ตั้งค่า</h1>
+        </div>
+        
+        <ManagePurposes />
+    </div>
+  );
+}
