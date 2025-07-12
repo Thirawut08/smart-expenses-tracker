@@ -45,18 +45,13 @@ interface TransactionFormProps {
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   
-  const formSchema = transactionFormSchema.extend({
-    amount: transactionFormSchema.shape.amount.optional(),
-    date: transactionFormSchema.shape.date.optional(),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       type: 'expense',
-      date: initialData?.date === undefined ? new Date() : initialData.date,
       ...initialData,
       amount: initialData?.amount === undefined ? undefined : initialData.amount,
+      date: initialData?.date === undefined ? new Date() : initialData.date,
       details: initialData?.details ?? '',
       sender: initialData?.sender ?? '',
       recipient: initialData?.recipient ?? '',
@@ -139,7 +134,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <FormItem>
                   <FormLabel>จำนวนเงิน</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber)} />
+                    <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber || undefined)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
