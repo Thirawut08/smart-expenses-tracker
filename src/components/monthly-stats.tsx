@@ -5,7 +5,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
 import { useMemo } from 'react';
-import { PieChartIcon } from 'lucide-react';
+import { PieChartIcon, Loader2 } from 'lucide-react';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -26,18 +27,24 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function MonthlyStats({ transactions, monthLabel }: { transactions: Transaction[], monthLabel: string }) {
+  const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
+
   const { chartData, totalIncome, totalExpense, totalNet } = useMemo(() => {
-    if (!transactions || transactions.length === 0) {
+    if (!transactions || transactions.length === 0 || !usdToThbRate) {
       return { chartData: [], totalIncome: 0, totalExpense: 0, totalNet: 0 };
     }
     
+    const getAmountInTHB = (t: Transaction) => {
+        return t.account.currency === 'USD' ? t.amount * usdToThbRate : t.amount;
+    };
+
     const income = transactions
       .filter(t => t.type === 'income')
-      .reduce((acc, t) => acc + t.amount, 0);
+      .reduce((acc, t) => acc + getAmountInTHB(t), 0);
 
     const expense = transactions
       .filter(t => t.type === 'expense')
-      .reduce((acc, t) => acc + Math.abs(t.amount), 0);
+      .reduce((acc, t) => acc + Math.abs(getAmountInTHB(t)), 0);
 
     return {
       chartData: [
@@ -48,7 +55,7 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
       totalExpense: expense,
       totalNet: income - expense,
     };
-  }, [transactions]);
+  }, [transactions, usdToThbRate]);
 
   const cardTitle = `ภาพรวม (${monthLabel})`;
   
@@ -74,7 +81,10 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
     <Card>
       <CardHeader>
         <CardTitle>{cardTitle}</CardTitle>
-        <CardDescription>สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด</CardDescription>
+        <CardDescription>
+            สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด (เทียบเท่า THB)
+            {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">
         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
@@ -100,6 +110,7 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
                   value,
                   index,
                 }) => {
+                  if (value === 0) return null;
                   const RADIAN = Math.PI / 180
                   const radius = 25 + innerRadius + (outerRadius - innerRadius)
                   const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -128,17 +139,17 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
         <div className="mt-4 flex flex-col items-center text-center">
             <span className="text-sm text-muted-foreground">คงเหลือสุทธิ</span>
             <span className={`text-2xl font-bold ${totalNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {currencyFormatter.format(totalNet)}
+              {isRateLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : currencyFormatter.format(totalNet)}
             </span>
         </div>
         <div className="w-full flex justify-around mt-4 text-sm">
             <div className="text-center">
                 <span className="text-muted-foreground">รายรับทั้งหมด</span>
-                <p className="font-semibold text-green-600">{currencyFormatter.format(totalIncome)}</p>
+                <p className="font-semibold text-green-600">{isRateLoading ? <Loader2 className="w-4 h-4 inline animate-spin" /> : currencyFormatter.format(totalIncome)}</p>
             </div>
             <div className="text-center">
                 <span className="text-muted-foreground">รายจ่ายทั้งหมด</span>
-                <p className="font-semibold text-red-600">{currencyFormatter.format(totalExpense)}</p>
+                <p className="font-semibold text-red-600">{isRateLoading ? <Loader2 className="w-4 h-4 inline animate-spin" /> : currencyFormatter.format(totalExpense)}</p>
             </div>
         </div>
       </CardContent>
