@@ -1,7 +1,9 @@
 
 export async function getUsdToThbRate(): Promise<number> {
   try {
-    const response = await fetch('https://api.exchangerate.host/convert?from=USD&to=THB');
+    const API_KEY = '0413258644998b6d98d7b6f99bcd344e';
+    const API_URL = `https://api.exchangerate.host/convert?from=USD&to=THB&access_key=${API_KEY}`;
+    const response = await fetch(API_URL);
     console.log('ExchangeRateHost fetch status:', response.status);
     const data = await response.json();
     console.log('ExchangeRateHost response data:', data);
