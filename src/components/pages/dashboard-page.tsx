@@ -11,6 +11,7 @@ import { MonthInfoTable } from '@/components/month-info-table';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { InvestmentChart } from '@/components/investment-chart';
 import { SavingsChart } from '@/components/savings-chart';
+import { ExchangeRateDisplay } from '../exchange-rate-display';
 
 
 export function DashboardPage() {
@@ -63,6 +64,7 @@ export function DashboardPage() {
             </div>
         </div>
         <div className="grid grid-cols-1 gap-6">
+            <ExchangeRateDisplay />
             <InvestmentChart transactions={transactions} />
             <SavingsChart transactions={transactions} />
         </div>
