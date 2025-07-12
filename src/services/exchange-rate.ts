@@ -4,7 +4,7 @@ const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
 
 // Simple in-memory cache to avoid fetching too often
 let cachedRate: { rate: number; timestamp: number } | null = null;
-const CACHE_DURATION = 1000 * 60 * 60; // Cache for 1 hour
+const CACHE_DURATION = 1000 * 60 * 1; // Cache for 1 minute
 
 export async function getUsdToThbRate(): Promise<number> {
   if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
