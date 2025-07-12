@@ -33,7 +33,9 @@ export function useExchangeRate() {
   }, [toast]);
 
   useEffect(() => {
-    fetchRate();
+    fetchRate(); // ดึงครั้งแรกตอน mount
+    const interval = setInterval(fetchRate, 60 * 1000); // ดึงใหม่ทุก 1 นาที
+    return () => clearInterval(interval); // ล้าง interval ตอน unmount
   }, [fetchRate]);
 
   return { rate, isLoading, error, refetch: fetchRate };
