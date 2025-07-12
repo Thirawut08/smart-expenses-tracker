@@ -5,58 +5,80 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { investmentAccountNames, accounts } from '@/lib/data';
+import { investmentAccountNames, accounts, USD_TO_THB_EXCHANGE_RATE } from '@/lib/data';
 import { TrendingUp } from 'lucide-react';
 
-const currencyFormatter = new Intl.NumberFormat('th-TH', {
+const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
+const usdFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+const formatCurrency = (value: number, currency: 'THB' | 'USD' | undefined) => {
+    if (currency === 'USD') {
+        return usdFormatter.format(value);
+    }
+    return thbFormatter.format(value);
+}
+
+
 export function InvestmentChart({ transactions }: { transactions: Transaction[] }) {
-  const { chartData, totalInvestment } = useMemo(() => {
+  const { chartData, totalInvestmentInTHB } = useMemo(() => {
     const investmentTransactions = transactions.filter(t => investmentAccountNames.includes(t.account.name));
 
     if (investmentTransactions.length === 0) {
-      return { chartData: [], totalInvestment: 0 };
+      return { chartData: [], totalInvestmentInTHB: 0 };
     }
 
-    const balances = new Map<string, number>();
-    const accountDetails = new Map<string, { name: string, color: string }>();
+    const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
+    const accountDetails = new Map<string, { name: string, color: string, currency: 'THB' | 'USD' }>();
 
     investmentAccountNames.forEach(name => {
       const account = accounts.find(a => a.name === name);
       if (account) {
-          balances.set(name, 0);
-          accountDetails.set(name, { name: account.name, color: account.color || '#8884d8' });
+          balances.set(name, { balance: 0, currency: account.currency });
+          accountDetails.set(name, { name: account.name, color: account.color || '#8884d8', currency: account.currency });
       }
     });
 
     investmentTransactions.forEach(t => {
-      const currentBalance = balances.get(t.account.name) ?? 0;
-      const amount = t.type === 'income' ? t.amount : -t.amount;
-      balances.set(t.account.name, currentBalance + amount);
+      const accountBalance = balances.get(t.account.name);
+      if (accountBalance) {
+        const amount = t.type === 'income' ? t.amount : -t.amount;
+        balances.set(t.account.name, { ...accountBalance, balance: accountBalance.balance + amount });
+      }
     });
     
     const dataWithValues = Array.from(balances.entries())
-      .map(([name, balance]) => ({ 
-          name, 
-          value: balance,
-          color: accountDetails.get(name)?.color
-      }))
+      .map(([name, { balance, currency }]) => {
+          const balanceInTHB = currency === 'USD' ? balance * USD_TO_THB_EXCHANGE_RATE : balance;
+          return { 
+            name, 
+            value: balance,
+            valueInTHB: balanceInTHB,
+            currency,
+            color: accountDetails.get(name)?.color,
+          }
+      })
       .filter(item => item.value !== 0) 
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => b.valueInTHB - a.valueInTHB);
 
     const chartData = dataWithValues.map(item => ({
         ...item,
-        chartValue: Math.abs(item.value)
+        chartValue: Math.abs(item.valueInTHB) // Use THB value for sizing pie slices
     }));
 
-    const totalInvestment = dataWithValues.reduce((sum, item) => sum + item.value, 0);
+    const totalInvestmentInTHB = dataWithValues.reduce((sum, item) => sum + item.valueInTHB, 0);
     
-    return { chartData, totalInvestment };
+    return { chartData, totalInvestmentInTHB };
   }, [transactions]);
   
   if (chartData.length === 0) {
@@ -90,7 +112,18 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent 
-                    formatter={(value, name, props) => `${props.payload.name}: ${currencyFormatter.format(props.payload.value)}`} 
+                    formatter={(value, name, props) => {
+                      const { payload } = props;
+                      const originalValueFormatted = formatCurrency(payload.value, payload.currency);
+                      const thbValueFormatted = thbFormatter.format(payload.valueInTHB);
+                      
+                      let displayValue = `${originalValueFormatted}`;
+                      if (payload.currency === 'USD') {
+                          displayValue += ` (${thbValueFormatted})`;
+                      }
+
+                      return `${payload.name}: ${displayValue}`;
+                    }}
                     hideLabel 
                 />}
               />
@@ -101,32 +134,6 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
                 innerRadius="30%"
                 outerRadius="60%"
                 strokeWidth={5}
-                label={({
-                  cx,
-                  cy,
-                  midAngle,
-                  innerRadius,
-                  outerRadius,
-                  value,
-                  index,
-                }) => {
-                  const RADIAN = Math.PI / 180
-                  const radius = 25 + innerRadius + (outerRadius - innerRadius)
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN)
-
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      className="fill-muted-foreground text-xs"
-                      textAnchor={x > cx ? "start" : "end"}
-                      dominantBaseline="central"
-                    >
-                      {currencyFormatter.format(chartData[index].value)}
-                    </text>
-                  )
-                }}
               >
                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -136,9 +143,9 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
           </ResponsiveContainer>
         </ChartContainer>
         <div className="mt-4 flex flex-col items-center text-center">
-            <span className="text-sm text-muted-foreground">ยอดลงทุนรวม</span>
-            <span className={`text-2xl font-bold ${totalInvestment >= 0 ? '' : 'text-red-600'}`}>
-              {currencyFormatter.format(totalInvestment)}
+            <span className="text-sm text-muted-foreground">ยอดลงทุนรวม (เทียบเท่า THB)</span>
+            <span className={`text-2xl font-bold ${totalInvestmentInTHB >= 0 ? '' : 'text-red-600'}`}>
+              {thbFormatter.format(totalInvestmentInTHB)}
             </span>
         </div>
       </CardContent>

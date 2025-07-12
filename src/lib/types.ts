@@ -6,6 +6,7 @@ export interface Account {
   name: string;
   accountNumber: string;
   color?: string;
+  currency: 'THB' | 'USD';
 }
 
 export interface Transaction {
