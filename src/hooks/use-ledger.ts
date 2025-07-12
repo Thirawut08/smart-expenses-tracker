@@ -133,7 +133,7 @@ export function useLedger() {
     }
 
     handleDialogClose(false);
-  }, [editingTransaction, handleDialogClose, toast]);
+  }, [editingTransaction, handleDialogClose, toast, templates]);
   
   const handleUseTemplate = useCallback((template: Template) => {
     setEditingTemplate(template);
@@ -197,6 +197,5 @@ export function useLedger() {
     confirmDelete,
     handleDialogClose,
     dialogInitialData,
-    setTransactions // Exposing for filtering if needed
   };
 }
