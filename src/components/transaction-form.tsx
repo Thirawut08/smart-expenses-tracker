@@ -146,7 +146,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         className={cn(selectedAccount && 'pl-8')}
                       />
                        {selectedAccount && (
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                           {selectedAccount.currency === 'USD' ? '$' : '฿'}
                         </span>
                       )}
