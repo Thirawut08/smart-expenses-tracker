@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { accounts, purposes, investmentAccountNames, savingAccountNames } from '@/lib/data';
+import { accounts, investmentAccountNames, savingAccountNames } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,12 +26,22 @@ export const transactionFormSchema = z.object({
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
   accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
+  customPurpose: z.string().optional(),
   amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
   sender: z.string().optional(),
   recipient: z.string().optional(),
   details: z.string().optional(),
+}).refine(data => {
+    if (data.purpose === 'อื่นๆ' && (!data.customPurpose || data.customPurpose.trim() === '')) {
+        return false;
+    }
+    return true;
+}, {
+    message: 'กรุณาระบุวัตถุประสงค์',
+    path: ['customPurpose'],
 });
+
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
 
@@ -40,9 +50,10 @@ interface TransactionFormProps {
   onSubmit: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
   isEditing?: boolean;
   isTemplate?: boolean;
+  availablePurposes: string[];
 }
 
-export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false }: TransactionFormProps) {
+export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false, availablePurposes = [] }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   
   const form = useForm<TransactionFormValues>({
@@ -50,6 +61,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     defaultValues: {
       type: 'expense',
       ...initialData,
+      purpose: initialData?.purpose,
+      customPurpose: '',
       amount: initialData?.amount === undefined ? undefined : initialData.amount,
       date: initialData?.date === undefined ? new Date() : initialData.date,
       details: initialData?.details ?? '',
@@ -59,22 +72,26 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   });
 
   const selectedAccountNumber = form.watch('accountNumber');
+  const purposeValue = form.watch('purpose');
   
   const selectedAccount = useMemo(() => {
     return accounts.find(acc => acc.accountNumber === selectedAccountNumber);
   }, [selectedAccountNumber]);
 
-  const availablePurposes = useMemo(() => {
+  const allPurposes = useMemo(() => {
+    const purposeSet = new Set(availablePurposes);
     if (selectedAccount) {
       if (investmentAccountNames.includes(selectedAccount.name)) {
+        purposeSet.add('ลงทุน');
         return ['ลงทุน'];
       }
       if (savingAccountNames.includes(selectedAccount.name)) {
+        purposeSet.add('ออมทรัพย์');
         return ['ออมทรัพย์'];
       }
     }
-    return purposes;
-  }, [selectedAccount]);
+    return Array.from(purposeSet);
+  }, [selectedAccount, availablePurposes]);
   
   useEffect(() => {
     if (selectedAccount) {
@@ -83,9 +100,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       } else if (savingAccountNames.includes(selectedAccount.name)) {
         form.setValue('purpose', 'ออมทรัพย์', { shouldValidate: true });
       } else {
-        // If the current purpose is not in the general list, clear it.
         const currentPurpose = form.getValues('purpose');
-        if (currentPurpose && !purposes.includes(currentPurpose)) {
+        if (currentPurpose === 'ลงทุน' || currentPurpose === 'ออมทรัพย์') {
             form.setValue('purpose', '', { shouldValidate: true });
         }
       }
@@ -94,7 +110,11 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
 
   const handleSubmit = (data: TransactionFormValues) => {
-    onSubmit(data, saveAsTemplate);
+    const finalData = { ...data };
+    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
+      finalData.purpose = data.customPurpose.trim();
+    }
+    onSubmit(finalData, saveAsTemplate);
   }
 
   return (
@@ -235,7 +255,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {availablePurposes.map(purpose => (
+                    {allPurposes.map(purpose => (
                       <SelectItem key={purpose} value={purpose}>
                         {purpose}
                       </SelectItem>
@@ -246,6 +266,22 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
               </FormItem>
             )}
           />
+
+          {purposeValue === 'อื่นๆ' && (
+              <FormField
+                control={form.control}
+                name="customPurpose"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>ระบุวัตถุประสงค์</FormLabel>
+                        <FormControl>
+                            <Input placeholder="เช่น ค่ากาแฟ, ค่าสมาชิก Netflix" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+              />
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField

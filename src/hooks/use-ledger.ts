@@ -2,12 +2,13 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Template } from '@/lib/types';
-import { accounts } from '@/lib/data';
+import { accounts, defaultPurposes } from '@/lib/data';
 import type { TransactionFormValues } from '@/components/transaction-form';
 import { useToast } from '@/hooks/use-toast';
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
 const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
+const PURPOSES_STORAGE_KEY = 'ledger-ai-purposes';
 
 const sortTransactions = (transactions: Transaction[]) => {
   return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -17,6 +18,7 @@ const sortTransactions = (transactions: Transaction[]) => {
 export function useLedger() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [purposes, setPurposes] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | undefined>(undefined);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
@@ -39,12 +41,19 @@ export function useLedger() {
       if (storedTemplates) {
         setTemplates(JSON.parse(storedTemplates));
       }
+
+      const storedPurposes = localStorage.getItem(PURPOSES_STORAGE_KEY);
+      if (storedPurposes) {
+        setPurposes(JSON.parse(storedPurposes));
+      } else {
+        setPurposes(defaultPurposes);
+      }
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       toast({
         variant: "destructive",
         title: "เกิดข้อผิดพลาดในการโหลดข้อมูล",
-        description: "ไม่สามารถโหลดข้อมูลธุรกรรมที่บันทึกไว้ได้",
+        description: "ไม่สามารถโหลดข้อมูลที่บันทึกไว้ได้",
       });
     }
   }, [toast]);
@@ -67,6 +76,23 @@ export function useLedger() {
       console.error("Failed to save templates to localStorage", error);
     }
   }, []);
+  
+  const updateAndSavePurposes = useCallback((newPurposes: string[]) => {
+    const uniquePurposes = [...new Set(newPurposes)].sort((a, b) => a.localeCompare(b));
+    setPurposes(uniquePurposes);
+    try {
+        localStorage.setItem(PURPOSES_STORAGE_KEY, JSON.stringify(uniquePurposes));
+    } catch (error) {
+        console.error("Failed to save purposes to localStorage", error);
+    }
+  }, []);
+
+  const addPurpose = useCallback((newPurpose: string) => {
+    if (newPurpose && !purposes.includes(newPurpose) && newPurpose !== 'ลงทุน' && newPurpose !== 'ออมทรัพย์') {
+        const newPurposes = [...purposes, newPurpose];
+        updateAndSavePurposes(newPurposes);
+    }
+  }, [purposes, updateAndSavePurposes]);
 
 
   const handleDialogClose = useCallback((open: boolean) => {
@@ -87,6 +113,10 @@ export function useLedger() {
     if (!data.amount || !data.date) {
         toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
         return;
+    }
+
+    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
+        addPurpose(data.customPurpose);
     }
 
     if (editingTransaction) {
@@ -143,7 +173,7 @@ export function useLedger() {
     }
 
     handleDialogClose(false);
-  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates]);
+  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates, addPurpose]);
   
   const handleUseTemplate = useCallback((template: Template) => {
     setEditingTemplate(template);
@@ -193,6 +223,7 @@ export function useLedger() {
   return {
     transactions,
     templates,
+    purposes,
     isDialogOpen,
     editingTransaction,
     transactionToDelete,

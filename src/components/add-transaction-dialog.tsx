@@ -14,11 +14,12 @@ type AddTransactionDialogProps = {
   onSave: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
   initialData?: Partial<TransactionFormValues>;
   isEditing?: boolean;
+  availablePurposes: string[];
 };
 
 type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
-export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
   const [activeTab, setActiveTab] = useState(isEditing || initialData ? 'manual' : 'slip');
   
@@ -89,6 +90,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
               onSubmit={handleFormSubmit}
               isEditing={isEditing}
               isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
+              availablePurposes={availablePurposes}
             />
           </TabsContent>
           <TabsContent value="slip">

@@ -25,7 +25,8 @@ export default function TransactionsPage() {
     handleEditTransaction,
     handleDeleteRequest,
     setTransactionToDelete,
-    confirmDelete
+    confirmDelete,
+    purposes
   } = useLedger();
 
   const { toast } = useToast();
@@ -101,6 +102,7 @@ export default function TransactionsPage() {
               onSave={handleSaveTransaction}
               initialData={dialogInitialData}
               isEditing={!!editingTransaction}
+              availablePurposes={purposes}
             >
               <Button onClick={() => setIsDialogOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />

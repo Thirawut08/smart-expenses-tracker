@@ -34,7 +34,7 @@ export const savingAccountNames = [
     'Dime! FCD'
 ];
 
-export const purposes: string[] = [
+export const defaultPurposes: string[] = [
   'อาหาร',
   'เดินทาง',
   'ชอปปิง',
@@ -43,8 +43,6 @@ export const purposes: string[] = [
   'ค่าสาธารณูปโภค',
   'สุขภาพ',
   'การศึกษา',
-  'ลงทุน',
-  'ออมทรัพย์',
   'เงินเดือน',
   'อื่นๆ'
 ];
