@@ -59,9 +59,12 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   });
 
   const selectedAccountNumber = form.watch('accountNumber');
+  
+  const selectedAccount = useMemo(() => {
+    return accounts.find(acc => acc.accountNumber === selectedAccountNumber);
+  }, [selectedAccountNumber]);
 
   const availablePurposes = useMemo(() => {
-    const selectedAccount = accounts.find(acc => acc.accountNumber === selectedAccountNumber);
     if (selectedAccount) {
       if (investmentAccountNames.includes(selectedAccount.name)) {
         return ['ลงทุน'];
@@ -71,10 +74,9 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       }
     }
     return purposes;
-  }, [selectedAccountNumber]);
+  }, [selectedAccount]);
   
   useEffect(() => {
-    const selectedAccount = accounts.find(acc => acc.accountNumber === selectedAccountNumber);
     if (selectedAccount) {
       if (investmentAccountNames.includes(selectedAccount.name)) {
         form.setValue('purpose', 'ลงทุน', { shouldValidate: true });
@@ -88,7 +90,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
         }
       }
     }
-  }, [selectedAccountNumber, form]);
+  }, [selectedAccountNumber, form, selectedAccount]);
 
 
   const handleSubmit = (data: TransactionFormValues) => {
@@ -134,7 +136,21 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <FormItem>
                   <FormLabel>จำนวนเงิน</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber || undefined)} />
+                    <div className="relative">
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        {...field} 
+                        value={field.value ?? ''} 
+                        onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
+                        className={cn(selectedAccount && 'pl-8')}
+                      />
+                       {selectedAccount && (
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
+                          {selectedAccount.currency === 'USD' ? '$' : '฿'}
+                        </span>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
