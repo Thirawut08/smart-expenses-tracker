@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useLedger } from '@/hooks/use-ledger';
 import { investmentAccountNames } from '@/lib/data';
-import { TransactionsTable } from '@/components/transactions-table';
+import { InvestmentTransactionsTable } from '@/components/investment-transactions-table';
 
 export default function InvestmentsPage() {
   const { transactions, handleEditTransaction, handleDeleteRequest } = useLedger();
@@ -17,7 +17,7 @@ export default function InvestmentsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold font-headline">ภาพรวมการลงทุน</h1>
       </div>
-      <TransactionsTable
+      <InvestmentTransactionsTable
         transactions={investmentTransactions}
         onEdit={handleEditTransaction}
         onDelete={handleDeleteRequest}
