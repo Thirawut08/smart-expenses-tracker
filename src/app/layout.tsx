@@ -38,10 +38,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          <div className="flex flex-col min-h-screen bg-background">
+          <div className="relative flex min-h-screen flex-col bg-background">
             <MainNav />
-            <main className="flex-1 container mx-auto p-4 md:p-8">
-              {children}
+            <main className="flex-1">
+              <div className="container relative py-6 lg:py-8">
+                {children}
+              </div>
             </main>
           </div>
           <Toaster />
