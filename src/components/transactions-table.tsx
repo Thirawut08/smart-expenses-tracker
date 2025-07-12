@@ -6,6 +6,7 @@ import { th } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -27,8 +28,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
           {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="min-w-[150px]">บัญชี</TableHead>
+              <TableHead className="sticky left-0 bg-card z-10 w-[50px]"></TableHead>
+              <TableHead className="sticky left-[50px] bg-card z-10 min-w-[150px]">บัญชี</TableHead>
               <TableHead className="min-w-[150px]">วันที่</TableHead>
               <TableHead className="min-w-[200px]">รายละเอียด</TableHead>
               <TableHead className="min-w-[120px]">วัตถุประสงค์</TableHead>
@@ -41,7 +42,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
           <TableBody>
             {transactions.map((transaction) => (
               <TableRow key={transaction.id}>
-                <TableCell>
+                <TableCell className="sticky left-0 bg-card z-10">
                   {transaction.type === 'income' ? (
                     <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                       <TrendingUp className="h-3 w-3" />
@@ -52,7 +53,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell className="sticky left-[50px] bg-card z-10">
                   <div className="font-medium">{transaction.account.name}</div>
                 </TableCell>
                 <TableCell>{format(transaction.date, 'd MMM yyyy, HH:mm', { locale: th })}</TableCell>
@@ -62,8 +63,8 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                 <TableCell>{transaction.purpose}</TableCell>
                 <TableCell>{transaction.sender || '-'}</TableCell>
                 <TableCell>{transaction.recipient || '-'}</TableCell>
-                <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500'}`}>
-                  {currencyFormatter.format(Math.abs(transaction.amount))}
+                <TableCell className={cn('text-right font-medium', transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                  {currencyFormatter.format(transaction.amount)}
                 </TableCell>
                 <TableCell className="text-center">
                   <DropdownMenu>
