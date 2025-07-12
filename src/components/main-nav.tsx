@@ -10,6 +10,7 @@ import { ThemeToggle } from './theme-toggle';
 const navItems = [
   { href: '/', label: 'แดชบอร์ด' },
   { href: '/transactions', label: 'ธุรกรรม' },
+  { href: '/income', label: 'รายรับ' },
   { href: '/investments', label: 'การลงทุน' },
 ];
 
