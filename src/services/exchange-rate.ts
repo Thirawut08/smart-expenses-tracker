@@ -1,6 +1,6 @@
 
-const API_KEY = process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY;
-const API_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
+const API_KEY = process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY;
+const API_URL = `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=THB&apikey=${API_KEY}`;
 
 // Simple in-memory cache to avoid fetching too often
 let cachedRate: { rate: number; timestamp: number } | null = null;
@@ -8,7 +8,7 @@ const CACHE_DURATION = 1000 * 60 * 1; // Cache for 1 minute
 
 export async function getUsdToThbRate(): Promise<number> {
   if (!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
-    console.warn("Exchange Rate API key is not set. Using fallback rate.");
+    console.warn("Alpha Vantage API key is not set. Using fallback rate.");
     return 36.50;
   }
 
@@ -25,13 +25,18 @@ export async function getUsdToThbRate(): Promise<number> {
       throw new Error(`API request failed with status ${response.status}`);
     }
     const data = await response.json();
+    
+    const rateInfo = data['Realtime Currency Exchange Rate'];
 
-    if (data.result === 'success' && data.conversion_rates && data.conversion_rates.THB) {
-      const rate = data.conversion_rates.THB;
+    if (rateInfo && rateInfo['5. Exchange Rate']) {
+      const rate = parseFloat(rateInfo['5. Exchange Rate']);
       // Update cache
       cachedRate = { rate, timestamp: now };
       return rate;
-    } else {
+    } else if (data['Note']) {
+       throw new Error('API call frequency limit reached. Using cached or fallback rate.');
+    }
+    else {
       throw new Error('Invalid data format from API');
     }
   } catch (error) {

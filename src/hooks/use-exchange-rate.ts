@@ -12,8 +12,9 @@ export function useExchangeRate() {
   const { toast } = useToast();
 
   const fetchRate = useCallback(async () => {
+    // No need to set loading to true on refetches, to avoid UI flicker
+    // setIsLoading(true); 
     try {
-      setIsLoading(true);
       const fetchedRate = await getUsdToThbRate();
       setRate(fetchedRate);
       setError(null);
@@ -26,11 +27,13 @@ export function useExchangeRate() {
         description: 'ไม่สามารถโหลดอัตราแลกเปลี่ยนล่าสุดได้ จะใช้ค่าเริ่มต้นแทน',
       });
       // Fallback to a default rate if API fails
-      setRate(36.50); 
+      if (rate === null) { // Only set fallback if there's no rate at all
+          setRate(36.50); 
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, rate]);
 
   useEffect(() => {
     fetchRate(); // ดึงครั้งแรกตอน mount
