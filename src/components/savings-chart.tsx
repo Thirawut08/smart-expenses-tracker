@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { savingAccountNames } from '@/lib/data';
+import { savingAccountNames, accounts } from '@/lib/data';
 import { PiggyBank } from 'lucide-react';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
@@ -14,14 +14,6 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0,
 });
-
-const CHART_COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-].reverse();
 
 export function SavingsChart({ transactions }: { transactions: Transaction[] }) {
   const { chartData, totalSavings } = useMemo(() => {
@@ -32,9 +24,14 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
     }
 
     const balances = new Map<string, number>();
+    const accountDetails = new Map<string, { name: string, color: string }>();
 
     savingAccountNames.forEach(name => {
-      balances.set(name, 0);
+      const account = accounts.find(a => a.name === name);
+      if (account) {
+          balances.set(name, 0);
+          accountDetails.set(name, { name: account.name, color: account.color || '#8884d8' });
+      }
     });
 
     savingTransactions.forEach(t => {
@@ -44,7 +41,11 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
     });
     
     const dataWithValues = Array.from(balances.entries())
-      .map(([name, balance]) => ({ name, value: balance }))
+      .map(([name, balance]) => ({ 
+        name, 
+        value: balance,
+        color: accountDetails.get(name)?.color
+      }))
       .filter(item => item.value !== 0)
       .sort((a, b) => b.value - a.value);
 
@@ -128,7 +129,7 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
                 }}
               >
                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
               </Pie>
             </PieChart>

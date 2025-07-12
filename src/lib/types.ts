@@ -5,6 +5,7 @@ export interface Account {
   id: string;
   name: string;
   accountNumber: string;
+  color?: string;
 }
 
 export interface Transaction {

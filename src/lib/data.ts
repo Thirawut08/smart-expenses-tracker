@@ -1,22 +1,22 @@
 import type { Account } from './types';
 
 export const accounts: Account[] = [
-  { id: '6', name: 'Binance TH', accountNumber: 'Binance TH' },
-  { id: '5', name: 'Bybit', accountNumber: 'Bybit' },
-  { id: '4', name: 'Dime!', accountNumber: 'Dime!' },
-  { id: '14', name: 'Dime! FCD', accountNumber: 'Dime! FCD' },
-  { id: '15', name: 'Dime! USD', accountNumber: 'Dime! USD' },
-  { id: '10', name: 'GSB', accountNumber: 'GSB' },
-  { id: '1', name: 'KBANK', accountNumber: 'KBANK' },
-  { id: '3', name: 'Kept', accountNumber: 'Kept' },
-  { id: '9', name: 'KTB', accountNumber: 'KTB' },
-  { id: '8', name: 'Money Plus', accountNumber: 'Money Plus' },
-  { id: '2', name: 'SCB', accountNumber: 'SCB' },
-  { id: '12', name: 'Shopee Pay', accountNumber: 'Shopee Pay' },
-  { id: '7', name: 'TTB', accountNumber: 'TTB' },
-  { id: '11', name: 'True Wallet', accountNumber: 'True Wallet' },
-  { id: '13', name: 'Webull', accountNumber: 'Webull' },
-  { id: '16', name: 'เงินสด', accountNumber: 'เงินสด' },
+  { id: '6', name: 'Binance TH', accountNumber: 'Binance TH', color: '#F0B90B' },
+  { id: '5', name: 'Bybit', accountNumber: 'Bybit', color: '#FFD42C' },
+  { id: '4', name: 'Dime!', accountNumber: 'Dime!', color: '#7A3FF3' },
+  { id: '14', name: 'Dime! FCD', accountNumber: 'Dime! FCD', color: '#7A3FF3' },
+  { id: '15', name: 'Dime! USD', accountNumber: 'Dime! USD', color: '#7A3FF3' },
+  { id: '10', name: 'GSB', accountNumber: 'GSB', color: '#EC008C' },
+  { id: '1', name: 'KBANK', accountNumber: 'KBANK', color: '#00A950' },
+  { id: '3', name: 'Kept', accountNumber: 'Kept', color: '#00AEEF' },
+  { id: '9', name: 'KTB', accountNumber: 'KTB', color: '#00A3E0' },
+  { id: '8', name: 'Money Plus', accountNumber: 'Money Plus', color: '#4CAF50' }, // Generic green
+  { id: '2', name: 'SCB', accountNumber: 'SCB', color: '#4D2C91' },
+  { id: '12', name: 'Shopee Pay', accountNumber: 'Shopee Pay', color: '#EE4D2D' },
+  { id: '7', name: 'TTB', accountNumber: 'TTB', color: '#0073E6' },
+  { id: '11', name: 'True Wallet', accountNumber: 'True Wallet', color: '#FF8A00' },
+  { id: '13', name: 'Webull', accountNumber: 'Webull', color: '#0065FF' },
+  { id: '16', name: 'เงินสด', accountNumber: 'เงินสด', color: '#808080' },
 ];
 
 export const investmentAccountNames = [
