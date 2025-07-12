@@ -7,7 +7,8 @@ import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'l
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { USD_TO_THB_EXCHANGE_RATE } from '@/lib/data';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { Skeleton } from './ui/skeleton';
 
 const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -35,7 +36,8 @@ interface InvestmentTransactionsTableProps {
 }
 
 export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: InvestmentTransactionsTableProps) {
-  
+  const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
+
   return (
     <div>
         <Table>
@@ -47,14 +49,17 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
               <TableHead className="min-w-[150px]">วันที่</TableHead>
               <TableHead className="min-w-[200px]">รายละเอียด</TableHead>
               <TableHead className="text-right min-w-[120px]">จำนวนเงิน</TableHead>
-              <TableHead className="text-right min-w-[120px]">เทียบเท่า (THB)</TableHead>
+              <TableHead className="text-right min-w-[120px]">
+                เทียบเท่า (THB)
+                {isRateLoading && <span className="text-xs font-normal ml-1">(loading...)</span>}
+              </TableHead>
               <TableHead className="w-[50px] text-center"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transactions.map((transaction) => {
               const amountInTHB = transaction.account.currency === 'USD'
-                ? transaction.amount * USD_TO_THB_EXCHANGE_RATE
+                ? transaction.amount * (usdToThbRate || 0)
                 : transaction.amount;
               const amountInThbFormatted = thbFormatter.format(transaction.type === 'income' ? amountInTHB : -amountInTHB);
 
@@ -82,7 +87,7 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
                   {formatCurrency(transaction.amount, transaction.account.currency, transaction.type)}
                 </TableCell>
                 <TableCell className={cn('text-right font-medium text-muted-foreground', transaction.type === 'income' ? 'text-green-600/80 dark:text-green-400/80' : 'text-red-600/80 dark:text-red-500/80')}>
-                  {amountInThbFormatted}
+                  {isRateLoading && transaction.account.currency === 'USD' ? <Skeleton className="h-5 w-24 float-right" /> : amountInThbFormatted}
                 </TableCell>
                 <TableCell className="text-center">
                   <DropdownMenu>

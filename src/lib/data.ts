@@ -1,8 +1,5 @@
 import type { Account } from './types';
 
-// Static exchange rate for simplicity. Can be replaced with a dynamic API call later.
-export const USD_TO_THB_EXCHANGE_RATE = 36.50;
-
 export const accounts: Account[] = [
   { id: '6', name: 'Binance TH', accountNumber: 'Binance TH', color: '#F0B90B', currency: 'THB' },
   { id: '5', name: 'Bybit', accountNumber: 'Bybit', color: '#FFD42C', currency: 'USD' },

@@ -9,7 +9,7 @@ import { IncomeTable } from '@/components/income-table';
 import { useIncome } from '@/hooks/use-income';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { IncomeAllocationDashboard } from '@/components/income-allocation-dashboard';
-import { USD_TO_THB_EXCHANGE_RATE } from '@/lib/data';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
 export default function IncomePage() {
   const { 
@@ -23,15 +23,17 @@ export default function IncomePage() {
     setIsFormOpen
   } = useIncome();
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+  const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
 
   const totalIncomeInTHB = useMemo(() => {
+    if (!usdToThbRate) return 0;
     return incomes.reduce((total, income) => {
       const amountInTHB = income.account.currency === 'USD' 
-        ? income.amount * USD_TO_THB_EXCHANGE_RATE 
+        ? income.amount * usdToThbRate 
         : income.amount;
       return total + amountInTHB;
     }, 0);
-  }, [incomes]);
+  }, [incomes, usdToThbRate]);
 
   const handleFormSubmit = (data: { date: Date; accountNumber: string; amount: number; }) => {
     if (editingIncome) {
@@ -78,7 +80,10 @@ export default function IncomePage() {
           </Button>
         </div>
 
-        <IncomeAllocationDashboard totalIncome={totalIncomeInTHB} />
+        <IncomeAllocationDashboard 
+            totalIncome={totalIncomeInTHB} 
+            isLoading={isRateLoading}
+        />
 
         {isFormOpen && (
           <Card>

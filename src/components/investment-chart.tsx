@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { investmentAccountNames, accounts, USD_TO_THB_EXCHANGE_RATE } from '@/lib/data';
-import { TrendingUp } from 'lucide-react';
+import { investmentAccountNames, accounts } from '@/lib/data';
+import { TrendingUp, Loader2 } from 'lucide-react';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { Skeleton } from './ui/skeleton';
 
 const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -31,7 +33,13 @@ const formatCurrency = (value: number, currency: 'THB' | 'USD' | undefined) => {
 
 
 export function InvestmentChart({ transactions }: { transactions: Transaction[] }) {
+  const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
+
   const { chartData, totalInvestmentInTHB } = useMemo(() => {
+    if (isRateLoading) {
+      return { chartData: [], totalInvestmentInTHB: 0 };
+    }
+
     const investmentTransactions = transactions.filter(t => investmentAccountNames.includes(t.account.name));
 
     if (investmentTransactions.length === 0) {
@@ -59,7 +67,7 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     
     const dataWithValues = Array.from(balances.entries())
       .map(([name, { balance, currency }]) => {
-          const balanceInTHB = currency === 'USD' ? balance * USD_TO_THB_EXCHANGE_RATE : balance;
+          const balanceInTHB = currency === 'USD' ? balance * (usdToThbRate || 0) : balance;
           return { 
             name, 
             value: balance,
@@ -79,9 +87,9 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     const totalInvestmentInTHB = dataWithValues.reduce((sum, item) => sum + item.valueInTHB, 0);
     
     return { chartData, totalInvestmentInTHB };
-  }, [transactions]);
+  }, [transactions, usdToThbRate, isRateLoading]);
   
-  if (chartData.length === 0) {
+  if (chartData.length === 0 && !isRateLoading) {
     return (
         <Card>
             <CardHeader>
@@ -103,51 +111,63 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     <Card>
       <CardHeader>
         <CardTitle>ภาพรวมการลงทุน</CardTitle>
-        <CardDescription>สัดส่วนยอดเงินคงเหลือในบัญชีลงทุน</CardDescription>
+        <CardDescription>
+            สัดส่วนยอดเงินคงเหลือในบัญชีลงทุน
+             {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">
-        <ChartContainer config={{}} className="mx-auto aspect-square h-[250px]">
-          <ResponsiveContainer>
-            <PieChart>
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent 
-                    formatter={(value, name, props) => {
-                      const { payload } = props;
-                      const originalValueFormatted = formatCurrency(payload.value, payload.currency);
-                      const thbValueFormatted = thbFormatter.format(payload.valueInTHB);
-                      
-                      let displayValue = `${originalValueFormatted}`;
-                      if (payload.currency === 'USD') {
-                          displayValue += ` (${thbValueFormatted})`;
-                      }
+        {isRateLoading ? (
+            <div className="flex flex-col items-center justify-center h-[318px]">
+                <Loader2 className="w-12 h-12 animate-spin mb-4" />
+                <p className="text-muted-foreground">กำลังโหลดข้อมูล...</p>
+            </div>
+        ) : (
+        <>
+            <ChartContainer config={{}} className="mx-auto aspect-square h-[250px]">
+            <ResponsiveContainer>
+                <PieChart>
+                <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent 
+                        formatter={(value, name, props) => {
+                        const { payload } = props;
+                        const originalValueFormatted = formatCurrency(payload.value, payload.currency);
+                        const thbValueFormatted = thbFormatter.format(payload.valueInTHB);
+                        
+                        let displayValue = `${originalValueFormatted}`;
+                        if (payload.currency === 'USD') {
+                            displayValue += ` (${thbValueFormatted})`;
+                        }
 
-                      return `${payload.name}: ${displayValue}`;
-                    }}
-                    hideLabel 
-                />}
-              />
-              <Pie
-                data={chartData}
-                dataKey="chartValue"
-                nameKey="name"
-                innerRadius="30%"
-                outerRadius="60%"
-                strokeWidth={5}
-              >
-                 {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-        <div className="mt-4 flex flex-col items-center text-center">
-            <span className="text-sm text-muted-foreground">ยอดลงทุนรวม (เทียบเท่า THB)</span>
-            <span className={`text-2xl font-bold ${totalInvestmentInTHB >= 0 ? '' : 'text-red-600'}`}>
-              {thbFormatter.format(totalInvestmentInTHB)}
-            </span>
-        </div>
+                        return `${payload.name}: ${displayValue}`;
+                        }}
+                        hideLabel 
+                    />}
+                />
+                <Pie
+                    data={chartData}
+                    dataKey="chartValue"
+                    nameKey="name"
+                    innerRadius="30%"
+                    outerRadius="60%"
+                    strokeWidth={5}
+                >
+                    {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                </Pie>
+                </PieChart>
+            </ResponsiveContainer>
+            </ChartContainer>
+            <div className="mt-4 flex flex-col items-center text-center">
+                <span className="text-sm text-muted-foreground">ยอดลงทุนรวม (เทียบเท่า THB)</span>
+                <span className={`text-2xl font-bold ${totalInvestmentInTHB >= 0 ? '' : 'text-red-600'}`}>
+                {thbFormatter.format(totalInvestmentInTHB)}
+                </span>
+            </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );
