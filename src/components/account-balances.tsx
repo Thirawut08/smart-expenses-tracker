@@ -61,14 +61,16 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
   const calculateBalances = (accountNames: string[]) => {
     const balances = new Map<string, number>();
 
-    // Initialize filtered accounts with 0 balance
-    accounts
-        .filter(acc => accountNames.includes(acc.name))
-        .forEach(acc => {
-            balances.set(acc.name, 0);
-        });
+    const relevantAccounts = accounts.filter(acc => accountNames.includes(acc.name));
+    
+    if (relevantAccounts.length === 0) {
+        return { balances: [], total: 0 };
+    }
 
-    // Calculate balances from transactions
+    relevantAccounts.forEach(acc => {
+        balances.set(acc.name, 0);
+    });
+
     transactions.forEach(t => {
       if (balances.has(t.account.name)) {
         const currentBalance = balances.get(t.account.name) ?? 0;

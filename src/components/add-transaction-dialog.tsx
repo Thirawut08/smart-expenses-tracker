@@ -20,26 +20,20 @@ type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
 export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
-  const [activeTab, setActiveTab] = useState('slip');
+  const [activeTab, setActiveTab] = useState(isEditing || initialData ? 'manual' : 'slip');
   
   useEffect(() => {
-    if (extractedData) {
-      setActiveTab('manual');
+    if (open) {
+        if (extractedData) {
+            setActiveTab('manual');
+        } else if (isEditing || (initialData && initialData.purpose)) {
+            setActiveTab('manual');
+        } else {
+            setActiveTab('slip');
+        }
     }
-  }, [extractedData]);
-  
-  useEffect(() => {
-    // If initialData is provided (from a template or editing), switch to manual tab
-    if (initialData && !isEditing) {
-      setActiveTab('manual');
-    } else if (isEditing) {
-      setActiveTab('manual');
-    }
-     else {
-      // Default to slip uploader for new transactions
-      setActiveTab('slip');
-    }
-  }, [initialData, isEditing]);
+  }, [extractedData, isEditing, initialData, open]);
+
 
   const handleFormSubmit = (values: TransactionFormValues, saveAsTemplate: boolean) => {
     onSave(values, saveAsTemplate);
@@ -51,14 +45,13 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
   }
   
   const handleOpenChange = (isOpen: boolean) => {
+    onOpenChange(isOpen);
     if (!isOpen) {
-      // Reset state on close
       setTimeout(() => {
         setExtractedData(null);
-        setActiveTab('slip');
+        setActiveTab(isEditing || initialData ? 'manual' : 'slip');
       }, 300);
     }
-    onOpenChange(isOpen);
   }
 
   const getDialogTitle = () => {
@@ -76,23 +69,14 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual" disabled={!initialData && !!extractedData}>กรอกข้อมูลเอง</TabsTrigger>
+            <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
             <TabsTrigger value="slip" disabled={isEditing || !!(initialData?.purpose && !initialData?.id)}>อัปโหลดสลิป</TabsTrigger>
           </TabsList>
           <TabsContent value="manual">
             <TransactionForm
-              key={JSON.stringify(initialData) || 'manual-form'}
-              initialData={initialData}
-              onSubmit={handleFormSubmit}
-              isEditing={isEditing}
-              isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
-            />
-          </TabsContent>
-          <TabsContent value="slip">
-            {extractedData ? (
-              <TransactionForm
-                key={JSON.stringify(extractedData)}
-                initialData={{
+              key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
+              initialData={
+                extractedData ? {
                   accountNumber: '',
                   purpose: extractedData.purpose || '',
                   amount: extractedData.amount,
@@ -100,12 +84,15 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
                   type: 'expense',
                   sender: extractedData.sender,
                   recipient: extractedData.recipient,
-                }}
-                onSubmit={handleFormSubmit}
-              />
-            ) : (
-              <SlipUploader onExtractionComplete={setExtractedData} />
-            )}
+                } : initialData
+              }
+              onSubmit={handleFormSubmit}
+              isEditing={isEditing}
+              isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
+            />
+          </TabsContent>
+          <TabsContent value="slip">
+             <SlipUploader onExtractionComplete={setExtractedData} />
           </TabsContent>
         </Tabs>
       </DialogContent>

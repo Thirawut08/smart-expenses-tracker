@@ -9,6 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
 const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
 
+const sortTransactions = (transactions: Transaction[]) => {
+  return transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+
 export function useLedger() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -27,7 +32,7 @@ export function useLedger() {
           ...t,
           date: new Date(t.date), // Convert date string back to Date object
         }));
-        setTransactions(parsedTransactions);
+        setTransactions(sortTransactions(parsedTransactions));
       }
 
       const storedTemplates = localStorage.getItem(TEMPLATES_STORAGE_KEY);
@@ -44,40 +49,44 @@ export function useLedger() {
     }
   }, [toast]);
 
-  // Save transactions to localStorage whenever they change
-  useEffect(() => {
+  const updateAndSaveTransactions = useCallback((newTransactions: Transaction[]) => {
+    const sorted = sortTransactions(newTransactions);
+    setTransactions(sorted);
     try {
-      localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+      localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(sorted));
     } catch (error) {
       console.error("Failed to save transactions to localStorage", error);
     }
-  }, [transactions]);
-
-  // Save templates to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(templates));
+  }, []);
+  
+  const updateAndSaveTemplates = useCallback((newTemplates: Template[]) => {
+    setTemplates(newTemplates);
+     try {
+      localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(newTemplates));
     } catch (error) {
       console.error("Failed to save templates to localStorage", error);
     }
-  }, [templates]);
-  
+  }, []);
+
+
   const handleDialogClose = useCallback((open: boolean) => {
-    setIsDialogOpen(open);
     if (!open) {
-      // Delay resetting to avoid form flicker
-      setTimeout(() => {
-        setEditingTemplate(undefined);
-        setEditingTransaction(undefined);
-      }, 300);
+      setEditingTemplate(undefined);
+      setEditingTransaction(undefined);
     }
+    setIsDialogOpen(open);
   }, []);
 
   const handleSaveTransaction = useCallback((data: TransactionFormValues, saveAsTemplate: boolean) => {
     const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
     if (!selectedAccount) {
-      console.error("Account not found");
+      toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
       return;
+    }
+    
+    if (!data.amount || !data.date) {
+        toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
+        return;
     }
 
     if (editingTransaction) {
@@ -86,17 +95,18 @@ export function useLedger() {
         ...editingTransaction,
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.amount!,
-        date: data.date!,
+        amount: data.amount,
+        date: data.date,
         type: data.type,
         details: data.details,
         sender: data.sender,
         recipient: data.recipient,
       };
-      setTransactions(prev =>
-        prev.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      
+      updateAndSaveTransactions(
+        transactions.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
       );
+
       toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${data.purpose}" เรียบร้อยแล้ว` });
 
     } else {
@@ -105,15 +115,15 @@ export function useLedger() {
         id: new Date().toISOString() + Math.random(),
         account: selectedAccount,
         purpose: data.purpose,
-        amount: data.amount!,
-        date: data.date!,
+        amount: data.amount,
+        date: data.date,
         type: data.type,
         details: data.details,
         sender: data.sender,
         recipient: data.recipient,
       };
       
-      setTransactions(prev => [...prev, newTransaction].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+      updateAndSaveTransactions([...transactions, newTransaction]);
       toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการ "${data.purpose}" เรียบร้อยแล้ว` });
     }
     
@@ -128,12 +138,12 @@ export function useLedger() {
         recipient: data.recipient,
         details: data.details,
       };
-      setTemplates(prev => [...prev, newTemplate]);
+      updateAndSaveTemplates([...templates, newTemplate]);
       toast({ title: "บันทึกเทมเพลตสำเร็จ", description: `เทมเพลต "${newTemplate.name}" ถูกสร้างแล้ว` });
     }
 
     handleDialogClose(false);
-  }, [editingTransaction, handleDialogClose, toast, templates]);
+  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates]);
   
   const handleUseTemplate = useCallback((template: Template) => {
     setEditingTemplate(template);
@@ -153,7 +163,7 @@ export function useLedger() {
 
   const confirmDelete = useCallback(() => {
     if (transactionToDelete) {
-      setTransactions(prev => prev.filter(t => t.id !== transactionToDelete.id));
+      updateAndSaveTransactions(transactions.filter(t => t.id !== transactionToDelete.id));
       toast({ 
         variant: "destructive",
         title: "ลบธุรกรรมสำเร็จ", 
@@ -161,7 +171,7 @@ export function useLedger() {
       });
       setTransactionToDelete(null);
     }
-  }, [transactionToDelete, toast]);
+  }, [transactionToDelete, toast, transactions, updateAndSaveTransactions]);
 
   const dialogInitialData = useMemo(() => {
     if (editingTransaction) {
