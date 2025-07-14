@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Template } from '@/lib/types';
 import { accounts, defaultPurposes } from '@/lib/data';
-import type { TransactionFormValues } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
+import type { UnifiedFormValues } from '@/components/transaction-form';
 import { useToast } from '@/hooks/use-toast';
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
@@ -185,7 +186,7 @@ export function useLedger() {
     setIsDialogOpen(open);
   }, []);
 
-  const handleSaveTransaction = useCallback((data: TransactionFormValues, saveAsTemplate: boolean) => {
+  const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues, saveAsTemplate: boolean) => {
     const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
     if (!selectedAccount) {
       toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });

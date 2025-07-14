@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TransactionForm } from './transaction-form';
-import type { TransactionFormValues } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
+import type { UnifiedFormValues } from './transaction-form';
 import { SlipUploader } from './slip-uploader';
 import type { ExtractTransactionDetailsOutput } from '@/ai/flows/extract-transaction-details';
 
@@ -12,8 +13,8 @@ type AddTransactionDialogProps = {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
-  initialData?: Partial<TransactionFormValues>;
+  onSave: (data: Transaction | Transaction[], saveAsTemplate: boolean) => void;
+  initialData?: Partial<UnifiedFormValues>;
   isEditing?: boolean;
   availablePurposes: string[];
 };
@@ -37,8 +38,13 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
   }, [extractedData, isEditing, initialData, open]);
 
 
-  const handleFormSubmit = (values: TransactionFormValues, saveAsTemplate: boolean) => {
-    onSave(values, saveAsTemplate);
+  const handleFormSubmit = (values: UnifiedFormValues | UnifiedFormValues[], saveAsTemplate: boolean) => {
+    // ถ้าเป็น array (transfer) ให้ map เป็น Transaction[]
+    if (Array.isArray(values)) {
+      onSave(values as any, saveAsTemplate);
+    } else {
+      onSave(values as any, saveAsTemplate);
+    }
     handleClose();
   }
   

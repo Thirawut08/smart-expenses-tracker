@@ -20,8 +20,6 @@ export interface Transaction {
   details?: string;
 }
 
-export type TransactionFormValues = UnifiedFormValues;
-
 export type Template = {
   id: string;
   name: string;
