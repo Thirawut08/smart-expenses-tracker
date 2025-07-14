@@ -87,58 +87,60 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-3xl font-bold font-headline">ธุรกรรมทั้งหมด</h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleExportToCsv} disabled={transactions.length === 0}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Export to CSV
-            </Button>
-            <AddTransactionDialog
-              key={editingTransaction?.id || 'new'}
-              open={isDialogOpen}
-              onOpenChange={handleDialogClose}
-              onSave={handleSaveTransaction}
-              initialData={dialogInitialData}
-              isEditing={!!editingTransaction}
-              availablePurposes={purposes}
-            >
-              <Button onClick={() => setIsDialogOpen(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                เพิ่มธุรกรรม
+      <div className="flex justify-center w-full">
+        <div className="space-y-8 w-full max-w-5xl">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 className="text-3xl font-bold font-headline">ธุรกรรมทั้งหมด</h1>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportToCsv} disabled={transactions.length === 0}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Export to CSV
               </Button>
-            </AddTransactionDialog>
+              <AddTransactionDialog
+                key={editingTransaction?.id || 'new'}
+                open={isDialogOpen}
+                onOpenChange={handleDialogClose}
+                onSave={handleSaveTransaction}
+                initialData={dialogInitialData}
+                isEditing={!!editingTransaction}
+                availablePurposes={purposes}
+              >
+                <Button onClick={() => setIsDialogOpen(true)}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  เพิ่มธุรกรรม
+                </Button>
+              </AddTransactionDialog>
+            </div>
           </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>รายการธุรกรรม</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="expense" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
+                  <TabsTrigger value="income">รายรับ</TabsTrigger>
+                </TabsList>
+                <TabsContent value="expense" className="mt-4">
+                    <TransactionsTable 
+                        transactions={expenseTransactions}
+                        onEdit={handleEditTransaction}
+                        onDelete={handleDeleteRequest}
+                    />
+                </TabsContent>
+                <TabsContent value="income" className="mt-4">
+                    <TransactionsTable 
+                        transactions={incomeTransactions}
+                        onEdit={handleEditTransaction}
+                        onDelete={handleDeleteRequest}
+                    />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>รายการธุรกรรม</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="expense" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
-                <TabsTrigger value="income">รายรับ</TabsTrigger>
-              </TabsList>
-              <TabsContent value="expense" className="mt-4">
-                  <TransactionsTable 
-                      transactions={expenseTransactions}
-                      onEdit={handleEditTransaction}
-                      onDelete={handleDeleteRequest}
-                  />
-              </TabsContent>
-              <TabsContent value="income" className="mt-4">
-                  <TransactionsTable 
-                      transactions={incomeTransactions}
-                      onEdit={handleEditTransaction}
-                      onDelete={handleDeleteRequest}
-                  />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
       </div>
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <AlertDialogContent>

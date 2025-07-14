@@ -11,7 +11,6 @@ import { MonthInfoTable } from '@/components/month-info-table';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { InvestmentChart } from '@/components/investment-chart';
 import { SavingsChart } from '@/components/savings-chart';
-import { ExchangeRateDisplay } from '../exchange-rate-display';
 
 
 export function DashboardPage() {
@@ -64,7 +63,17 @@ export function DashboardPage() {
             </div>
         </div>
         <div className="grid grid-cols-1 gap-6">
-            <ExchangeRateDisplay />
+            {/* Center the Google Finance link */}
+            <div className="flex justify-center">
+              <a
+                href="https://www.google.com/finance/quote/USD-THB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-700 dark:text-blue-300 text-center font-semibold hover:underline w-full max-w-xs"
+              >
+                ดูอัตราแลกเปลี่ยน USD/THB ล่าสุด (Google Finance)
+              </a>
+            </div>
             <InvestmentChart transactions={transactions} />
             <SavingsChart transactions={transactions} />
         </div>

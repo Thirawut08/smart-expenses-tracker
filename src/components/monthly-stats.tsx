@@ -82,8 +82,7 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
       <CardHeader>
         <CardTitle>{cardTitle}</CardTitle>
         <CardDescription>
-            สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด (เทียบเท่า THB)
-            {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
+            สรุปสัดส่วนรายรับและรายจ่ายทั้งหมด (THB)
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">

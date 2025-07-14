@@ -142,7 +142,6 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
         <CardTitle>ยอดคงเหลือแต่ละบัญชี</CardTitle>
         <CardDescription>
           ยอดเงินคงเหลือแยกตามประเภทบัญชี
-          {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
         </CardDescription>
       </CardHeader>
       <CardContent>

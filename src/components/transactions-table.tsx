@@ -23,20 +23,20 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
   const tableType = transactions.length > 0 ? transactions[0].type : 'expense';
 
   return (
-    <div>
-        <Table>
+    <div className="w-full">
+        <Table className="w-full table-fixed">
           {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 bg-card z-10 w-[50px]"></TableHead>
-              <TableHead className="sticky left-[50px] bg-card z-10 min-w-[150px]">บัญชี</TableHead>
-              <TableHead className="min-w-[150px]">วันที่</TableHead>
-              <TableHead className="min-w-[200px]">รายละเอียด</TableHead>
-              <TableHead className="min-w-[120px]">วัตถุประสงค์</TableHead>
-              <TableHead className="min-w-[120px]">ผู้จ่าย</TableHead>
-              <TableHead className="min-w-[120px]">ผู้รับ</TableHead>
-              <TableHead className="text-right min-w-[120px]">จำนวนเงิน</TableHead>
-              <TableHead className="w-[50px] text-center"></TableHead>
+              <TableHead className="sticky left-0 bg-card z-10 w-12"></TableHead>
+              <TableHead className="sticky left-12 bg-card z-10">บัญชี</TableHead>
+              <TableHead>วันที่</TableHead>
+              <TableHead>รายละเอียด</TableHead>
+              <TableHead>วัตถุประสงค์</TableHead>
+              <TableHead>ผู้จ่าย</TableHead>
+              <TableHead>ผู้รับ</TableHead>
+              <TableHead className="text-right">จำนวนเงิน</TableHead>
+              <TableHead className="w-12 text-center"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

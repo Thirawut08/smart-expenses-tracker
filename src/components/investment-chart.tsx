@@ -113,7 +113,6 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
         <CardTitle>ภาพรวมการลงทุน</CardTitle>
         <CardDescription>
             สัดส่วนยอดเงินคงเหลือในบัญชีลงทุน
-             {isRateLoading && <span className="text-xs text-muted-foreground ml-2">(กำลังโหลดอัตราแลกเปลี่ยน...)</span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">

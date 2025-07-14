@@ -41,8 +41,10 @@ export default function RootLayout({
           <div className="relative flex min-h-screen flex-col bg-background">
             <MainNav />
             <main className="flex-1">
-              <div className="container relative py-6 lg:py-8">
-                {children}
+              <div className="flex justify-center w-full">
+                <div className="w-full max-w-5xl relative py-6 lg:py-8">
+                  {children}
+                </div>
               </div>
             </main>
           </div>
