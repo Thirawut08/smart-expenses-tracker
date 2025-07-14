@@ -85,6 +85,16 @@ export default function TransactionsPage() {
     });
   };
 
+  // Wrapper รองรับ transfer (array)
+  const handleSaveTransactionWrapper = (data: any, saveAsTemplate: boolean) => {
+    if (Array.isArray(data)) {
+      data.forEach(tx => handleSaveTransaction(tx, false));
+      toast({ title: 'บันทึกการโอนสำเร็จ', description: 'สร้าง 2 รายการโอนระหว่างบัญชีแล้ว' });
+    } else {
+      handleSaveTransaction(data, saveAsTemplate);
+    }
+  };
+
   return (
     <>
       <div className="flex justify-center w-full">
@@ -100,7 +110,7 @@ export default function TransactionsPage() {
                 key={editingTransaction?.id || 'new'}
                 open={isDialogOpen}
                 onOpenChange={handleDialogClose}
-                onSave={handleSaveTransaction}
+                onSave={handleSaveTransactionWrapper}
                 initialData={dialogInitialData}
                 isEditing={!!editingTransaction}
                 availablePurposes={purposes}
