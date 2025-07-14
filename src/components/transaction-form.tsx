@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, ForเmControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,37 +22,30 @@ import { Switch } from '@/components/ui/switch';
 import { useState, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 
-// สร้าง schema แบบ discriminated union
-const unifiedSchema = z.discriminatedUnion('mode', [
-  z.object({
-    mode: z.literal('normal'),
-    type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
-    accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
-    purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
-    customPurpose: z.string().optional(),
-    amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-    date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-    sender: z.string().optional(),
-    recipient: z.string().optional(),
-    details: z.string().optional(),
-  }).refine(data => {
-    if (data.purpose === 'อื่นๆ' && (!data.customPurpose || data.customPurpose.trim() === '')) {
-      return false;
-    }
-    return true;
-  }, {
-    message: 'กรุณาระบุวัตถุประสงค์',
-    path: ['customPurpose'],
-  }),
-  z.object({
-    mode: z.literal('transfer'),
-    fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
-    toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
-    amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-    date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-    details: z.string().optional(),
-  })
-]);
+// สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
+const normalSchema = z.object({
+  mode: z.literal('normal'),
+  type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
+  accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+  purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
+  customPurpose: z.string().optional(),
+  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+  sender: z.string().optional(),
+  recipient: z.string().optional(),
+  details: z.string().optional(),
+});
+
+const transferSchema = z.object({
+  mode: z.literal('transfer'),
+  fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
+  toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
+  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+  details: z.string().optional(),
+});
+
+const unifiedSchema = z.discriminatedUnion('mode', [normalSchema, transferSchema]) as any;
 
 
 export type UnifiedFormValues = z.infer<typeof unifiedSchema>;
@@ -69,11 +62,14 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
 
+  // ป้องกัน initialData ที่ไม่มี mode (เช่น undefined หรือ transaction จริง)
+  const safeInitialData: UnifiedFormValues = (initialData && 'mode' in initialData)
+    ? initialData as UnifiedFormValues
+    : { mode: 'normal', type: 'expense', accountNumber: '', purpose: '', amount: 0, date: new Date(), customPurpose: '', details: '', sender: '', recipient: '' };
+
   const form = useForm<UnifiedFormValues>({
     resolver: zodResolver(unifiedSchema),
-    defaultValues: isTransfer
-      ? { mode: 'transfer', fromAccount: '', toAccount: '', amount: undefined, date: new Date(), details: '' }
-      : { mode: 'normal', type: 'expense', ...initialData, purpose: initialData?.purpose, customPurpose: '', amount: initialData?.amount === undefined ? undefined : initialData.amount, date: initialData?.date === undefined ? new Date() : initialData.date, details: initialData?.details ?? '', sender: initialData?.sender ?? '', recipient: initialData?.recipient ?? '' },
+    defaultValues: safeInitialData,
     mode: 'onChange',
   });
 
@@ -82,7 +78,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     if (isTransfer) {
       form.reset({ mode: 'transfer', fromAccount: '', toAccount: '', amount: undefined, date: new Date(), details: '' });
     } else {
-      form.reset({ mode: 'normal', type: 'expense', ...initialData, purpose: initialData?.purpose, customPurpose: '', amount: initialData?.amount === undefined ? undefined : initialData.amount, date: initialData?.date === undefined ? new Date() : initialData.date, details: initialData?.details ?? '', sender: initialData?.sender ?? '', recipient: initialData?.recipient ?? '' });
+      form.reset(safeInitialData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTransfer]);
@@ -127,6 +123,10 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
   // handleSubmit ใหม่ รองรับ schema ใหม่
   const handleSubmit = (data: UnifiedFormValues) => {
+    if (data.mode === 'normal' && data.purpose === 'อื่นๆ' && (!data.customPurpose || data.customPurpose.trim() === '')) {
+      alert('กรุณาระบุวัตถุประสงค์');
+      return;
+    }
     if (data.mode === 'transfer') {
       const fromAcc = accounts.find(acc => acc.accountNumber === data.fromAccount);
       const toAcc = accounts.find(acc => acc.accountNumber === data.toAccount);
@@ -153,8 +153,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
         purpose: 'โอนเข้า',
         details: `โอนจากบัญชี ${fromAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
-      onSubmit(tx1, saveAsTemplate);
-      onSubmit(tx2, saveAsTemplate);
+      onSubmit(tx1 as any, saveAsTemplate);
+      onSubmit(tx2 as any, saveAsTemplate);
       return;
     }
     // ... โหมดปกติ ...
