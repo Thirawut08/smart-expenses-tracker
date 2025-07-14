@@ -21,6 +21,28 @@ type AddTransactionDialogProps = {
 
 type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
 
+// Helper: แปลง initialData ให้มี mode เสมอ
+function getInitialFormData(initialData: any): any {
+  if (!initialData) return undefined;
+  if ('id' in initialData && 'account' in initialData) {
+    // เป็น transaction จริง
+    return {
+      mode: 'normal',
+      ...initialData,
+      accountNumber: initialData.account.accountNumber,
+    };
+  }
+  if ('id' in initialData && 'accountNumber' in initialData) {
+    // เป็น template
+    return {
+      mode: 'normal',
+      ...initialData,
+    };
+  }
+  // กรณี slip extraction หรืออื่น ๆ
+  return initialData;
+}
+
 export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
   const [activeTab, setActiveTab] = useState(isEditing || initialData ? 'manual' : 'slip');
@@ -83,17 +105,16 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
           <TabsContent value="manual">
             <TransactionForm
               key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
-              initialData={
-                extractedData ? {
-                  accountNumber: '',
-                  purpose: extractedData.purpose || '',
-                  amount: extractedData.amount,
-                  date: new Date(extractedData.date),
-                  type: 'expense',
-                  sender: extractedData.sender,
-                  recipient: extractedData.recipient,
-                } : initialData
-              }
+              initialData={extractedData ? {
+                mode: 'normal',
+                accountNumber: '',
+                purpose: extractedData.purpose || '',
+                amount: extractedData.amount,
+                date: new Date(extractedData.date),
+                type: 'expense',
+                sender: extractedData.sender,
+                recipient: extractedData.recipient,
+              } : getInitialFormData(initialData)}
               onSubmit={handleFormSubmit}
               isEditing={isEditing}
               isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
