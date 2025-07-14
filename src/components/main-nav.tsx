@@ -13,6 +13,7 @@ const navItems = [
   { href: '/income', label: 'รายได้' },
   { href: '/investments', label: 'การลงทุน' },
   { href: '/settings', label: 'ตั้งค่า' },
+  { href: '/note', label: 'Note' },
 ];
 
 export function MainNav() {
