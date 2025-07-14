@@ -31,22 +31,19 @@ export function ManageAccounts() {
 
   // Form state
   const [name, setName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
   const [color, setColor] = useState('#808080');
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
 
   const resetForm = () => {
     setName('');
-    setAccountNumber('');
     setColor('#808080');
     setCurrency('THB');
   };
 
   const handleAdd = () => {
-    if (!name.trim() || !accountNumber.trim()) return;
+    if (!name.trim()) return;
     addAccount({
       name: name.trim(),
-      accountNumber: accountNumber.trim(),
       color,
       currency,
     });
@@ -58,7 +55,6 @@ export function ManageAccounts() {
     if (!editAccountState) return;
     editAccount(editAccountState.id, {
       name: name.trim(),
-      accountNumber: accountNumber.trim(),
       color,
       currency,
     });
@@ -82,7 +78,6 @@ export function ManageAccounts() {
   const openEditDialog = (account: Account) => {
     setEditAccountState(account);
     setName(account.name);
-    setAccountNumber(account.accountNumber);
     setColor(account.color || '#808080');
     setCurrency(account.currency);
     setIsEditDialogOpen(true);
@@ -167,10 +162,6 @@ export function ManageAccounts() {
               <Input id="account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account-number" className="text-right">เลขบัญชี</Label>
-              <Input id="account-number" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="account-color" className="text-right">สีบัญชี</Label>
               <input id="account-color" type="color" value={color} onChange={e => setColor(e.target.value)} className="col-span-1 w-10 h-10 p-0 border-none bg-transparent" />
             </div>
@@ -199,10 +190,6 @@ export function ManageAccounts() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-account-name" className="text-right">ชื่อบัญชี</Label>
               <Input id="edit-account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-account-number" className="text-right">เลขบัญชี</Label>
-              <Input id="edit-account-number" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-account-color" className="text-right">สีบัญชี</Label>

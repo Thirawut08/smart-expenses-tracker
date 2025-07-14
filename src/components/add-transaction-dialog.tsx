@@ -45,19 +45,13 @@ function getInitialFormData(initialData: any): any {
 
 export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
-  const [activeTab, setActiveTab] = useState(isEditing || initialData ? 'manual' : 'slip');
+  const [activeTab, setActiveTab] = useState('manual');
   
   useEffect(() => {
     if (open) {
-        if (extractedData) {
-            setActiveTab('manual');
-        } else if (isEditing || (initialData && initialData.purpose)) {
-            setActiveTab('manual');
-        } else {
-            setActiveTab('slip');
-        }
+      setActiveTab('manual');
     }
-  }, [extractedData, isEditing, initialData, open]);
+  }, [open]);
 
 
   const handleFormSubmit = (values: UnifiedFormValues | UnifiedFormValues[], saveAsTemplate: boolean) => {
@@ -97,7 +91,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
         <DialogHeader>
           <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'manual' | 'slip')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
             <TabsTrigger value="slip" disabled={isEditing || !!(initialData?.purpose && !initialData?.id)}>อัปโหลดสลิป</TabsTrigger>
