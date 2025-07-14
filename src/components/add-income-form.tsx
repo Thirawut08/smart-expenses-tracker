@@ -19,7 +19,7 @@ import { useEffect, useMemo } from 'react';
 
 const incomeFormSchema = z.object({
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-  accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+  accountId: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
 });
 
@@ -30,7 +30,7 @@ interface AddIncomeFormProps {
       id: string;
       date: Date;
       amount: number;
-      accountNumber: string;
+      accountId: string;
   } | null;
   onSubmit: (data: IncomeFormValues) => void;
   onCancel: () => void;
@@ -42,7 +42,7 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
     resolver: zodResolver(incomeFormSchema),
     defaultValues: {
       date: initialData?.date ?? new Date(),
-      accountNumber: initialData?.accountNumber ?? '',
+      accountId: initialData?.accountId ?? '',
       amount: initialData?.amount ?? undefined,
     },
   });
@@ -51,16 +51,14 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
   useEffect(() => {
     form.reset({
       date: initialData?.date ?? new Date(),
-      accountNumber: initialData?.accountNumber ?? '',
+      accountId: initialData?.accountId ?? '',
       amount: initialData?.amount ?? undefined,
     });
   }, [initialData, form]);
 
-  const selectedAccountNumber = form.watch('accountNumber');
+  const selectedAccountId = form.watch('accountId');
   
-  const selectedAccount = useMemo(() => {
-    return accounts.find(acc => acc.accountNumber === selectedAccountNumber);
-  }, [selectedAccountNumber]);
+  const selectedAccount = useMemo(() => accounts.find(acc => acc.id === selectedAccountId), [selectedAccountId, accounts]);
 
 
   return (
@@ -108,7 +106,7 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
             />
              <FormField
               control={form.control}
-              name="accountNumber"
+              name="accountId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>บัญชี</FormLabel>
@@ -120,7 +118,7 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
                     </FormControl>
                     <SelectContent>
                       {accounts.map(account => (
-                        <SelectItem key={account.id} value={account.accountNumber}>
+                        <SelectItem key={account.id} value={account.id}>
                           {account.name}
                         </SelectItem>
                       ))}

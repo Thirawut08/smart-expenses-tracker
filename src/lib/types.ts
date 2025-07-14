@@ -3,7 +3,6 @@ import type { UnifiedFormValues } from '@/components/transaction-form';
 export interface Account {
   id: string;
   name: string;
-  accountNumber: string;
   color?: string;
   currency: 'THB' | 'USD';
 }
@@ -24,7 +23,6 @@ export type Template = {
   id: string;
   name: string;
   type: 'income' | 'expense';
-  accountNumber: string;
   purpose: string;
   sender?: string;
   recipient?: string;

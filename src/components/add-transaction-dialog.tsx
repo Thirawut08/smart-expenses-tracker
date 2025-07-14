@@ -29,10 +29,10 @@ function getInitialFormData(initialData: any): any {
     return {
       mode: 'normal',
       ...initialData,
-      accountNumber: initialData.account.accountNumber,
+      accountId: initialData.account.id,
     };
   }
-  if ('id' in initialData && 'accountNumber' in initialData) {
+  if ('id' in initialData && 'accountId' in initialData) {
     // เป็น template
     return {
       mode: 'normal',
@@ -101,7 +101,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
               key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
               initialData={extractedData ? {
                 mode: 'normal',
-                accountNumber: '',
+                accountId: '',
                 purpose: extractedData.purpose || '',
                 amount: extractedData.amount,
                 date: new Date(extractedData.date),

@@ -21,12 +21,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useState, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
+import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 
 // สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
 const normalSchema = z.object({
   mode: z.literal('normal'),
   type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
-  accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+  accountId: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
   customPurpose: z.string().optional(),
   amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
@@ -66,7 +67,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   // ป้องกัน initialData ที่ไม่มี mode (เช่น undefined หรือ transaction จริง)
   const safeInitialData: UnifiedFormValues = (initialData && 'mode' in initialData)
     ? initialData as UnifiedFormValues
-    : { mode: 'normal', type: 'expense', accountNumber: '', purpose: '', amount: 0, date: new Date(), customPurpose: '', details: '', sender: '', recipient: '' };
+    : { mode: 'normal', type: 'expense', accountId: '', purpose: '', amount: 0, date: new Date(), customPurpose: '', details: '', sender: '', recipient: '' };
 
   const form = useForm<UnifiedFormValues>({
     resolver: zodResolver(unifiedSchema),
@@ -84,12 +85,10 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTransfer]);
 
-  const selectedAccountNumber = form.watch('accountNumber');
+  const selectedAccountId = form.watch('accountId');
   const purposeValue = form.watch('purpose');
   
-  const selectedAccount = useMemo(() => {
-    return accounts.find(acc => acc.accountNumber === selectedAccountNumber);
-  }, [selectedAccountNumber, accounts]);
+  const selectedAccount = useMemo(() => accounts.find(acc => acc.id === selectedAccountId), [selectedAccountId, accounts]);
 
   const allPurposes = useMemo(() => {
     const purposeSet = new Set(availablePurposes);
@@ -119,7 +118,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
         }
       }
     }
-  }, [selectedAccountNumber, form, selectedAccount]);
+  }, [selectedAccountId, form, selectedAccount]);
 
 
   // handleSubmit ใหม่ รองรับ schema ใหม่
@@ -129,8 +128,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       return;
     }
     if (data.mode === 'transfer') {
-      const fromAcc = accounts.find(acc => acc.accountNumber === data.fromAccount);
-      const toAcc = accounts.find(acc => acc.accountNumber === data.toAccount);
+      const fromAcc = accounts.find(acc => acc.id === data.fromAccount);
+      const toAcc = accounts.find(acc => acc.id === data.toAccount);
       if (!fromAcc || !toAcc || data.fromAccount === data.toAccount) {
         alert('กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน');
         return;
@@ -143,14 +142,14 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       const tx1 = {
         ...base,
         type: 'expense' as const,
-        accountNumber: data.fromAccount,
+        accountId: data.fromAccount,
         purpose: 'โอนออก',
         details: `โอนไปบัญชี ${toAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
       const tx2 = {
         ...base,
         type: 'income' as const,
-        accountNumber: data.toAccount,
+        accountId: data.toAccount,
         purpose: 'โอนเข้า',
         details: `โอนจากบัญชี ${fromAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
@@ -199,7 +198,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                     </FormControl>
                     <SelectContent>
                       {accounts.map(account => (
-                        <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === form.watch('toAccount')}>
+                        <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('toAccount')}>
                           {account.name}
                         </SelectItem>
                       ))}
@@ -222,7 +221,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                     </FormControl>
                     <SelectContent>
                       {accounts.map(account => (
-                        <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === form.watch('fromAccount')}>
+                        <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('fromAccount')}>
                           {account.name}
                         </SelectItem>
                       ))}
@@ -398,7 +397,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
             <FormField
               control={form.control}
-              name="accountNumber"
+              name="accountId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>บัญชี</FormLabel>
@@ -410,7 +409,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                     </FormControl>
                     <SelectContent>
                       {accounts.map(account => (
-                        <SelectItem key={account.id} value={account.accountNumber}>
+                        <SelectItem key={account.id} value={account.id}>
                           {account.name}
                         </SelectItem>
                       ))}

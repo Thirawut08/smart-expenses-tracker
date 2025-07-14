@@ -1,22 +1,22 @@
 import type { Account } from './types';
 
 export const accounts: Account[] = [
-  { id: '6', name: 'Binance TH', accountNumber: 'Binance TH', color: '#F0B90B', currency: 'THB' },
-  { id: '5', name: 'Bybit', accountNumber: 'Bybit', color: '#FFD42C', currency: 'USD' },
-  { id: '4', name: 'Dime!', accountNumber: 'Dime!', color: '#7A3FF3', currency: 'THB' },
-  { id: '14', name: 'Dime! FCD', accountNumber: 'Dime! FCD', color: '#986FFB', currency: 'USD' },
-  { id: '15', name: 'Dime! USD', accountNumber: 'Dime! USD', color: '#5C1FDC', currency: 'USD' },
-  { id: '10', name: 'GSB', accountNumber: 'GSB', color: '#EC008C', currency: 'THB' },
-  { id: '1', name: 'KBANK', accountNumber: 'KBANK', color: '#00A950', currency: 'THB' },
-  { id: '3', name: 'Kept', accountNumber: 'Kept', color: '#00AEEF', currency: 'THB' },
-  { id: '9', name: 'KTB', accountNumber: 'KTB', color: '#00A3E0', currency: 'THB' },
-  { id: '8', name: 'Money Plus', accountNumber: 'Money Plus', color: '#4CAF50', currency: 'THB' }, // Generic green
-  { id: '2', name: 'SCB', accountNumber: 'SCB', color: '#4D2C91', currency: 'THB' },
-  { id: '12', name: 'Shopee Pay', accountNumber: 'Shopee Pay', color: '#EE4D2D', currency: 'THB' },
-  { id: '7', name: 'TTB', accountNumber: 'TTB', color: '#0073E6', currency: 'THB' },
-  { id: '11', name: 'True Wallet', accountNumber: 'True Wallet', color: '#FF8A00', currency: 'THB' },
-  { id: '13', name: 'Webull', accountNumber: 'Webull', color: '#0065FF', currency: 'USD' },
-  { id: '16', name: 'เงินสด', accountNumber: 'เงินสด', color: '#808080', currency: 'THB' },
+  { id: '6', name: 'Binance TH', color: '#F0B90B', currency: 'THB' },
+  { id: '5', name: 'Bybit', color: '#FFD42C', currency: 'USD' },
+  { id: '4', name: 'Dime!', color: '#7A3FF3', currency: 'THB' },
+  { id: '14', name: 'Dime! FCD', color: '#986FFB', currency: 'USD' },
+  { id: '15', name: 'Dime! USD', color: '#5C1FDC', currency: 'USD' },
+  { id: '10', name: 'GSB', color: '#EC008C', currency: 'THB' },
+  { id: '1', name: 'KBANK', color: '#00A950', currency: 'THB' },
+  { id: '3', name: 'Kept', color: '#00AEEF', currency: 'THB' },
+  { id: '9', name: 'KTB', color: '#00A3E0', currency: 'THB' },
+  { id: '8', name: 'Money Plus', color: '#4CAF50', currency: 'THB' }, // Generic green
+  { id: '2', name: 'SCB', color: '#4D2C91', currency: 'THB' },
+  { id: '12', name: 'Shopee Pay', color: '#EE4D2D', currency: 'THB' },
+  { id: '7', name: 'TTB', color: '#0073E6', currency: 'THB' },
+  { id: '11', name: 'True Wallet', color: '#FF8A00', currency: 'THB' },
+  { id: '13', name: 'Webull', color: '#0065FF', currency: 'USD' },
+  { id: '16', name: 'เงินสด', color: '#808080', currency: 'THB' },
 ];
 
 export const investmentAccountNames = [

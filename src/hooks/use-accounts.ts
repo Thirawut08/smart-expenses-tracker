@@ -24,8 +24,6 @@ export function useAccounts() {
   }, [accounts]);
 
   const addAccount = useCallback((account: Omit<Account, 'id'>) => {
-    // Prevent duplicate accountNumber
-    if (accounts.some(a => a.accountNumber === account.accountNumber)) return false;
     const newAccount: Account = {
       ...account,
       id: Date.now().toString(),

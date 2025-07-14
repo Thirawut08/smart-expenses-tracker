@@ -50,8 +50,8 @@ export function useIncome() {
     }
   }, [toast]);
 
-  const addIncome = useCallback((data: { date: Date; accountNumber: string; amount: number; }) => {
-    const account = accounts.find(a => a.accountNumber === data.accountNumber);
+  const addIncome = useCallback((data: { date: Date; accountId: string; amount: number; }) => {
+    const account = accounts.find(a => a.id === data.accountId);
     if (!account) {
       toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
       return;
@@ -66,8 +66,8 @@ export function useIncome() {
     toast({ title: 'บันทึกรายรับสำเร็จ' });
   }, [incomes, toast, updateAndSaveIncomes]);
   
-  const editIncome = useCallback((id: string, data: { date: Date; accountNumber: string; amount: number; }) => {
-      const account = accounts.find(a => a.accountNumber === data.accountNumber);
+  const editIncome = useCallback((id: string, data: { date: Date; accountId: string; amount: number; }) => {
+      const account = accounts.find(a => a.id === data.accountId);
       if (!account) {
         toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
         return;

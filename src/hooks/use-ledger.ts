@@ -190,7 +190,7 @@ export function useLedger() {
       data.forEach(tx => handleSaveTransaction(tx, false));
       return;
     }
-    const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
+    const selectedAccount = accounts.find(acc => acc.id === data.accountId);
     if (!selectedAccount) {
       toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
       return;
@@ -301,7 +301,7 @@ export function useLedger() {
     if (editingTransaction) {
       return {
         ...editingTransaction,
-        accountNumber: editingTransaction.account.accountNumber,
+        accountNumber: editingTransaction.account.id,
       };
     }
     if (editingTemplate) {

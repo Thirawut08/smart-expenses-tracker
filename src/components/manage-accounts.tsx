@@ -15,9 +15,9 @@ const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
 
 function getDefaultAccounts(): Account[] {
   return [
-    { id: '1', name: 'เงินสด', accountNumber: 'เงินสด', color: '#808080', currency: 'THB' },
-    { id: '2', name: 'KBANK', accountNumber: 'KBANK', color: '#00A950', currency: 'THB' },
-    { id: '3', name: 'SCB', accountNumber: 'SCB', color: '#4D2C91', currency: 'THB' },
+    { id: '1', name: 'เงินสด', color: '#808080', currency: 'THB' },
+    { id: '2', name: 'KBANK', color: '#00A950', currency: 'THB' },
+    { id: '3', name: 'SCB', color: '#4D2C91', currency: 'THB' },
   ];
 }
 
@@ -65,7 +65,7 @@ export function ManageAccounts() {
 
   const handleDelete = () => {
     if (!accountToDelete) return;
-    const used = transactions.some(t => t.account.accountNumber === accountToDelete.accountNumber);
+    const used = transactions.some(t => t.account.id === accountToDelete.id);
     if (used) {
       alert('บัญชีนี้ถูกใช้งานในธุรกรรม ไม่สามารถลบได้');
       setAccountToDelete(null);
@@ -101,7 +101,6 @@ export function ManageAccounts() {
             <TableHeader>
               <TableRow>
                 <TableHead>ชื่อบัญชี</TableHead>
-                <TableHead>เลขบัญชี</TableHead>
                 <TableHead>สกุลเงิน</TableHead>
                 <TableHead>สี</TableHead>
                 <TableHead className="w-[50px] text-center"></TableHead>
@@ -111,7 +110,6 @@ export function ManageAccounts() {
               {accounts.map((acc) => (
                 <TableRow key={acc.id}>
                   <TableCell className="font-medium">{acc.name}</TableCell>
-                  <TableCell>{acc.accountNumber}</TableCell>
                   <TableCell>{acc.currency}</TableCell>
                   <TableCell>
                     <span className="inline-block w-6 h-6 rounded-full border" style={{ background: acc.color }} title={acc.color}></span>
