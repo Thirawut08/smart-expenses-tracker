@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { investmentAccountNames, accounts } from '@/lib/data';
+import { investmentAccountNames } from '@/lib/data';
+import { useAccounts } from '@/hooks/use-accounts';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 import { Skeleton } from './ui/skeleton';
@@ -34,6 +35,7 @@ const formatCurrency = (value: number, currency: 'THB' | 'USD' | undefined) => {
 
 export function InvestmentChart({ transactions }: { transactions: Transaction[] }) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
+  const { accounts } = useAccounts();
 
   const { chartData, totalInvestmentInTHB } = useMemo(() => {
     if (isRateLoading) {
@@ -87,7 +89,7 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     const totalInvestmentInTHB = dataWithValues.reduce((sum, item) => sum + item.valueInTHB, 0);
     
     return { chartData, totalInvestmentInTHB };
-  }, [transactions, usdToThbRate, isRateLoading]);
+  }, [transactions, usdToThbRate, isRateLoading, accounts]);
   
   if (chartData.length === 0 && !isRateLoading) {
     return (

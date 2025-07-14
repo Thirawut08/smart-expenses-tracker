@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { accounts, investmentAccountNames, savingAccountNames } from '@/lib/data';
+import { useAccounts } from '@/hooks/use-accounts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +61,7 @@ interface TransactionFormProps {
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false, availablePurposes = [] }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
+  const { accounts } = useAccounts();
 
   // ป้องกัน initialData ที่ไม่มี mode (เช่น undefined หรือ transaction จริง)
   const safeInitialData: UnifiedFormValues = (initialData && 'mode' in initialData)
@@ -88,7 +89,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   
   const selectedAccount = useMemo(() => {
     return accounts.find(acc => acc.accountNumber === selectedAccountNumber);
-  }, [selectedAccountNumber]);
+  }, [selectedAccountNumber, accounts]);
 
   const allPurposes = useMemo(() => {
     const purposeSet = new Set(availablePurposes);

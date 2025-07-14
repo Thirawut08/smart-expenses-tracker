@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLedger } from '@/hooks/use-ledger';
+import { useAccounts } from '@/hooks/use-accounts';
 import type { Account } from '@/lib/types';
 
 const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
@@ -22,10 +23,10 @@ function getDefaultAccounts(): Account[] {
 
 export function ManageAccounts() {
   const { transactions } = useLedger();
-  const [accounts, setAccounts] = useState<Account[]>(getDefaultAccounts());
+  const { accounts, addAccount, editAccount, deleteAccount } = useAccounts();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editAccount, setEditAccount] = useState<Account | null>(null);
+  const [editAccountState, setEditAccountState] = useState<Account | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   // Form state
@@ -33,19 +34,6 @@ export function ManageAccounts() {
   const [accountNumber, setAccountNumber] = useState('');
   const [color, setColor] = useState('#808080');
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
-
-  // Load from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
-    if (stored) {
-      setAccounts(JSON.parse(stored));
-    }
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
-  }, [accounts]);
 
   const resetForm = () => {
     setName('');
@@ -56,47 +44,43 @@ export function ManageAccounts() {
 
   const handleAdd = () => {
     if (!name.trim() || !accountNumber.trim()) return;
-    if (accounts.some(a => a.accountNumber === accountNumber.trim())) return;
-    setAccounts([...accounts, {
-      id: Date.now().toString(),
+    addAccount({
       name: name.trim(),
       accountNumber: accountNumber.trim(),
       color,
       currency,
-    }]);
+    });
     setIsAddDialogOpen(false);
     resetForm();
   };
 
   const handleEdit = () => {
-    if (!editAccount) return;
-    setAccounts(accounts.map(a => a.id === editAccount.id ? {
-      ...a,
+    if (!editAccountState) return;
+    editAccount(editAccountState.id, {
       name: name.trim(),
       accountNumber: accountNumber.trim(),
       color,
       currency,
-    } : a));
+    });
     setIsEditDialogOpen(false);
-    setEditAccount(null);
+    setEditAccountState(null);
     resetForm();
   };
 
   const handleDelete = () => {
     if (!accountToDelete) return;
-    // ป้องกันลบบัญชีที่ถูกใช้งาน
     const used = transactions.some(t => t.account.accountNumber === accountToDelete.accountNumber);
     if (used) {
       alert('บัญชีนี้ถูกใช้งานในธุรกรรม ไม่สามารถลบได้');
       setAccountToDelete(null);
       return;
     }
-    setAccounts(accounts.filter(a => a.id !== accountToDelete.id));
+    deleteAccount(accountToDelete.id);
     setAccountToDelete(null);
   };
 
   const openEditDialog = (account: Account) => {
-    setEditAccount(account);
+    setEditAccountState(account);
     setName(account.name);
     setAccountNumber(account.accountNumber);
     setColor(account.color || '#808080');

@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Transaction } from '@/lib/types';
-import { accounts, investmentAccountNames, savingAccountNames } from '@/lib/data';
+import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 import { WalletCards } from 'lucide-react';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { useAccounts } from '@/hooks/use-accounts';
 
 const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -71,6 +72,7 @@ const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name
 
 export function AccountBalances({ transactions }: { transactions: Transaction[] }) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
+  const { accounts } = useAccounts();
     
   const calculateBalances = (accountNames: string[]) => {
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();

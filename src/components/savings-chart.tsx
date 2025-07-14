@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import type { Transaction } from '@/lib/types';
-import { savingAccountNames, accounts } from '@/lib/data';
+import { savingAccountNames } from '@/lib/data';
 import { PiggyBank } from 'lucide-react';
+import { useAccounts } from '@/hooks/use-accounts';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -16,6 +17,7 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
 });
 
 export function SavingsChart({ transactions }: { transactions: Transaction[] }) {
+  const { accounts } = useAccounts();
   const { chartData, totalSavings } = useMemo(() => {
     const savingTransactions = transactions.filter(t => savingAccountNames.includes(t.account.name));
 
