@@ -22,41 +22,44 @@ import { Switch } from '@/components/ui/switch';
 import { useState, useMemo, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 
-export const transactionFormSchema = z.object({
-  type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
-  accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
-  purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
-  customPurpose: z.string().optional(),
-  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-  sender: z.string().optional(),
-  recipient: z.string().optional(),
-  details: z.string().optional(),
-}).refine(data => {
+// สร้าง schema แบบ discriminated union
+const unifiedSchema = z.discriminatedUnion('mode', [
+  z.object({
+    mode: z.literal('normal'),
+    type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
+    accountNumber: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+    purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
+    customPurpose: z.string().optional(),
+    amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+    date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+    sender: z.string().optional(),
+    recipient: z.string().optional(),
+    details: z.string().optional(),
+  }).refine(data => {
     if (data.purpose === 'อื่นๆ' && (!data.customPurpose || data.customPurpose.trim() === '')) {
-        return false;
+      return false;
     }
     return true;
-}, {
+  }, {
     message: 'กรุณาระบุวัตถุประสงค์',
     path: ['customPurpose'],
-});
+  }),
+  z.object({
+    mode: z.literal('transfer'),
+    fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
+    toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
+    amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+    date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+    details: z.string().optional(),
+  })
+]);
 
-// เพิ่มใน schema (เฉพาะโหมดโอน)
-const transferFormSchema = z.object({
-  fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
-  toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
-  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-  details: z.string().optional(),
-});
 
-
-export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
+export type UnifiedFormValues = z.infer<typeof unifiedSchema>;
 
 interface TransactionFormProps {
-  initialData?: Partial<TransactionFormValues & { validationResult?: string }>;
-  onSubmit: (data: TransactionFormValues, saveAsTemplate: boolean) => void;
+  initialData?: Partial<UnifiedFormValues & { validationResult?: string }>;
+  onSubmit: (data: UnifiedFormValues, saveAsTemplate: boolean) => void;
   isEditing?: boolean;
   isTemplate?: boolean;
   availablePurposes: string[];
@@ -66,37 +69,23 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
 
-  // เพิ่ม state สำหรับบัญชีต้นทาง/ปลายทาง
-  const [fromAccount, setFromAccount] = useState('');
-  const [toAccount, setToAccount] = useState('');
-
-  const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(transactionFormSchema),
-    defaultValues: {
-      type: 'expense',
-      ...initialData,
-      purpose: initialData?.purpose,
-      customPurpose: '',
-      amount: initialData?.amount === undefined ? undefined : initialData.amount,
-      date: initialData?.date === undefined ? new Date() : initialData.date,
-      details: initialData?.details ?? '',
-      sender: initialData?.sender ?? '',
-      recipient: initialData?.recipient ?? '',
-    },
-  });
-
-  // ใช้ react-hook-form สำหรับโหมดโอน
-  const transferForm = useForm({
-    resolver: zodResolver(transferFormSchema),
-    defaultValues: {
-      fromAccount: '',
-      toAccount: '',
-      amount: undefined,
-      date: new Date(),
-      details: '',
-    },
+  const form = useForm<UnifiedFormValues>({
+    resolver: zodResolver(unifiedSchema),
+    defaultValues: isTransfer
+      ? { mode: 'transfer', fromAccount: '', toAccount: '', amount: undefined, date: new Date(), details: '' }
+      : { mode: 'normal', type: 'expense', ...initialData, purpose: initialData?.purpose, customPurpose: '', amount: initialData?.amount === undefined ? undefined : initialData.amount, date: initialData?.date === undefined ? new Date() : initialData.date, details: initialData?.details ?? '', sender: initialData?.sender ?? '', recipient: initialData?.recipient ?? '' },
     mode: 'onChange',
   });
+
+  // เมื่อสลับโหมด รีเซ็ตค่า default
+  useEffect(() => {
+    if (isTransfer) {
+      form.reset({ mode: 'transfer', fromAccount: '', toAccount: '', amount: undefined, date: new Date(), details: '' });
+    } else {
+      form.reset({ mode: 'normal', type: 'expense', ...initialData, purpose: initialData?.purpose, customPurpose: '', amount: initialData?.amount === undefined ? undefined : initialData.amount, date: initialData?.date === undefined ? new Date() : initialData.date, details: initialData?.details ?? '', sender: initialData?.sender ?? '', recipient: initialData?.recipient ?? '' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTransfer]);
 
   const selectedAccountNumber = form.watch('accountNumber');
   const purposeValue = form.watch('purpose');
@@ -136,32 +125,31 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   }, [selectedAccountNumber, form, selectedAccount]);
 
 
-  // handleSubmit ใหม่ รองรับโหมดโอน
-  const handleSubmit = (data: TransactionFormValues) => {
-    if (isTransfer) {
-      const transferData = transferForm.getValues();
-      const fromAcc = accounts.find(acc => acc.accountNumber === transferData.fromAccount);
-      const toAcc = accounts.find(acc => acc.accountNumber === transferData.toAccount);
-      if (!fromAcc || !toAcc || transferData.fromAccount === transferData.toAccount) {
+  // handleSubmit ใหม่ รองรับ schema ใหม่
+  const handleSubmit = (data: UnifiedFormValues) => {
+    if (data.mode === 'transfer') {
+      const fromAcc = accounts.find(acc => acc.accountNumber === data.fromAccount);
+      const toAcc = accounts.find(acc => acc.accountNumber === data.toAccount);
+      if (!fromAcc || !toAcc || data.fromAccount === data.toAccount) {
         alert('กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน');
         return;
       }
       const base = {
-        amount: transferData.amount,
-        date: transferData.date,
-        details: transferData.details,
+        amount: data.amount,
+        date: data.date,
+        details: data.details,
       };
       const tx1 = {
         ...base,
         type: 'expense' as const,
-        accountNumber: transferData.fromAccount,
+        accountNumber: data.fromAccount,
         purpose: 'โอนออก',
         details: `โอนไปบัญชี ${toAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
       const tx2 = {
         ...base,
         type: 'income' as const,
-        accountNumber: transferData.toAccount,
+        accountNumber: data.toAccount,
         purpose: 'โอนเข้า',
         details: `โอนจากบัญชี ${fromAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
@@ -171,91 +159,203 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     }
     // ... โหมดปกติ ...
     const finalData = { ...data };
-    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
+    if (data.mode === 'normal' && data.purpose === 'อื่นๆ' && data.customPurpose) {
       finalData.purpose = data.customPurpose.trim();
     }
-    onSubmit(finalData, saveAsTemplate);
-  }
+    // ลบฟิลด์ mode ออกก่อนส่ง
+    delete (finalData as any).mode;
+    onSubmit(finalData as any, saveAsTemplate);
+  };
 
   // Debug log
   console.log({
-    fromAccount,
-    toAccount,
+    fromAccount: form.watch('fromAccount'),
+    toAccount: form.watch('toAccount'),
     amount: form.watch('amount'),
     date: form.watch('date'),
   });
 
   return (
-    <>
-      <Form {...(isTransfer ? transferForm : form)}>
-        <form onSubmit={(isTransfer ? transferForm.handleSubmit(handleSubmit) : form.handleSubmit(handleSubmit))} className="space-y-4 pt-4">
-          {/* Toggle โอนระหว่างบัญชี */}
-          <div className="flex items-center gap-2 mb-2">
-            <Switch id="transfer-switch" checked={isTransfer} onCheckedChange={setIsTransfer} />
-            <label htmlFor="transfer-switch" className="font-medium">โอนระหว่างบัญชีของฉัน</label>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
+        {/* Toggle โอนระหว่างบัญชี */}
+        <div className="flex items-center gap-2 mb-2">
+          <Switch id="transfer-switch" checked={isTransfer} onCheckedChange={setIsTransfer} />
+          <label htmlFor="transfer-switch" className="font-medium">โอนระหว่างบัญชีของฉัน</label>
+        </div>
+        {form.watch('mode') === 'transfer' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* fromAccount */}
+            <FormField
+              control={form.control}
+              name="fromAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>บัญชีต้นทาง</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="เลือกบัญชีต้นทาง" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accounts.map(account => (
+                        <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === form.watch('toAccount')}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* toAccount */}
+            <FormField
+              control={form.control}
+              name="toAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>บัญชีปลายทาง</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue placeholder="เลือกบัญชีปลายทาง" /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accounts.map(account => (
+                        <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === form.watch('fromAccount')}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* amount */}
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>จำนวนเงิน</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber || undefined)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* date */}
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>วันที่และเวลา</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        initialFocus />
+                      <div className="p-2 border-t border-border">
+                        <TimePicker date={field.value} setDate={field.onChange} />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* details */}
+            <FormField
+              control={form.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>รายละเอียด (ถ้ามี)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="col-span-2 flex flex-col items-end">
+              <Button
+                type="submit"
+                className="w-full md:w-auto"
+                disabled={!(form.formState.isValid && form.watch('fromAccount') && form.watch('toAccount') && form.watch('fromAccount') !== form.watch('toAccount'))}
+              >
+                บันทึกการโอน
+              </Button>
+              {form.watch('fromAccount') === form.watch('toAccount') && (
+                <div className="text-red-500 text-sm mt-2">กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน</div>
+              )}
+            </div>
           </div>
+        ) : (
+          <>
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>ประเภทธุรกรรม</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl><RadioGroupItem value="expense" /></FormControl>
+                        <FormLabel className="font-normal">รายจ่าย</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl><RadioGroupItem value="income" /></FormControl>
+                        <FormLabel className="font-normal">รายรับ</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          {isTransfer ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
-                control={transferForm.control}
-                name="fromAccount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>บัญชีต้นทาง</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="เลือกบัญชีต้นทาง" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {accounts.map(account => (
-                          <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === transferForm.watch('toAccount')}>
-                            {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={transferForm.control}
-                name="toAccount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>บัญชีปลายทาง</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="เลือกบัญชีปลายทาง" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {accounts.map(account => (
-                          <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === transferForm.watch('fromAccount')}>
-                            {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={transferForm.control}
+                control={form.control}
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>จำนวนเงิน</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} value={field.value ?? ''} onChange={event => field.onChange(event.target.valueAsNumber || undefined)} />
+                      <div className="relative">
+                        <Input 
+                          type="number" 
+                          placeholder="0.00" 
+                          {...field} 
+                          value={field.value ?? ''} 
+                          onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
+                          className={cn(selectedAccount && 'pl-8')}
+                        />
+                         {selectedAccount && (
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                            {selectedAccount.currency === 'USD' ? '$' : '฿'}
+                          </span>
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
-                control={transferForm.control}
+                control={form.control}
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
@@ -263,12 +363,27 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
-                          <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>{field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                          initialFocus />
+                        <Calendar
+                          locale={th}
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                        />
                         <div className="p-2 border-t border-border">
                           <TimePicker date={field.value} setDate={field.onChange} />
                         </div>
@@ -278,253 +393,130 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                   </FormItem>
                 )}
               />
-              <FormField
-                control={transferForm.control}
-                name="details"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>รายละเอียด (ถ้ามี)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="col-span-2 flex flex-col items-end">
-                <Button
-                  type="submit"
-                  className="w-full md:w-auto"
-                  disabled={!transferForm.formState.isValid}
-                >
-                  บันทึกการโอน
-                </Button>
-                {transferForm.watch('fromAccount') === transferForm.watch('toAccount') && (
-                  <div className="text-red-500 text-sm mt-2">กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน</div>
-                )}
-              </div>
             </div>
-          ) : (
-            <>
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>ประเภทธุรกรรม</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl><RadioGroupItem value="expense" /></FormControl>
-                          <FormLabel className="font-normal">รายจ่าย</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl><RadioGroupItem value="income" /></FormControl>
-                          <FormLabel className="font-normal">รายรับ</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="accountNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>บัญชี</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="เลือกบัญชี" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accounts.map(account => (
+                        <SelectItem key={account.id} value={account.accountNumber}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="purpose"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>วัตถุประสงค์</FormLabel>
+                   <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!selectedAccount && (investmentAccountNames.includes(selectedAccount.name) || savingAccountNames.includes(selectedAccount.name))}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="เลือกวัตถุประสงค์" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {allPurposes.map(purpose => (
+                        <SelectItem key={purpose} value={purpose}>
+                          {purpose}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {purposeValue === 'อื่นๆ' && (
                 <FormField
                   control={form.control}
-                  name="amount"
+                  name="customPurpose"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>จำนวนเงิน</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type="number" 
-                            placeholder="0.00" 
-                            {...field} 
-                            value={field.value ?? ''} 
-                            onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
-                            className={cn(selectedAccount && 'pl-8')}
-                          />
-                           {selectedAccount && (
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                              {selectedAccount.currency === 'USD' ? '$' : '฿'}
-                            </span>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>วันที่และเวลา</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                      <FormItem>
+                          <FormLabel>ระบุวัตถุประสงค์</FormLabel>
                           <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                              <Input placeholder="เช่น ค่ากาแฟ, ค่าสมาชิก Netflix" {...field} />
                           </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            locale={th}
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                          <div className="p-2 border-t border-border">
-                            <TimePicker date={field.value} setDate={field.onChange} />
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
+                          <FormMessage />
+                      </FormItem>
                   )}
                 />
-              </div>
-
+            )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="accountNumber"
+                name="sender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>บัญชี</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกบัญชี" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {accounts.map(account => (
-                          <SelectItem key={account.id} value={account.accountNumber}>
-                            {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="purpose"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>วัตถุประสงค์</FormLabel>
-                     <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!!selectedAccount && (investmentAccountNames.includes(selectedAccount.name) || savingAccountNames.includes(selectedAccount.name))}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกวัตถุประสงค์" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {allPurposes.map(purpose => (
-                          <SelectItem key={purpose} value={purpose}>
-                            {purpose}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {purposeValue === 'อื่นๆ' && (
-                  <FormField
-                    control={form.control}
-                    name="customPurpose"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>ระบุวัตถุประสงค์</FormLabel>
-                            <FormControl>
-                                <Input placeholder="เช่น ค่ากาแฟ, ค่าสมาชิก Netflix" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                  />
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="sender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ผู้จ่าย (ถ้ามี)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ชื่อผู้จ่าย" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="recipient"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ผู้รับ (ถ้ามี)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ชื่อผู้รับ" {...field} value={field.value ?? ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="details"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>รายละเอียด (ถ้ามี)</FormLabel>
+                    <FormLabel>ผู้จ่าย (ถ้ามี)</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
+                      <Input placeholder="ชื่อผู้จ่าย" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              {!(isEditing || isTemplate) && (
-                <div className="flex items-center space-x-2 pt-2">
-                  <Switch id="save-template" checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} />
-                  <Label htmlFor="save-template">บันทึกเป็นเทมเพลต</Label>
-                </div>
-              )}
+              <FormField
+                control={form.control}
+                name="recipient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ผู้รับ (ถ้ามี)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ชื่อผู้รับ" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-              <Button type="submit" className="w-full">
-                {isEditing ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}
-              </Button>
-            </>
-          )}
-        </form>
-      </Form>
-    </>
+            <FormField
+              control={form.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>รายละเอียด (ถ้ามี)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {!(isEditing || isTemplate) && (
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch id="save-template" checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} />
+                <Label htmlFor="save-template">บันทึกเป็นเทมเพลต</Label>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full">
+              {isEditing ? 'บันทึกการเปลี่ยนแปลง' : 'เพิ่มธุรกรรม'}
+            </Button>
+          </>
+        )}
+      </form>
+    </Form>
   );
 }

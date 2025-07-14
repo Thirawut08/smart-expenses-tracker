@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Template } from '@/lib/types';
 import { accounts, defaultPurposes } from '@/lib/data';
-import type { TransactionFormValues } from '@/components/transaction-form';
+import type { TransactionFormValues } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TransactionForm, type TransactionFormValues } from './transaction-form';
+import { TransactionForm } from './transaction-form';
+import type { TransactionFormValues } from '@/lib/types';
 import { SlipUploader } from './slip-uploader';
 import type { ExtractTransactionDetailsOutput } from '@/ai/flows/extract-transaction-details';
 
