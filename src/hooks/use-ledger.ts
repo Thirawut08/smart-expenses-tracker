@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Template } from '@/lib/types';
 import { accounts, defaultPurposes } from '@/lib/data';
-import type { Transaction } from '@/lib/types';
 import type { UnifiedFormValues } from '@/components/transaction-form';
 import { useToast } from '@/hooks/use-toast';
 
@@ -186,7 +185,11 @@ export function useLedger() {
     setIsDialogOpen(open);
   }, []);
 
-  const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues, saveAsTemplate: boolean) => {
+  const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues | (Transaction | UnifiedFormValues)[], saveAsTemplate: boolean) => {
+    if (Array.isArray(data)) {
+      data.forEach(tx => handleSaveTransaction(tx, false));
+      return;
+    }
     const selectedAccount = accounts.find(acc => acc.accountNumber === data.accountNumber);
     if (!selectedAccount) {
       toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
