@@ -42,6 +42,15 @@ export const transactionFormSchema = z.object({
     path: ['customPurpose'],
 });
 
+// เพิ่มใน schema (เฉพาะโหมดโอน)
+const transferFormSchema = z.object({
+  fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
+  toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
+  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+  details: z.string().optional(),
+});
+
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;
 
@@ -74,6 +83,19 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       sender: initialData?.sender ?? '',
       recipient: initialData?.recipient ?? '',
     },
+  });
+
+  // ใช้ react-hook-form สำหรับโหมดโอน
+  const transferForm = useForm({
+    resolver: zodResolver(transferFormSchema),
+    defaultValues: {
+      fromAccount: '',
+      toAccount: '',
+      amount: undefined,
+      date: new Date(),
+      details: '',
+    },
+    mode: 'onChange',
   });
 
   const selectedAccountNumber = form.watch('accountNumber');
@@ -117,32 +139,32 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   // handleSubmit ใหม่ รองรับโหมดโอน
   const handleSubmit = (data: TransactionFormValues) => {
     if (isTransfer) {
-      // สร้าง 2 transaction
-      const fromAcc = accounts.find(acc => acc.accountNumber === fromAccount);
-      const toAcc = accounts.find(acc => acc.accountNumber === toAccount);
-      if (!fromAcc || !toAcc || fromAccount === toAccount) {
+      const transferData = transferForm.getValues();
+      const fromAcc = accounts.find(acc => acc.accountNumber === transferData.fromAccount);
+      const toAcc = accounts.find(acc => acc.accountNumber === transferData.toAccount);
+      if (!fromAcc || !toAcc || transferData.fromAccount === transferData.toAccount) {
         alert('กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน');
         return;
       }
       const base = {
-        amount: data.amount,
-        date: data.date,
+        amount: transferData.amount,
+        date: transferData.date,
+        details: transferData.details,
       };
       const tx1 = {
         ...base,
-        type: 'expense',
-        accountNumber: fromAccount,
+        type: 'expense' as const,
+        accountNumber: transferData.fromAccount,
         purpose: 'โอนออก',
-        details: `โอนไปบัญชี ${toAcc.name}`,
+        details: `โอนไปบัญชี ${toAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
       const tx2 = {
         ...base,
-        type: 'income',
-        accountNumber: toAccount,
+        type: 'income' as const,
+        accountNumber: transferData.toAccount,
         purpose: 'โอนเข้า',
-        details: `โอนจากบัญชี ${fromAcc.name}`,
+        details: `โอนจากบัญชี ${fromAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
-      // เรียก onSubmit ทีละ transaction
       onSubmit(tx1, saveAsTemplate);
       onSubmit(tx2, saveAsTemplate);
       return;
@@ -165,8 +187,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-4">
+      <Form {...(isTransfer ? transferForm : form)}>
+        <form onSubmit={(isTransfer ? transferForm.handleSubmit(handleSubmit) : form.handleSubmit(handleSubmit))} className="space-y-4 pt-4">
           {/* Toggle โอนระหว่างบัญชี */}
           <div className="flex items-center gap-2 mb-2">
             <Switch id="transfer-switch" checked={isTransfer} onCheckedChange={setIsTransfer} />
@@ -175,38 +197,52 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
           {isTransfer ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <FormLabel>บัญชีต้นทาง</FormLabel>
-                <Select value={fromAccount} onValueChange={setFromAccount}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="เลือกบัญชีต้นทาง" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {accounts.map(account => (
-                      <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === toAccount}>
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <FormLabel>บัญชีปลายทาง</FormLabel>
-                <Select value={toAccount} onValueChange={setToAccount}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="เลือกบัญชีปลายทาง" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {accounts.map(account => (
-                      <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === fromAccount}>
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <FormField
-                control={form.control}
+                control={transferForm.control}
+                name="fromAccount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>บัญชีต้นทาง</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="เลือกบัญชีต้นทาง" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {accounts.map(account => (
+                          <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === transferForm.watch('toAccount')}>
+                            {account.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={transferForm.control}
+                name="toAccount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>บัญชีปลายทาง</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="เลือกบัญชีปลายทาง" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {accounts.map(account => (
+                          <SelectItem key={account.id} value={account.accountNumber} disabled={account.accountNumber === transferForm.watch('fromAccount')}>
+                            {account.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={transferForm.control}
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
@@ -219,7 +255,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 )}
               />
               <FormField
-                control={form.control}
+                control={transferForm.control}
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
@@ -243,7 +279,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 )}
               />
               <FormField
-                control={form.control}
+                control={transferForm.control}
                 name="details"
                 render={({ field }) => (
                   <FormItem>
@@ -259,18 +295,11 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <Button
                   type="submit"
                   className="w-full md:w-auto"
-                  disabled={
-                    !fromAccount ||
-                    !toAccount ||
-                    fromAccount === toAccount ||
-                    !form.watch('amount') ||
-                    Number(form.watch('amount')) <= 0 ||
-                    !form.watch('date')
-                  }
+                  disabled={!transferForm.formState.isValid}
                 >
                   บันทึกการโอน
                 </Button>
-                {fromAccount === toAccount && (
+                {transferForm.watch('fromAccount') === transferForm.watch('toAccount') && (
                   <div className="text-red-500 text-sm mt-2">กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน</div>
                 )}
               </div>
