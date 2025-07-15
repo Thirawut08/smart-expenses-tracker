@@ -12,6 +12,7 @@ import { CardContent } from '@/components/ui/card';
 import { monthDetails } from '@/lib/data';
 
 export function MonthInfoTable() {
+  const currentMonth = new Date().getMonth() + 1; // 1-based
   return (
     <CardContent className="pt-0">
       <Table>
@@ -26,7 +27,10 @@ export function MonthInfoTable() {
         </TableHeader>
         <TableBody>
           {monthDetails.map((month) => (
-            <TableRow key={month.order}>
+            <TableRow
+              key={month.order}
+              className={month.order === currentMonth ? 'bg-blue-900/40 text-blue-400 font-bold' : ''}
+            >
               <TableCell>{month.order}</TableCell>
               <TableCell>{month.engFull}</TableCell>
               <TableCell>{month.engAbbr}</TableCell>
