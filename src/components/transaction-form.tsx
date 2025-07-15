@@ -75,6 +75,19 @@ function getAccountBalance(accountId: string, transactions: Transaction[]): { ba
   return { balance, currency };
 }
 
+// เพิ่มฟังก์ชัน getContrastColor
+function getContrastColor(bg: string) {
+  if (!bg) return '#222';
+  // แปลง hex เป็น rgb
+  const hex = bg.replace('#', '');
+  const r = parseInt(hex.substring(0,2), 16);
+  const g = parseInt(hex.substring(2,4), 16);
+  const b = parseInt(hex.substring(4,6), 16);
+  // คำนวณ contrast
+  const yiq = (r*299 + g*587 + b*114) / 1000;
+  return yiq >= 128 ? '#222' : '#fff';
+}
+
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false, availablePurposes = [], transactions = [] }: TransactionFormProps) {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
@@ -298,8 +311,9 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         </FormControl>
                         <SelectContent>
                           {accounts.map(account => (
-                            <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('toAccount')}>
-                              <span className="inline-block w-3 h-3 rounded-full mr-2 align-middle" style={{ backgroundColor: account.color || '#ccc' }} />
+                            <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('toAccount')}
+                              style={{ backgroundColor: account.color, color: getContrastColor(account.color) }}
+                            >
                               {account.name}
                             </SelectItem>
                           ))}
@@ -330,8 +344,9 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         </FormControl>
                         <SelectContent>
                           {accounts.map(account => (
-                            <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('fromAccount')}>
-                              <span className="inline-block w-3 h-3 rounded-full mr-2 align-middle" style={{ backgroundColor: account.color || '#ccc' }} />
+                            <SelectItem key={account.id} value={account.id} disabled={account.id === form.watch('fromAccount')}
+                              style={{ backgroundColor: account.color, color: getContrastColor(account.color) }}
+                            >
                               {account.name}
                             </SelectItem>
                           ))}
@@ -499,8 +514,9 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                       </FormControl>
                       <SelectContent>
                         {accounts.map(account => (
-                          <SelectItem key={account.id} value={account.id}>
-                            <span className="inline-block w-3 h-3 rounded-full mr-2 align-middle" style={{ backgroundColor: account.color || '#ccc' }} />
+                          <SelectItem key={account.id} value={account.id}
+                            style={{ backgroundColor: account.color, color: getContrastColor(account.color) }}
+                          >
                             {account.name}
                           </SelectItem>
                         ))}
