@@ -114,6 +114,7 @@ export default function TransactionsPage() {
                 initialData={dialogInitialData}
                 isEditing={!!editingTransaction}
                 availablePurposes={purposes}
+                transactions={transactions}
               >
                 <Button onClick={() => setIsDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />

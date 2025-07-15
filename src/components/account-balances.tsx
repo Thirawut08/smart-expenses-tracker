@@ -9,6 +9,7 @@ import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 import { WalletCards } from 'lucide-react';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 import { useAccounts } from '@/hooks/use-accounts';
+import { convertToTHB } from '@/lib/utils';
 
 const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -100,7 +101,7 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
       .sort((a, b) => a.name.localeCompare(b.name));
 
     const totalInThb = sortedBalances.reduce((sum, acc) => {
-        const amountInThb = acc.currency === 'USD' ? acc.balance * (usdToThbRate || 0) : acc.balance;
+        const amountInThb = convertToTHB(acc.balance, acc.currency, usdToThbRate || 0);
         return sum + amountInThb;
     }, 0);
     

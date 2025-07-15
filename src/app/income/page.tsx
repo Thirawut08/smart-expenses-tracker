@@ -10,6 +10,7 @@ import { useIncome } from '@/hooks/use-income';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { IncomeAllocationDashboard } from '@/components/income-allocation-dashboard';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { convertToTHB } from '@/lib/utils';
 
 export default function IncomePage() {
   const { 
@@ -28,9 +29,7 @@ export default function IncomePage() {
   const totalIncomeInTHB = useMemo(() => {
     if (!usdToThbRate) return 0;
     return incomes.reduce((total, income) => {
-      const amountInTHB = income.account.currency === 'USD' 
-        ? income.amount * usdToThbRate 
-        : income.amount;
+      const amountInTHB = convertToTHB(income.amount, income.account.currency, usdToThbRate);
       return total + amountInTHB;
     }, 0);
   }, [incomes, usdToThbRate]);

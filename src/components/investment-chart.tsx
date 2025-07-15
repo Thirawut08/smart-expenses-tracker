@@ -10,6 +10,7 @@ import { useAccounts } from '@/hooks/use-accounts';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 import { Skeleton } from './ui/skeleton';
+import { convertToTHB } from '@/lib/utils';
 
 const thbFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -69,7 +70,7 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     
     const dataWithValues = Array.from(balances.entries())
       .map(([name, { balance, currency }]) => {
-          const balanceInTHB = currency === 'USD' ? balance * (usdToThbRate || 0) : balance;
+          const balanceInTHB = convertToTHB(balance, currency, usdToThbRate || 0);
           return { 
             name, 
             value: balance,

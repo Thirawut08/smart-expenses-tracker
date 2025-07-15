@@ -17,6 +17,7 @@ type AddTransactionDialogProps = {
   initialData?: Partial<UnifiedFormValues>;
   isEditing?: boolean;
   availablePurposes: string[];
+  transactions: Transaction[]; // เพิ่ม prop นี้
 };
 
 type SlipData = ExtractTransactionDetailsOutput & { validationResult?: string };
@@ -43,7 +44,7 @@ function getInitialFormData(initialData: any): any {
   return initialData;
 }
 
-export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes, transactions }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
   const [activeTab, setActiveTab] = useState('manual');
   
@@ -113,6 +114,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
               isEditing={isEditing}
               isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
               availablePurposes={availablePurposes}
+              transactions={transactions} // ส่ง prop นี้เข้าไป
             />
           </TabsContent>
           <TabsContent value="slip">

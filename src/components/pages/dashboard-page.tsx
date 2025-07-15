@@ -37,6 +37,9 @@ export function DashboardPage() {
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
+              <span className="text-sm text-muted-foreground border rounded px-2 py-1 bg-muted/50">
+                {new Date().toLocaleDateString('th-TH')}
+              </span>
             </div>
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger className="w-full md:w-[220px] font-semibold">
@@ -44,11 +47,19 @@ export function DashboardPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">ทุกเดือน</SelectItem>
-                {thaiMonths.map(month => (
-                  <SelectItem key={month.value} value={month.value.toString()}>
-                    {month.label}
-                  </SelectItem>
-                ))}
+                {thaiMonths.map(month => {
+                  const isCurrent = month.value === new Date().getMonth();
+                  return (
+                    <SelectItem
+                      key={month.value}
+                      value={month.value.toString()}
+                      className={isCurrent ? 'bg-blue-100 text-blue-700 font-bold dark:bg-blue-900/40' : ''}
+                    >
+                      {month.label}
+                      {isCurrent && <span className="ml-2 text-xs text-blue-500">(ปัจจุบัน)</span>}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

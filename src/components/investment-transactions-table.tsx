@@ -6,7 +6,7 @@ import { th } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { cn, convertToTHB } from '@/lib/utils';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 import { Skeleton } from './ui/skeleton';
 
@@ -58,9 +58,7 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
           </TableHeader>
           <TableBody>
             {transactions.map((transaction) => {
-              const amountInTHB = transaction.account.currency === 'USD'
-                ? transaction.amount * (usdToThbRate || 0)
-                : transaction.amount;
+              const amountInTHB = convertToTHB(transaction.amount, transaction.account.currency, usdToThbRate || 0);
               const amountInThbFormatted = thbFormatter.format(transaction.type === 'income' ? amountInTHB : -amountInTHB);
 
               return (

@@ -7,6 +7,7 @@ import type { Transaction } from '@/lib/types';
 import { useMemo } from 'react';
 import { PieChartIcon, Loader2 } from 'lucide-react';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { convertToTHB } from '@/lib/utils';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
@@ -35,7 +36,7 @@ export function MonthlyStats({ transactions, monthLabel }: { transactions: Trans
     }
     
     const getAmountInTHB = (t: Transaction) => {
-        return t.account.currency === 'USD' ? t.amount * usdToThbRate : t.amount;
+        return convertToTHB(t.amount, t.account.currency, usdToThbRate);
     };
 
     const income = transactions

@@ -6,7 +6,7 @@ import { th } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+import { cn, convertToTHB } from '@/lib/utils';
 
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
