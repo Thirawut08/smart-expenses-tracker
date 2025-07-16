@@ -4,77 +4,85 @@
 
 @layer base {
   :root {
-    --background: 249 15% 97%; /* #F9F9F9 */
-    --foreground: 213 44% 20%; /* #2C3E50 */
+    --background: 220 20% 98%; /* เทาอ่อนมาก #F7F8FA */
+    --foreground: 240 15% 5%; /* #080809 */
 
     --card: 0 0% 100%; /* #FFFFFF */
-    --card-foreground: 213 44% 20%; /* #2C3E50 */
+    --card-foreground: 240 15% 5%; /* #080809 */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 213 44% 20%;
+    --popover-foreground: 240 15% 5%;
 
-    --primary: 204 70% 53%; /* #3498DB */
+    --primary: 240 15% 5%; /* #080809 */
     --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-    --secondary: 210 10% 60%; /* #7F8C8D */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 220 10% 80%; /* #E5E7EB เทาอ่อน */
+    --secondary-foreground: 240 15% 5%;
 
-    --muted: 210 10% 80%; /* #E0E0E0 (ใช้สีเทาอ่อนสำหรับ muted) */
-    --muted-foreground: 210 10% 60%; /* #7F8C8D */
+    --muted: 220 10% 90%; /* #F1F3F6 */
+    --muted-foreground: 220 10% 50%; /* #8A8D93 */
 
-    --accent: 204 70% 53%; /* #3498DB */
+    --accent: 220 100% 60%; /* #3B82F6 น้ำเงินอ่อน (เหมาะกับลิงก์/ปุ่ม) */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 2 80% 60%; /* สีแดง (default) */
+    --destructive: 0 80% 60%; /* #FF4D4F แดง */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 10% 90%; /* #E0E0E0 */
-    --input: 210 10% 90%;
-    --ring: 217 74% 40%; /* #2980B9 */
+    --border: 220 10% 90%; /* #E5E7EB */
+    --input: 220 10% 90%;
+    --ring: 220 100% 60%; /* #3B82F6 */
 
-    --chart-1: 204 70% 53%; /* #3498DB */
-    --chart-2: 2 80% 60%;
-    --chart-3: 160 60% 40%;
-    --chart-4: 350 87% 60%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 220 100% 60%; /* #3B82F6 */
+    --chart-2: 0 80% 60%; /* #FF4D4F */
+    --chart-3: 160 60% 40%; /* #2DD4BF */
+    --chart-4: 50 100% 60%; /* #FACC15 */
+    --chart-5: 280 60% 60%; /* #A78BFA */
 
     --radius: 0.5rem;
+    --primary-hover: 240 10% 15%; /* #232427 (เข้มขึ้น) */
+    --secondary-hover: 220 10% 70%; /* #D1D5DB (เข้มขึ้น) */
+    --accent-hover: 220 100% 50%; /* #2563EB (น้ำเงินเข้มขึ้น) */
+    --destructive-hover: 0 80% 50%; /* #D90429 (แดงเข้มขึ้น) */
   }
 
   .dark {
-    --background: 225 10% 10%; /* #1A1A1A */
-    --foreground: 0 0% 88%; /* #E0E0E0 */
+    --background: 240 10% 10%; /* #18191A */
+    --foreground: 0 0% 100%; /* #FFFFFF */
 
-    --card: 225 10% 17%; /* #2C2C2C */
-    --card-foreground: 0 0% 88%; /* #E0E0E0 */
+    --card: 240 10% 16%; /* #232427 */
+    --card-foreground: 0 0% 100%; /* #FFFFFF */
 
-    --popover: 225 10% 17%;
-    --popover-foreground: 0 0% 88%;
+    --popover: 240 10% 16%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 204 70% 53%; /* #3498DB */
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 100%; /* #FFFFFF */
+    --primary-foreground: 240 15% 5%; /* #080809 */
 
-    --secondary: 0 0% 63%; /* #A0A0A0 */
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 240 10% 20%; /* #2A2B2E */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 63%; /* #A0A0A0 */
-    --muted-foreground: 0 0% 88%; /* #E0E0E0 */
+    --muted: 240 10% 25%; /* #35363A */
+    --muted-foreground: 220 10% 70%; /* #C7C9D1 */
 
-    --accent: 204 70% 67%; /* #5DADE2 */
+    --accent: 220 100% 70%; /* #60A5FA น้ำเงินอ่อน */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 2 80% 40%;
+    --destructive: 0 80% 60%; /* #FF4D4F */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 25%; /* #404040 */
-    --input: 0 0% 25%;
-    --ring: 204 70% 67%; /* #5DADE2 */
+    --border: 240 10% 20%; /* #2A2B2E */
+    --input: 240 10% 20%;
+    --ring: 220 100% 70%; /* #60A5FA */
 
-    --chart-1: 204 70% 53%; /* #3498DB */
-    --chart-2: 2 80% 60%;
-    --chart-3: 160 60% 40%;
-    --chart-4: 350 87% 60%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 220 100% 70%; /* #60A5FA */
+    --chart-2: 0 80% 60%; /* #FF4D4F */
+    --chart-3: 160 60% 40%; /* #2DD4BF */
+    --chart-4: 50 100% 60%; /* #FACC15 */
+    --chart-5: 280 60% 60%; /* #A78BFA */
+    --primary-hover: 0 0% 80%; /* #CCCCCC (ขาวหม่น) */
+    --secondary-hover: 240 10% 30%; /* #3A3B3F (สว่างขึ้น) */
+    --accent-hover: 220 100% 60%; /* #3B82F6 (น้ำเงินสด) */
+    --destructive-hover: 0 80% 50%; /* #D90429 (แดงเข้มขึ้น) */
   }
 }
 
