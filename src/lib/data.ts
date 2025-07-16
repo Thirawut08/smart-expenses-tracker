@@ -4,7 +4,7 @@ export const accounts: Account[] = [
   { id: '6', name: 'Binance TH', color: '#F0B90B', currency: 'THB' },
   { id: '5', name: 'Bybit', color: '#FFD42C', currency: 'USD' },
   { id: '4', name: 'Dime!', color: '#7A3FF3', currency: 'THB' },
-  { id: '14', name: 'Dime! FCD', color: '#986FFB', currency: 'USD' },
+  { id: '14', name: 'Dime! FCD', color: '#259b24', currency: 'USD' },
   { id: '15', name: 'Dime! USD', color: '#5C1FDC', currency: 'USD' },
   { id: '10', name: 'GSB', color: '#EC008C', currency: 'THB' },
   { id: '1', name: 'KBANK', color: '#00A950', currency: 'THB' },

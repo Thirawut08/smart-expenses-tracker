@@ -36,6 +36,17 @@ interface AddIncomeFormProps {
   onCancel: () => void;
 }
 
+// เพิ่มฟังก์ชัน getContrastColor
+function getContrastColor(bg: string) {
+  if (!bg) return '#222';
+  const hex = bg.replace('#', '');
+  const r = parseInt(hex.substring(0,2), 16);
+  const g = parseInt(hex.substring(2,4), 16);
+  const b = parseInt(hex.substring(4,6), 16);
+  const yiq = (r*299 + g*587 + b*114) / 1000;
+  return yiq >= 128 ? '#222' : '#fff';
+}
+
 export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeFormProps) {
   const { accounts } = useAccounts();
   const form = useForm<IncomeFormValues>({
@@ -63,21 +74,22 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4 md:p-6 bg-card rounded-xl shadow border border-border">
+        <div className="font-headline text-lg md:text-xl font-bold mb-4 text-primary-foreground dark:text-white">เพิ่มรายการใหม่</div>
+        <div className="flex flex-col gap-6">
             <FormField
               control={form.control}
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>วันที่และเวลา</FormLabel>
+                  <FormLabel className="font-semibold">วันที่และเวลา</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-full pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal text-base h-12",
                             !field.value && "text-muted-foreground"
                           )}
                         >
@@ -109,17 +121,28 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
               name="accountId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>บัญชี</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel className="font-semibold">บัญชี</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 text-base">
                         <SelectValue placeholder="เลือกบัญชี" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {accounts.map(account => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name}
+                        <SelectItem
+                          key={account.id}
+                          value={account.id}
+                          style={{
+                            backgroundColor: account.color || undefined,
+                            color: getContrastColor(account.color || '#fff'),
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <span style={{fontWeight: 500}}>{account.name}</span>
+                          <span style={{fontSize: 12, opacity: 0.7, marginLeft: 6}}>{account.currency}</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -129,13 +152,13 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
               )}
             />
         </div>
-        
+        <div className="border-t my-4" />
         <FormField
             control={form.control}
             name="amount"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>จำนวนเงิน</FormLabel>
+                <FormLabel className="font-semibold">จำนวนเงิน</FormLabel>
                 <FormControl>
                 <div className="relative">
                     <Input 
@@ -144,10 +167,10 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
                     {...field} 
                     value={field.value ?? ''} 
                     onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
-                    className={cn(selectedAccount && 'pl-8')}
+                    className={cn(selectedAccount && 'pl-8', 'h-12 text-lg')}
                     />
                     {selectedAccount && (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
                         {selectedAccount.currency === 'USD' ? '$' : '฿'}
                     </span>
                     )}
@@ -157,10 +180,9 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
             </FormItem>
             )}
         />
-        
-        <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onCancel}>ยกเลิก</Button>
-            <Button type="submit">
+        <div className="flex justify-end gap-2 mt-6">
+            <Button type="button" variant="ghost" onClick={onCancel} className="h-11 px-6 text-base font-semibold">ยกเลิก</Button>
+            <Button type="submit" className="h-11 px-8 text-base font-bold">
                 {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'บันทึกรายรับ'}
             </Button>
         </div>

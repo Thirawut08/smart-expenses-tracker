@@ -186,8 +186,28 @@ export function useLedger() {
   }, []);
 
   const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues | (Transaction | UnifiedFormValues)[], saveAsTemplate: boolean) => {
+    console.log('handleSaveTransaction', data);
     if (Array.isArray(data)) {
-      data.forEach(tx => handleSaveTransaction(tx, false));
+      // กรณีโอนระหว่างบัญชี รับ array ของ Transaction หรือ UnifiedFormValues
+      const newTransactions: Transaction[] = data.map(tx => {
+        const selectedAccount = accounts.find(acc => acc.id === tx.accountId);
+        console.log('DEBUG tx.accountId:', tx.accountId, 'selectedAccount:', selectedAccount?.name);
+        if (!selectedAccount) return null;
+        return {
+          id: new Date().toISOString() + Math.random(),
+          account: selectedAccount,
+          purpose: tx.purpose,
+          amount: tx.amount,
+          date: tx.date,
+          type: tx.type,
+          details: tx.details,
+          sender: tx.sender,
+          recipient: tx.recipient,
+        };
+      }).filter(Boolean) as Transaction[];
+      updateAndSaveTransactions([...transactions, ...newTransactions]);
+      toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว` });
+      handleDialogClose(false);
       return;
     }
     const selectedAccount = accounts.find(acc => acc.id === data.accountId);
@@ -256,7 +276,6 @@ export function useLedger() {
         id: new Date().toISOString() + Math.random(),
         name: `${finalData.purpose} (${finalData.type === 'income' ? 'รายรับ' : 'รายจ่าย'})`,
         type: finalData.type,
-        accountNumber: finalData.accountNumber,
         purpose: finalData.purpose,
         sender: finalData.sender,
         recipient: finalData.recipient,

@@ -19,7 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TimePicker } from './time-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 import type { Transaction } from '@/lib/types';
@@ -107,18 +107,26 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     mode: 'onChange',
   });
 
-  // เมื่อสลับโหมด รีเซ็ตค่า default
+  // ใช้ ref กัน reset/setValue ซ้ำ
+  const didInit = useRef(false);
+
+  // Reset เฉพาะตอน toggle โหมด และ accounts พร้อม
   useEffect(() => {
+    if (accounts.length === 0) return;
     if (isTransfer) {
+      console.log('RESET form (isTransfer=true)', form.getValues());
       form.reset({ mode: 'transfer', fromAccount: defaultAccount?.id ?? '', toAccount: '', amount: undefined, date: new Date(), details: '' });
     } else {
+      console.log('RESET form (isTransfer=false)', form.getValues());
       form.reset(safeInitialData);
     }
+    didInit.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTransfer]);
+  }, [isTransfer, accounts.length]);
 
-  // หลัง useForm และ accounts
+  // Set defaultAccount เฉพาะตอน mount/ accounts พร้อมครั้งแรก
   useEffect(() => {
+    if (didInit.current) return;
     if (accounts.length === 0) return;
     if (form.watch('mode') === 'normal' && !form.watch('accountId')) {
       if (defaultAccount?.id) form.setValue('accountId', defaultAccount.id);
@@ -126,8 +134,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
     if (form.watch('mode') === 'transfer' && !form.watch('fromAccount')) {
       if (defaultAccount?.id) form.setValue('fromAccount', defaultAccount.id);
     }
-    // ไม่ set toAccount อัตโนมัติ
-  }, [accounts, defaultAccount, form]);
+  }, [accounts.length]);
 
   const selectedAccountId = form.watch('accountId');
   const purposeValue = form.watch('purpose');
@@ -172,6 +179,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       return;
     }
     if (data.mode === 'transfer') {
+      console.log('DEBUG form submit:', { fromAccount: data.fromAccount, toAccount: data.toAccount, accounts });
       const fromAcc = accounts.find(acc => acc.id === data.fromAccount);
       const toAcc = accounts.find(acc => acc.id === data.toAccount);
       if (!fromAcc || !toAcc || data.fromAccount === data.toAccount) {
@@ -185,20 +193,21 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       };
       const tx1 = {
         ...base,
-        type: 'expense' as const,
+        type: 'expense', // ฝั่งโอนออก
         accountId: data.fromAccount,
         purpose: 'โอนออก',
         details: `โอนไปบัญชี ${toAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
       const tx2 = {
         ...base,
-        type: 'income' as const,
+        type: 'income', // ฝั่งโอนเข้า
         accountId: data.toAccount,
         purpose: 'โอนเข้า',
         details: `โอนจากบัญชี ${fromAcc.name}${base.details ? ' | ' + base.details : ''}`,
       };
-      onSubmit(tx1 as any, saveAsTemplate);
-      onSubmit(tx2 as any, saveAsTemplate);
+      console.log('tx1', tx1);
+      console.log('tx2', tx2);
+      onSubmit([tx1, tx2], saveAsTemplate);
       return;
     }
     // ... โหมดปกติ ...
@@ -285,7 +294,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         initialFocus
                       />
                       <div className="p-2 border-t border-border">
-                        <TimePicker date={field.value} setDate={field.onChange} />
+                        <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -301,7 +310,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 control={form.control}
                 name="fromAccount"
                 render={({ field }) => {
-                  const accBalance = getAccountBalance(field.value, transactions);
+                  console.log('RENDER fromAccount Select:', { value: field.value, accounts });
+                  const accBalance = getAccountBalance(field.value ?? '', transactions);
                   return (
                     <FormItem>
                       <FormLabel>บัญชีต้นทาง</FormLabel>
@@ -334,7 +344,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 control={form.control}
                 name="toAccount"
                 render={({ field }) => {
-                  const accBalance = getAccountBalance(field.value, transactions);
+                  console.log('RENDER toAccount Select:', { value: field.value, accounts });
+                  const accBalance = getAccountBalance(field.value ?? '', transactions);
                   return (
                     <FormItem>
                       <FormLabel>บัญชีปลายทาง</FormLabel>
@@ -488,7 +499,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         initialFocus
                       />
                       <div className="p-2 border-t border-border">
-                        <TimePicker date={field.value} setDate={field.onChange} />
+                        <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -506,7 +517,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>บัญชี</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="เลือกบัญชี" />
@@ -522,6 +533,12 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                         ))}
                       </SelectContent>
                     </Select>
+                    {/* แสดงยอดเงิน */}
+                    {(() => { const accBalance = getAccountBalance(field.value ?? '', transactions); return accBalance && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        ยอดเงิน: {accBalance.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {accBalance.currency}
+                      </div>
+                    )})()}
                     <FormMessage />
                   </FormItem>
                 )}

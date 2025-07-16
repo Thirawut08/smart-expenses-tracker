@@ -39,6 +39,10 @@ export default function TransactionsPage() {
     return transactions.filter(t => t.type === 'expense');
   }, [transactions]);
 
+  // DEBUG LOG
+  console.log('all transactions', transactions);
+  console.log('expenseTransactions', expenseTransactions);
+
   const handleExportToCsv = () => {
     if (transactions.length === 0) {
       toast({
@@ -88,7 +92,7 @@ export default function TransactionsPage() {
   // Wrapper รองรับ transfer (array)
   const handleSaveTransactionWrapper = (data: any, saveAsTemplate: boolean) => {
     if (Array.isArray(data)) {
-      data.forEach(tx => handleSaveTransaction(tx, false));
+      handleSaveTransaction(data, false);
       toast({ title: 'บันทึกการโอนสำเร็จ', description: 'สร้าง 2 รายการโอนระหว่างบัญชีแล้ว' });
     } else {
       handleSaveTransaction(data, saveAsTemplate);
