@@ -187,6 +187,8 @@ export function useLedger() {
 
   const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues | (Transaction | UnifiedFormValues)[], saveAsTemplate: boolean) => {
     console.log('handleSaveTransaction', data);
+    console.log('accounts in useLedger:', accounts);
+    console.log('transactions before save:', transactions);
     if (Array.isArray(data)) {
       // กรณีโอนระหว่างบัญชี รับ array ของ Transaction หรือ UnifiedFormValues
       const newTransactions: Transaction[] = data.map(tx => {
@@ -208,6 +210,7 @@ export function useLedger() {
       updateAndSaveTransactions([...transactions, ...newTransactions]);
       toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว` });
       handleDialogClose(false);
+      console.log('transactions after save:', [...transactions, ...newTransactions]);
       return;
     }
     const selectedAccount = accounts.find(acc => acc.id === data.accountId);
@@ -266,9 +269,8 @@ export function useLedger() {
         sender: data.sender,
         recipient: data.recipient,
       };
-      
       updateAndSaveTransactions([...transactions, newTransaction]);
-      toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการ "${finalData.purpose}" เรียบร้อยแล้ว` });
+      console.log('transactions after save:', [...transactions, newTransaction]);
     }
     
     if (saveAsTemplate && !editingTransaction) {

@@ -182,6 +182,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
       console.log('DEBUG form submit:', { fromAccount: data.fromAccount, toAccount: data.toAccount, accounts });
       const fromAcc = accounts.find(acc => acc.id === data.fromAccount);
       const toAcc = accounts.find(acc => acc.id === data.toAccount);
+      console.log('DEBUG fromAcc:', fromAcc);
+      console.log('DEBUG toAcc:', toAcc);
       if (!fromAcc || !toAcc || data.fromAccount === data.toAccount) {
         alert('กรุณาเลือกบัญชีต้นทางและปลายทางที่แตกต่างกัน');
         return;

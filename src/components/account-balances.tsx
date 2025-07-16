@@ -76,6 +76,8 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
   const { accounts } = useAccounts();
     
   const calculateBalances = (accountNames: string[]) => {
+    console.log('DEBUG calculateBalances accounts:', accounts);
+    console.log('DEBUG calculateBalances transactions:', transactions);
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
 
     const relevantAccounts = accounts.filter(acc => accountNames.includes(acc.name));
@@ -105,6 +107,7 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
         return sum + amountInThb;
     }, 0);
     
+    console.log('DEBUG balances result:', { balances: sortedBalances, totalInThb });
     return { balances: sortedBalances, totalInThb };
   };
 
