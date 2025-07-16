@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { FileText, Plus } from 'lucide-react';
 import type { Template } from '@/lib/types';
+import { defaultPurposes } from '@/lib/data';
 
 interface TransactionTemplatesProps {
   templates: Template[];
@@ -29,7 +30,7 @@ export function TransactionTemplates({ templates, onUseTemplate }: TransactionTe
                 className="h-auto p-4 flex flex-col items-start justify-start text-left"
                 onClick={() => onUseTemplate(template)}
               >
-                <p className="font-semibold">{template.name}</p>
+                <p className="font-semibold"><span className="mr-1 text-xl">{template.name}</span></p>
                 <p className="text-sm text-muted-foreground">
                   {template.purpose} - {template.accountNumber}
                 </p>

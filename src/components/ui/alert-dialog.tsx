@@ -30,19 +30,41 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-        className
-      )}
-      {...props}
-    />
-  </AlertDialogPortal>
-))
+>(({ className, ...props }, ref) => {
+  // ดัก keydown เพื่อ Enter = ดำเนินการต่อ
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  React.useImperativeHandle(ref, () => contentRef.current as any, []);
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const root = contentRef.current;
+        if (!root) return;
+        const actionBtn = root.querySelector('[data-radix-alert-dialog-action]') as HTMLButtonElement | null;
+        if (actionBtn) {
+          e.preventDefault();
+          actionBtn.click();
+        }
+      }
+    };
+    const node = contentRef.current;
+    if (node) node.addEventListener('keydown', handler);
+    return () => { if (node) node.removeEventListener('keydown', handler); };
+  }, []);
+
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay />
+      <AlertDialogPrimitive.Content
+        ref={contentRef}
+        className={cn(
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+          className
+        )}
+        {...props}
+      />
+    </AlertDialogPortal>
+  );
+});
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName
 
 const AlertDialogHeader = ({
@@ -101,10 +123,11 @@ AlertDialogDescription.displayName =
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
+>(({ className, autoFocus = true, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
     className={cn(buttonVariants(), className)}
+    autoFocus={autoFocus}
     {...props}
   />
 ))

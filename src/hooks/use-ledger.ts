@@ -81,90 +81,74 @@ export function useLedger() {
   }, []);
   
   const updateAndSavePurposes = useCallback((newPurposes: string[]) => {
-    const uniquePurposes = [...new Set(newPurposes)].sort((a, b) => a.localeCompare(b));
+    // unique by name
+    const uniquePurposes = Array.from(new Set(newPurposes.map(p => p.trim())));
     setPurposes(uniquePurposes);
     try {
-        localStorage.setItem(PURPOSES_STORAGE_KEY, JSON.stringify(uniquePurposes));
+      localStorage.setItem(PURPOSES_STORAGE_KEY, JSON.stringify(uniquePurposes));
     } catch (error) {
-        console.error("Failed to save purposes to localStorage", error);
+      console.error("Failed to save purposes to localStorage", error);
     }
   }, []);
 
   const addPurpose = useCallback((newPurpose: string) => {
     if (!newPurpose) return;
-    const trimmedPurpose = newPurpose.trim();
-    // ลบ reservedNames check
-    if (purposes.includes(trimmedPurpose)) {
+    const trimmedName = newPurpose.trim();
+    if (purposes.some(p => p === trimmedName)) {
       toast({
         variant: 'destructive',
         title: 'ชื่อวัตถุประสงค์ซ้ำ',
-        description: `มีวัตถุประสงค์ชื่อ "${trimmedPurpose}" อยู่แล้ว`
+        description: `มีวัตถุประสงค์ชื่อ "${trimmedName}" อยู่แล้ว`
       });
       return;
     }
-    const newPurposes = [...purposes, trimmedPurpose];
+    const newPurposes = [...purposes, trimmedName];
     updateAndSavePurposes(newPurposes);
     toast({
       title: 'เพิ่มวัตถุประสงค์สำเร็จ',
-      description: `"${trimmedPurpose}" ถูกเพิ่มในรายการแล้ว`
+      description: `"${trimmedName}" ถูกเพิ่มในรายการแล้ว`
     });
   }, [purposes, updateAndSavePurposes, toast]);
   
-  const editPurpose = useCallback(async (oldPurpose: string, newPurpose: string) => {
-    // Re-classify transactions
-     try {
-        const response = await fetch('/api/reclassify-transactions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transactions, oldPurpose, newPurpose }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to reclassify');
-
-        updateAndSaveTransactions(data.updatedTransactions.map((t:any) => ({...t, date: new Date(t.date)})));
-    } catch (error) {
-        console.error("Failed to re-classify transactions:", error);
-        toast({ variant: 'destructive', title: 'เกิดข้อผิดพลาดในการอัปเดตธุรกรรม' });
-        return; // Stop if transaction update fails
-    }
-    
-    // Update purpose list
-    const newPurposes = purposes.map(p => p === oldPurpose ? newPurpose : p);
+  const editPurpose = useCallback((oldPurposeName: string, updated: string) => {
+    // Update purpose in list
+    const newPurposes = purposes.map(p => p === oldPurposeName ? updated.trim() : p);
     updateAndSavePurposes(newPurposes);
-
-  }, [purposes, updateAndSavePurposes, transactions, updateAndSaveTransactions, toast]);
+    // Update transactions' purpose name if changed
+    if (oldPurposeName !== updated) {
+      setTransactions(prev => prev.map(t => t.purpose === oldPurposeName ? { ...t, purpose: updated } : t));
+    }
+    // (Optional) update templates if needed
+  }, [purposes, updateAndSavePurposes]);
 
   const removePurpose = useCallback(async (purposeToRemove: string, action?: 'reclassify' | 'deleteAll') => {
-      // Re-classify or delete transactions if needed
-      if (action) {
-         try {
-            const response = await fetch('/api/reclassify-transactions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    transactions, 
-                    oldPurpose: purposeToRemove, 
-                    newPurpose: 'อื่นๆ',
-                    deleteTransactions: action === 'deleteAll'
-                }),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to update transactions');
-
-            updateAndSaveTransactions(data.updatedTransactions.map((t:any) => ({...t, date: new Date(t.date)})));
-        } catch (error) {
-            console.error("Failed to update transactions:", error);
-            toast({ variant: 'destructive', title: 'เกิดข้อผิดพลาดในการอัปเดตธุรกรรม' });
-            return;
-        }
+    // Re-classify or delete transactions if needed
+    if (action) {
+      try {
+        const response = await fetch('/api/reclassify-transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactions,
+            oldPurpose: purposeToRemove,
+            newPurpose: 'อื่นๆ',
+            deleteTransactions: action === 'deleteAll'
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to update transactions');
+        setTransactions(data.updatedTransactions.map((t:any) => ({...t, date: new Date(t.date)})));
+      } catch (error) {
+        console.error("Failed to update transactions:", error);
+        toast({ variant: 'destructive', title: 'เกิดข้อผิดพลาดในการอัปเดตธุรกรรม' });
+        return;
       }
-
-      // Remove purpose from list
-      const newPurposes = purposes.filter(p => p !== purposeToRemove);
-      updateAndSavePurposes(newPurposes);
-      toast({ variant: 'destructive', title: 'ลบวัตถุประสงค์สำเร็จ' });
-
-  }, [purposes, updateAndSavePurposes, transactions, updateAndSaveTransactions, toast]);
+    }
+    // Remove purpose from list
+    const newPurposes = purposes.filter(p => p !== purposeToRemove);
+    updateAndSavePurposes(newPurposes);
+    toast({ variant: 'destructive', title: 'ลบวัตถุประสงค์สำเร็จ' });
+  }, [purposes, updateAndSavePurposes, transactions, toast]);
 
 
   const handleDialogClose = useCallback((open: boolean) => {
@@ -220,7 +204,7 @@ export function useLedger() {
     }
     
     // Add purpose only if it's new. ไม่ต้องเช็ค reservedNames
-    if (!purposes.includes(finalData.purpose)) {
+    if (!purposes.some(p => p === finalData.purpose)) {
         addPurpose(finalData.purpose);
     }
     

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { MonthlyStats } from '@/components/monthly-stats';
 import { useLedger } from '@/hooks/use-ledger';
 import { thaiMonths } from '@/lib/data';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HighPerfDropdown } from '../ui/high-perf-dropdown';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
 import { MonthInfoTable } from '@/components/month-info-table';
@@ -41,27 +41,13 @@ export function DashboardPage() {
                 {new Date().toLocaleDateString('th-TH')}
               </span>
             </div>
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-full md:w-[220px] font-semibold">
-                <SelectValue placeholder="เลือกเดือน" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">ทุกเดือน</SelectItem>
-                {thaiMonths.map(month => {
-                  const isCurrent = month.value === new Date().getMonth();
-                  return (
-                    <SelectItem
-                      key={month.value}
-                      value={month.value.toString()}
-                      className={isCurrent ? 'bg-blue-100 text-blue-700 font-bold dark:bg-blue-900/40' : ''}
-                    >
-                      {month.label}
-                      {isCurrent && <span className="ml-2 text-xs text-blue-500">(ปัจจุบัน)</span>}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <HighPerfDropdown
+              options={[{ value: 'all', label: 'ทุกเดือน' }, ...thaiMonths.map(month => ({ value: month.value.toString(), label: month.label + (month.value === new Date().getMonth() ? ' (ปัจจุบัน)' : '') }))]}
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+              placeholder="เลือกเดือน"
+              className="w-full md:w-[220px] font-semibold"
+            />
           </div>
           
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

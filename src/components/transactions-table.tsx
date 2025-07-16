@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, Ban, MoreHorizontal, Pencil, Trash2 } from 'l
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { cn, convertToTHB } from '@/lib/utils';
+import { defaultPurposes } from '@/lib/data';
 
 function formatCurrency(amount: number, currency: 'THB' | 'USD', type?: 'income' | 'expense') {
   const absAmount = Math.abs(amount);
@@ -70,7 +71,9 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                   <TableCell>
                     {transaction.details ? <div className="text-sm text-muted-foreground italic max-w-xs truncate">"{transaction.details}"</div> : '-'}
                   </TableCell>
-                  <TableCell>{transaction.purpose}</TableCell>
+                  <TableCell>
+                    {transaction.purpose}
+                  </TableCell>
                   <TableCell>{transaction.sender || '-'}</TableCell>
                   <TableCell>{transaction.recipient || '-'}</TableCell>
                   <TableCell className={cn('text-right font-medium', transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>

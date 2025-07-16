@@ -50,21 +50,58 @@ export function useAccounts() {
     localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
   }, [accounts]);
 
+  // Auto-refresh accounts if localStorage changes (in this tab)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ACCOUNTS_STORAGE_KEY) {
+        const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+        if (stored) setAccounts(JSON.parse(stored));
+      }
+    };
+    const handleCustomEvent = () => {
+      const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      if (stored) setAccounts(JSON.parse(stored));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('accounts-updated', handleCustomEvent);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('accounts-updated', handleCustomEvent);
+    };
+  }, []);
+
+  // Trigger custom event after add/edit/delete
+  const triggerAccountsUpdated = () => {
+    window.dispatchEvent(new Event('accounts-updated'));
+  };
+
   const addAccount = useCallback((account: Omit<Account, 'id'>) => {
     const newAccount: Account = {
       ...account,
       id: Date.now().toString(),
     };
-    setAccounts(prev => [...prev, newAccount]);
+    setAccounts(prev => {
+      const updated = [...prev, newAccount];
+      setTimeout(triggerAccountsUpdated, 0);
+      return updated;
+    });
     return true;
   }, [accounts]);
 
   const editAccount = useCallback((id: string, update: Partial<Omit<Account, 'id'>>) => {
-    setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...update } : a));
+    setAccounts(prev => {
+      const updated = prev.map(a => a.id === id ? { ...a, ...update } : a);
+      setTimeout(triggerAccountsUpdated, 0);
+      return updated;
+    });
   }, []);
 
   const deleteAccount = useCallback((id: string) => {
-    setAccounts(prev => prev.filter(a => a.id !== id));
+    setAccounts(prev => {
+      const updated = prev.filter(a => a.id !== id);
+      setTimeout(triggerAccountsUpdated, 0);
+      return updated;
+    });
   }, []);
 
   return {

@@ -16,6 +16,7 @@ import { th } from 'date-fns/locale';
 import { useAccounts } from '@/hooks/use-accounts';
 import { TimePicker } from './time-picker';
 import { useEffect, useMemo } from 'react';
+import { HighPerfDropdown } from './ui/high-perf-dropdown';
 
 const incomeFormSchema = z.object({
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
@@ -105,26 +106,12 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
             <FormField control={form.control} name="accountId" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm">บัญชี</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-10 text-base">
-                      <SelectValue placeholder="เลือกบัญชี" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-56 p-0">
-                    {accounts.map(account => (
-                      <SelectItem
-                        key={account.id}
-                        value={account.id}
-                        className="py-1 px-2 text-sm"
-                        style={{ backgroundColor: account.color || undefined, color: getContrastColor(account.color || '#fff'), display: 'flex', alignItems: 'center', gap: 8 }}
-                      >
-                        <span style={{fontWeight: 500}}>{account.name}</span>
-                        <span style={{fontSize: 12, opacity: 0.7, marginLeft: 6}}>{account.currency}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <HighPerfDropdown
+                  options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="เลือกบัญชี..."
+                />
                 <FormMessage />
               </FormItem>
             )} />

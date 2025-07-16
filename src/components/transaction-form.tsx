@@ -23,6 +23,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 import type { Transaction } from '@/lib/types';
+import { HighPerfDropdown } from './ui/high-perf-dropdown';
 
 // สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
 const normalSchema = z.object({
@@ -57,7 +58,7 @@ interface TransactionFormProps {
   onSubmit: (data: UnifiedFormValues, saveAsTemplate: boolean) => void;
   isEditing?: boolean;
   isTemplate?: boolean;
-  availablePurposes: string[];
+  availablePurposes: (string | { name: string; emoji?: string })[];
   transactions?: Transaction[]; // เพิ่ม prop นี้ (optional เพื่อไม่พังโหมดอื่น)
 }
 
@@ -93,6 +94,20 @@ function formatCurrency(amount: number, currency: 'THB' | 'USD') {
   if (currency === 'THB') return `฿${amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
   if (currency === 'USD') return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
   return amount;
+}
+
+function simplePurposeEmoji(name: string): string {
+  if (name.includes('อาหาร')) return '🍽️';
+  if (name.includes('เดินทาง')) return '🚗';
+  if (name.includes('ชอป')) return '🛍️';
+  if (name.includes('บันเทิง')) return '🎬';
+  if (name.includes('ที่พัก')) return '🏠';
+  if (name.includes('สาธารณูปโภค')) return '💡';
+  if (name.includes('สุขภาพ')) return '🏥';
+  if (name.includes('ศึกษา')) return '📚';
+  if (name.includes('เงินเดือน')) return '💵';
+  if (name.includes('อื่น')) return '✨';
+  return '✨';
 }
 
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false, availablePurposes = [], transactions = [] }: TransactionFormProps) {
@@ -150,9 +165,18 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   const selectedAccount = useMemo(() => accounts.find(acc => acc.id === selectedAccountId), [selectedAccountId, accounts]);
   const currencySymbol = selectedAccount?.currency === 'USD' ? '$' : '฿';
 
-  const allPurposes = useMemo(() => {
-    // ให้เลือกทุกวัตถุประสงค์ที่มี ไม่ fix ตามชื่อบัญชี
-    return Array.from(new Set(availablePurposes)).sort((a, b) => a.localeCompare(b));
+  // allPurposes: string[]
+  const allPurposes: string[] = useMemo(() => {
+    if (Array.isArray(availablePurposes) && availablePurposes.length > 0) {
+      if (typeof availablePurposes[0] === 'object') {
+        // fallback: แปลง object เป็น string
+        return (availablePurposes as any[]).map(p => typeof p === 'string' ? p : p.name);
+      } else {
+        // string[]
+        return (availablePurposes as string[]).filter(Boolean);
+      }
+    }
+    return [];
   }, [availablePurposes]);
 
   useEffect(() => {
@@ -181,124 +205,179 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 pt-2">
+        {/* โหมดธุรกรรม */}
+        <div className="flex items-center gap-2 mb-2">
+          <Switch
+            checked={isTransfer}
+            onCheckedChange={setIsTransfer}
+            id="toggle-transfer-mode"
+          />
+          <label htmlFor="toggle-transfer-mode" className="cursor-pointer select-none text-sm font-medium">
+            โอนระหว่างบัญชี
+          </label>
+        </div>
         {/* จำนวนเงิน + ประเภทธุรกรรม */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
-            <div className="flex items-center">
-              <span className="mr-1">{currencySymbol}</span>
-              <Input type="number" placeholder="0.00" {...form.register('amount')} className="h-10 text-base" />
+        {!isTransfer ? (
+          <>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
+                <div className="flex items-center">
+                  <span className="mr-1">{currencySymbol}</span>
+                  <Input type="number" placeholder="0.00" {...form.register('amount')} className="h-10 text-base" />
+                </div>
+              </div>
+              <div className="flex-1 flex items-end">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <div className="flex w-full gap-2">
+                      <Button type="button" variant={field.value === 'expense' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('expense')}>
+                        💸 รายจ่าย
+                      </Button>
+                      <Button type="button" variant={field.value === 'income' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('income')}>
+                        💰 รายรับ
+                      </Button>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <FormLabel className="text-sm">บัญชีต้นทาง</FormLabel>
+                <FormField control={form.control} name="fromAccount" render={({ field }) => (
+                  <FormItem>
+                    <HighPerfDropdown
+                      options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      placeholder="เลือกบัญชีต้นทาง..."
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <div className="flex-1">
+                <FormLabel className="text-sm">บัญชีปลายทาง</FormLabel>
+                <FormField control={form.control} name="toAccount" render={({ field }) => (
+                  <FormItem>
+                    <HighPerfDropdown
+                      options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      placeholder="เลือกบัญชีปลายทาง..."
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <div className="flex-1">
+                <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
+                <FormField control={form.control} name="amount" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input type="number" placeholder="0.00" {...field} className="h-10 text-base" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <div className="flex-1">
+                <FormLabel className="text-sm">วันที่</FormLabel>
+                <FormField control={form.control} name="date" render={({ field }) => (
+                  <FormItem>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
+                            {field.value instanceof Date && !isNaN(field.value.getTime()) ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
+                        <div className="p-2 border-t border-border">
+                          <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+            <div className="mt-2">
+              <FormLabel className="text-sm">รายละเอียด (ถ้ามี)</FormLabel>
+              <FormField control={form.control} name="details" render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+          </>
+        )}
+        {/* วันที่ */}
+        {/* บัญชี + วัตถุประสงค์ */}
+        {!isTransfer && (
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <FormLabel className="text-sm">บัญชี</FormLabel>
+              <FormField control={form.control} name="accountId" render={({ field }) => (
+                <FormItem>
+                  <HighPerfDropdown
+                    options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder="เลือกบัญชี..."
+                  />
+                  {/* ยอดเงินคงเหลือ */}
+                  {(() => { const accBalance = getAccountBalance(field.value || '', transactions); return accBalance && (
+                    <div className="text-xs text-muted-foreground mt-1">ยอดเงิน: {formatCurrency(accBalance.balance, accBalance.currency)}</div>
+                  )})()}
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+            <div className="flex-1">
+              <FormLabel className="text-sm">วัตถุประสงค์</FormLabel>
+              <FormField control={form.control} name="purpose" render={({ field }) => (
+                <FormItem>
+                  <HighPerfDropdown
+                    options={allPurposes.filter(Boolean).map(purpose => ({ value: purpose, label: purpose }))}
+                    value={field.value || ''}
+                    onChange={value => { field.onChange(value); if (value !== 'อื่นๆ') setCustomPurpose(''); }}
+                    placeholder="เลือกวัตถุประสงค์..."
+                  />
+                  {field.value === 'อื่นๆ' && (
+                    <div className="mt-2">
+                      <Input
+                        placeholder="กรอกวัตถุประสงค์ใหม่"
+                        value={customPurpose}
+                        onChange={e => setCustomPurpose(e.target.value)}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
           </div>
-          <div className="flex-1 flex items-end">
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <div className="flex w-full gap-2">
-                  <Button type="button" variant={field.value === 'expense' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('expense')}>
-                    💸 รายจ่าย
-                  </Button>
-                  <Button type="button" variant={field.value === 'income' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('income')}>
-                    💰 รายรับ
-                  </Button>
-                </div>
-              )}
-            />
-          </div>
-        </div>
-        {/* วันที่ */}
-        <FormField control={form.control} name="date" render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel className="text-sm">วันที่</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
-                    {field.value instanceof Date && !isNaN(field.value.getTime()) ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
-                <div className="p-2 border-t border-border">
-                  <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
-                </div>
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )} />
-        {/* บัญชี + วัตถุประสงค์ */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <FormLabel className="text-sm">บัญชี</FormLabel>
-            <FormField control={form.control} name="accountId" render={({ field }) => (
-              <FormItem>
-                <Select onValueChange={field.onChange} value={field.value || ''} defaultValue={field.value || ''}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="เลือกบัญชี" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-56 p-0">
-                    {accounts.map(account => (
-                      <SelectItem
-                        key={account.id}
-                        value={account.id}
-                        className="py-1 px-2 text-sm"
-                        style={{ backgroundColor: account.color, color: getContrastColor(account.color) }}
-                      >
-                        {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {/* ยอดเงินคงเหลือ */}
-                {(() => { const accBalance = getAccountBalance(field.value ?? '', transactions); return accBalance && (
-                  <div className="text-xs text-muted-foreground mt-1">ยอดเงิน: {formatCurrency(accBalance.balance, accBalance.currency)}</div>
-                )})()}
-                <FormMessage />
-              </FormItem>
-            )} />
-          </div>
-          <div className="flex-1">
-            <FormLabel className="text-sm">วัตถุประสงค์</FormLabel>
-            <FormField control={form.control} name="purpose" render={({ field }) => (
-              <FormItem>
-                <Select onValueChange={value => { field.onChange(value); if (value !== 'อื่นๆ') setCustomPurpose(''); }} value={field.value || ''} defaultValue={field.value || ''}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="เลือกวัตถุประสงค์" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-56 p-0">
-                    {allPurposes.filter(Boolean).map(purpose => (
-                      <SelectItem key={String(purpose)} value={String(purpose)} className="py-1 px-2 text-sm">
-                        {purpose}
-                      </SelectItem>
-                    ))}
-                    {!allPurposes.includes('อื่นๆ') && (
-                      <SelectItem key="other" value="อื่นๆ" className="py-1 px-2 text-sm text-blue-600">อื่นๆ (ระบุเอง)</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                {field.value === 'อื่นๆ' && (
-                  <div className="mt-2">
-                    <Input
-                      placeholder="กรอกวัตถุประสงค์ใหม่"
-                      value={customPurpose}
-                      onChange={e => setCustomPurpose(e.target.value)}
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                )}
-                <FormMessage />
-              </FormItem>
-            )} />
-          </div>
-        </div>
+        )}
         {/* รายละเอียดเพิ่มเติม (collapsible) */}
-        <details className="mb-2">
-          <summary className="cursor-pointer text-blue-600 font-medium py-2">รายละเอียดเพิ่มเติม</summary>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+        {!isTransfer && (
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField control={form.control} name="sender" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm">ผู้จ่าย (ถ้ามี)</FormLabel>
@@ -313,15 +392,15 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <FormMessage />
               </FormItem>
             )} />
+            <FormField control={form.control} name="details" render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel className="text-sm">รายละเอียด (ถ้ามี)</FormLabel>
+                <FormControl><Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
           </div>
-          <FormField control={form.control} name="details" render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm">รายละเอียด (ถ้ามี)</FormLabel>
-              <FormControl><Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </details>
+        )}
         {/* Toggle เทมเพลต + ปุ่มบันทึก */}
         <div className="flex items-center gap-2 mb-2">
           <Switch checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} id="save-as-template" />

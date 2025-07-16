@@ -44,7 +44,7 @@ export const defaultPurposes: string[] = [
   'สุขภาพ',
   'การศึกษา',
   'เงินเดือน',
-  'อื่นๆ'
+  'อื่นๆ',
 ];
 
 export const thaiMonths = [
