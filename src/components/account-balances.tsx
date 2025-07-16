@@ -21,11 +21,10 @@ const usdFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 });
 
-const formatCurrency = (value: number, currency: 'THB' | 'USD' | undefined) => {
-    if (currency === 'USD') {
-        return usdFormatter.format(value);
-    }
-    return thbFormatter.format(value);
+function formatCurrency(amount: number, currency: 'THB' | 'USD') {
+  if (currency === 'THB') return `฿${amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+  if (currency === 'USD') return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  return amount;
 }
 
 const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name: string, balance: number, currency: 'THB' | 'USD'}[], totalInThb: number, noDataMessage: string }) => {

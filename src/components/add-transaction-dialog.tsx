@@ -8,6 +8,7 @@ import type { Transaction } from '@/lib/types';
 import type { UnifiedFormValues } from './transaction-form';
 import { SlipUploader } from './slip-uploader';
 import type { ExtractTransactionDetailsOutput } from '@/ai/flows/extract-transaction-details';
+import { useLedger } from '@/hooks/use-ledger';
 
 type AddTransactionDialogProps = {
   children: React.ReactNode;
@@ -16,7 +17,6 @@ type AddTransactionDialogProps = {
   onSave: (data: Transaction | Transaction[], saveAsTemplate: boolean) => void;
   initialData?: Partial<UnifiedFormValues>;
   isEditing?: boolean;
-  availablePurposes: string[];
   transactions: Transaction[]; // เพิ่ม prop นี้
 };
 
@@ -44,9 +44,10 @@ function getInitialFormData(initialData: any): any {
   return initialData;
 }
 
-export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, availablePurposes, transactions }: AddTransactionDialogProps) {
+export function AddTransactionDialog({ children, open, onOpenChange, onSave, initialData, isEditing = false, transactions }: AddTransactionDialogProps) {
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
   const [activeTab, setActiveTab] = useState('manual');
+  const { purposes } = useLedger();
   
   useEffect(() => {
     if (open) {
@@ -113,7 +114,7 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
               onSubmit={handleFormSubmit}
               isEditing={isEditing}
               isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
-              availablePurposes={availablePurposes}
+              availablePurposes={purposes}
               transactions={transactions} // ส่ง prop นี้เข้าไป
             />
           </TabsContent>

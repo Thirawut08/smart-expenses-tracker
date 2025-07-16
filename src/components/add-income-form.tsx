@@ -74,117 +74,94 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4 md:p-6 bg-card rounded-xl shadow border border-border">
-        <div className="font-headline text-lg md:text-xl font-bold mb-4 text-primary-foreground dark:text-white">เพิ่มรายการใหม่</div>
-        <div className="flex flex-col gap-6">
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel className="font-semibold">วันที่และเวลา</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal text-base h-12",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        locale={th}
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                        initialFocus
-                      />
-                      <div className="p-2 border-t border-border">
-                        <TimePicker date={field.value} setDate={field.onChange} />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="accountId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-semibold">บัญชี</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3">
+        <h2 className="text-xl font-bold mb-4">เพิ่มรายการรายรับ</h2>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <FormField control={form.control} name="date" render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
                     <FormControl>
-                      <SelectTrigger className="h-12 text-base">
-                        <SelectValue placeholder="เลือกบัญชี" />
-                      </SelectTrigger>
+                      <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
+                        {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
                     </FormControl>
-                    <SelectContent>
-                      {accounts.map(account => (
-                        <SelectItem
-                          key={account.id}
-                          value={account.id}
-                          style={{
-                            backgroundColor: account.color || undefined,
-                            color: getContrastColor(account.color || '#fff'),
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                          }}
-                        >
-                          <span style={{fontWeight: 500}}>{account.name}</span>
-                          <span style={{fontSize: 12, opacity: 0.7, marginLeft: 6}}>{account.currency}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
+                    <div className="p-2 border-t border-border">
+                      <TimePicker date={field.value} setDate={field.onChange} />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+          <div className="flex-1">
+            <FormField control={form.control} name="accountId" render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm">บัญชี</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-10 text-base">
+                      <SelectValue placeholder="เลือกบัญชี" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-56 p-0">
+                    {accounts.map(account => (
+                      <SelectItem
+                        key={account.id}
+                        value={account.id}
+                        className="py-1 px-2 text-sm"
+                        style={{ backgroundColor: account.color || undefined, color: getContrastColor(account.color || '#fff'), display: 'flex', alignItems: 'center', gap: 8 }}
+                      >
+                        <span style={{fontWeight: 500}}>{account.name}</span>
+                        <span style={{fontSize: 12, opacity: 0.7, marginLeft: 6}}>{account.currency}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
         </div>
-        <div className="border-t my-4" />
         <FormField
-            control={form.control}
-            name="amount"
-            render={({ field }) => (
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
             <FormItem>
-                <FormLabel className="font-semibold">จำนวนเงิน</FormLabel>
-                <FormControl>
+              <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
+              <FormControl>
                 <div className="relative">
-                    <Input 
+                  <Input 
                     type="number" 
                     placeholder="0.00" 
                     {...field} 
                     value={field.value ?? ''} 
                     onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
-                    className={cn(selectedAccount && 'pl-8', 'h-12 text-lg')}
-                    />
-                    {selectedAccount && (
+                    className={cn(selectedAccount && 'pl-8', 'h-10 text-base')}
+                  />
+                  {selectedAccount && (
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
-                        {selectedAccount.currency === 'USD' ? '$' : '฿'}
+                      {selectedAccount.currency === 'USD' ? '$' : '฿'}
                     </span>
-                    )}
+                  )}
                 </div>
-                </FormControl>
-                <FormMessage />
+              </FormControl>
+              <FormMessage />
             </FormItem>
-            )}
+          )}
         />
-        <div className="flex justify-end gap-2 mt-6">
-            <Button type="button" variant="ghost" onClick={onCancel} className="h-11 px-6 text-base font-semibold">ยกเลิก</Button>
-            <Button type="submit" className="h-11 px-8 text-base font-bold">
-                {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'บันทึกรายรับ'}
-            </Button>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button type="button" variant="ghost" onClick={onCancel} className="h-9 px-4 text-sm font-semibold">ยกเลิก</Button>
+          <Button type="submit" className="h-9 px-6 text-sm font-bold">
+            {initialData ? 'บันทึกการเปลี่ยนแปลง' : 'บันทึกรายรับ'}
+          </Button>
         </div>
       </form>
     </Form>

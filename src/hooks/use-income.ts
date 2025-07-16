@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Income } from '@/lib/types';
 import { accounts } from '@/lib/data';
+import { useAccounts } from '@/hooks/use-accounts';
 
 const INCOME_STORAGE_KEY = 'ledger-ai-incomes';
 
@@ -12,6 +13,7 @@ const sortIncomes = (items: Income[]) => {
 };
 
 export function useIncome() {
+  const { accounts } = useAccounts();
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIncomeId, setEditingIncomeId] = useState<string | null>(null);
@@ -51,35 +53,40 @@ export function useIncome() {
   }, [toast]);
 
   const addIncome = useCallback((data: { date: Date; accountId: string; amount: number; }) => {
-    const account = accounts.find(a => a.id === data.accountId);
-    if (!account) {
-      toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
-      return;
-    }
-    const newIncome: Income = {
-      id: new Date().toISOString() + Math.random(),
+    const account = accounts.find(acc => acc.id === data.accountId);
+    if (!account) return;
+    const newIncome = {
+      id: Date.now().toString(),
       date: data.date,
-      account,
       amount: data.amount,
+      account: account,
     };
-    updateAndSaveIncomes([...incomes, newIncome]);
-    toast({ title: 'บันทึกรายรับสำเร็จ' });
-  }, [incomes, toast, updateAndSaveIncomes]);
+    setIncomes(prev => [newIncome, ...prev]);
+    try {
+      localStorage.setItem(INCOME_STORAGE_KEY, JSON.stringify([newIncome, ...incomes]));
+    } catch (error) {
+      console.error("Failed to save incomes to localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+      });
+    }
+  }, [accounts, incomes, toast]);
   
   const editIncome = useCallback((id: string, data: { date: Date; accountId: string; amount: number; }) => {
-      const account = accounts.find(a => a.id === data.accountId);
-      if (!account) {
-        toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
-        return;
-      }
-      
-      const updatedIncomes = incomes.map(income => 
-          income.id === id ? { ...income, date: data.date, account, amount: data.amount } : income
-      );
-      updateAndSaveIncomes(updatedIncomes);
-      toast({ title: 'แก้ไขรายรับสำเร็จ' });
-      setEditingIncomeId(null);
-  }, [incomes, toast, updateAndSaveIncomes]);
+    const account = accounts.find(acc => acc.id === data.accountId);
+    if (!account) return;
+    setIncomes(prev => prev.map(i => i.id === id ? { ...i, ...data, account } : i));
+    try {
+      localStorage.setItem(INCOME_STORAGE_KEY, JSON.stringify(incomes.map(i => i.id === id ? { ...i, ...data, account } : i)));
+    } catch (error) {
+      console.error("Failed to save incomes to localStorage", error);
+      toast({
+        variant: "destructive",
+        title: "เกิดข้อผิดพลาดในการบันทึกข้อมูล",
+      });
+    }
+  }, [accounts, incomes, toast]);
 
   const removeIncome = useCallback((id: string) => {
     updateAndSaveIncomes(incomes.filter(i => i.id !== id));
@@ -98,7 +105,7 @@ export function useIncome() {
         id: found.id,
         date: found.date,
         amount: found.amount,
-        accountNumber: found.account.accountNumber,
+        accountId: found.account.id,
     };
   }, [editingIncomeId, incomes]);
 

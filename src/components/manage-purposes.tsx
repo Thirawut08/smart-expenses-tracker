@@ -27,7 +27,7 @@ export function ManagePurposes() {
   const [purposeToDelete, setPurposeToDelete] = useState<string | null>(null);
   const [deleteAction, setDeleteAction] = useState<'reclassify' | 'deleteAll'>('reclassify');
 
-  const editablePurposes = purposes.filter(p => p !== 'ลงทุน' && p !== 'ออมทรัพย์' && p !== 'อื่นๆ');
+  const editablePurposes = purposes;
   
   const handleAddNewPurpose = () => {
     if (!newPurposeToAdd.trim()) {

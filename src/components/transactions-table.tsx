@@ -8,6 +8,13 @@ import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { cn, convertToTHB } from '@/lib/utils';
 
+function formatCurrency(amount: number, currency: 'THB' | 'USD', type?: 'income' | 'expense') {
+  const absAmount = Math.abs(amount);
+  if (currency === 'THB') return `${type === 'expense' ? '-' : ''}฿${absAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+  if (currency === 'USD') return `${type === 'expense' ? '-' : ''}$${absAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  return amount;
+}
+
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
@@ -67,7 +74,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
                   <TableCell>{transaction.sender || '-'}</TableCell>
                   <TableCell>{transaction.recipient || '-'}</TableCell>
                   <TableCell className={cn('text-right font-medium', transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                    {currencyFormatter.format(transaction.type === 'income' ? transaction.amount : -transaction.amount)}
+                    {formatCurrency(transaction.amount, transaction.account.currency, transaction.type)}
                   </TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>

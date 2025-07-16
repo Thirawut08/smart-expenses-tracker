@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Template } from '@/lib/types';
-import { accounts, defaultPurposes } from '@/lib/data';
+import { useAccounts } from '@/hooks/use-accounts';
 import type { UnifiedFormValues } from '@/components/transaction-form';
 import { useToast } from '@/hooks/use-toast';
+import { defaultPurposes } from '@/lib/data';
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
 const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
@@ -16,6 +17,7 @@ const sortTransactions = (transactions: Transaction[]) => {
 
 
 export function useLedger() {
+  const { accounts } = useAccounts();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [purposes, setPurposes] = useState<string[]>([]);
@@ -91,17 +93,7 @@ export function useLedger() {
   const addPurpose = useCallback((newPurpose: string) => {
     if (!newPurpose) return;
     const trimmedPurpose = newPurpose.trim();
-    const reservedNames = ['ลงทุน', 'ออมทรัพย์', 'อื่นๆ'];
-    
-    if (reservedNames.includes(trimmedPurpose)) {
-      toast({
-        variant: 'destructive',
-        title: 'ไม่สามารถเพิ่มได้',
-        description: `"${trimmedPurpose}" เป็นชื่อที่ระบบสงวนไว้`
-      });
-      return;
-    }
-    
+    // ลบ reservedNames check
     if (purposes.includes(trimmedPurpose)) {
       toast({
         variant: 'destructive',
@@ -110,14 +102,12 @@ export function useLedger() {
       });
       return;
     }
-
     const newPurposes = [...purposes, trimmedPurpose];
     updateAndSavePurposes(newPurposes);
     toast({
       title: 'เพิ่มวัตถุประสงค์สำเร็จ',
       description: `"${trimmedPurpose}" ถูกเพิ่มในรายการแล้ว`
     });
-
   }, [purposes, updateAndSavePurposes, toast]);
   
   const editPurpose = useCallback(async (oldPurpose: string, newPurpose: string) => {
@@ -229,9 +219,8 @@ export function useLedger() {
       finalData.purpose = data.customPurpose.trim();
     }
     
-    // Add purpose only if it's new and not a reserved name. The function handles checks.
-    const reservedNames = ['ลงทุน', 'ออมทรัพย์', 'อื่นๆ'];
-    if (!purposes.includes(finalData.purpose) && !reservedNames.includes(finalData.purpose)) {
+    // Add purpose only if it's new. ไม่ต้องเช็ค reservedNames
+    if (!purposes.includes(finalData.purpose)) {
         addPurpose(finalData.purpose);
     }
     

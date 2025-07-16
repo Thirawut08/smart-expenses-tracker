@@ -34,7 +34,7 @@ export default function IncomePage() {
     }, 0);
   }, [incomes, usdToThbRate]);
 
-  const handleFormSubmit = (data: { date: Date; accountNumber: string; amount: number; }) => {
+  const handleFormSubmit = (data: { date: Date; accountId: string; amount: number; }) => {
     if (editingIncome) {
       editIncome(editingIncome.id, data);
     } else {
@@ -86,9 +86,6 @@ export default function IncomePage() {
 
         {isFormOpen && (
           <Card>
-            <CardHeader>
-              <CardTitle>{editingIncome ? 'แก้ไขรายการ' : 'เพิ่มรายการใหม่'}</CardTitle>
-            </CardHeader>
             <CardContent>
               <AddIncomeForm
                 key={editingIncome?.id || 'new-income'}

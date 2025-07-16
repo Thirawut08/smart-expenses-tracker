@@ -39,19 +39,20 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
   const { accounts } = useAccounts();
 
   const { chartData, totalInvestmentInTHB } = useMemo(() => {
-    if (isRateLoading) {
+    // DEBUG: log ข้อมูลสำคัญ
+    console.debug("[INVESTMENT] useMemo: isRateLoading", isRateLoading, "usdToThbRate", usdToThbRate);
+    console.debug("[INVESTMENT] useMemo: accounts", accounts);
+    console.debug("[INVESTMENT] useMemo: transactions", transactions);
+    if (isRateLoading || !usdToThbRate) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
-
     const investmentTransactions = transactions.filter(t => investmentAccountNames.includes(t.account.name));
-
+    console.debug("[INVESTMENT] investmentTransactions", investmentTransactions);
     if (investmentTransactions.length === 0) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
-
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
     const accountDetails = new Map<string, { name: string, color: string, currency: 'THB' | 'USD' }>();
-
     investmentAccountNames.forEach(name => {
       const account = accounts.find(a => a.name === name);
       if (account) {
@@ -59,7 +60,6 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
           accountDetails.set(name, { name: account.name, color: account.color || '#8884d8', currency: account.currency });
       }
     });
-
     investmentTransactions.forEach(t => {
       const accountBalance = balances.get(t.account.name);
       if (accountBalance) {
@@ -67,10 +67,11 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
         balances.set(t.account.name, { ...accountBalance, balance: accountBalance.balance + amount });
       }
     });
-    
     const dataWithValues = Array.from(balances.entries())
       .map(([name, { balance, currency }]) => {
           const balanceInTHB = convertToTHB(balance, currency, usdToThbRate || 0);
+          // DEBUG: log การแปลงค่าเงิน
+          console.debug("[INVESTMENT] convertToTHB", { name, balance, currency, usdToThbRate, balanceInTHB });
           return { 
             name, 
             value: balance,
@@ -81,18 +82,39 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
       })
       .filter(item => item.value !== 0) 
       .sort((a, b) => b.valueInTHB - a.valueInTHB);
-
+    // DEBUG: log dataWithValues
+    console.debug("[INVESTMENT] dataWithValues", dataWithValues);
     const chartData = dataWithValues.map(item => ({
         ...item,
         chartValue: Math.abs(item.valueInTHB) // Use THB value for sizing pie slices
     }));
-
+    // DEBUG: log chartData
+    console.debug("[INVESTMENT] chartData", chartData);
     const totalInvestmentInTHB = dataWithValues.reduce((sum, item) => sum + item.valueInTHB, 0);
-    
+    // DEBUG: log totalInvestmentInTHB
+    console.debug("[INVESTMENT] totalInvestmentInTHB", totalInvestmentInTHB);
     return { chartData, totalInvestmentInTHB };
   }, [transactions, usdToThbRate, isRateLoading, accounts]);
+
+  // Guard: ถ้าข้อมูลยังไม่พร้อมหรือ format ผิด
+  if (isRateLoading || !usdToThbRate || !Array.isArray(chartData) || !Array.isArray(accounts) || accounts.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>ภาพรวมการลงทุน</CardTitle>
+          <CardDescription>กำลังโหลดข้อมูลอัตราแลกเปลี่ยนหรือบัญชี...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground bg-muted/30 rounded-lg">
+            <Loader2 className="w-16 h-16 mb-4 animate-spin" />
+            <h3 className="text-xl font-semibold">กำลังโหลดข้อมูล...</h3>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
-  if (chartData.length === 0 && !isRateLoading) {
+  if (chartData.length === 0) {
     return (
         <Card>
             <CardHeader>
