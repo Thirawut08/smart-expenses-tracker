@@ -73,53 +73,43 @@ const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name
 export function AccountBalances({ transactions, flatTable }: { transactions: Transaction[], flatTable?: boolean }) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
   const { accounts } = useAccounts();
-    
-  const calculateBalances = (accountNames: string[]) => {
-    console.log('DEBUG calculateBalances accounts:', accounts);
-    console.log('DEBUG calculateBalances transactions:', transactions);
-    const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
 
-    const relevantAccounts = accounts.filter(acc => accountNames.includes(acc.name));
-    
-    if (relevantAccounts.length === 0) {
-        return { balances: [], totalInThb: 0 };
-    }
+  // Group accounts by type (multi-group: 1 account in many types)
+  const accountsByType = useMemo(() => {
+    const groups: Record<string, typeof accounts> = {};
+    accounts.forEach(acc => {
+      const types = Array.isArray(acc.types) && acc.types.length > 0 ? acc.types : ['ทั่วไป'];
+      types.forEach(type => {
+        if (!groups[type]) groups[type] = [];
+        groups[type].push(acc);
+      });
+    });
+    return groups;
+  }, [accounts]);
 
-    relevantAccounts.forEach(acc => {
+  // Calculate balances for each group
+  const balancesByType = useMemo(() => {
+    const result: Record<string, { balances: {name: string, balance: number, currency: 'THB' | 'USD'}[], totalInThb: number }> = {};
+    Object.entries(accountsByType).forEach(([type, accs]) => {
+      const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
+      accs.forEach(acc => {
         balances.set(acc.name, { balance: 0, currency: acc.currency });
+      });
+      transactions.forEach(t => {
+        if (balances.has(t.account.name)) {
+          const currentData = balances.get(t.account.name)!;
+          const amount = t.type === 'income' ? t.amount : -t.amount;
+          balances.set(t.account.name, { ...currentData, balance: currentData.balance + amount });
+        }
+      });
+      const sortedBalances = Array.from(balances.entries())
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const totalInThb = sortedBalances.reduce((sum, acc) => sum + convertToTHB(acc.balance, acc.currency, usdToThbRate || 0), 0);
+      result[type] = { balances: sortedBalances, totalInThb };
     });
-
-    transactions.forEach(t => {
-      if (balances.has(t.account.name)) {
-        const currentData = balances.get(t.account.name)!;
-        const amount = t.type === 'income' ? t.amount : -t.amount;
-        balances.set(t.account.name, { ...currentData, balance: currentData.balance + amount });
-      }
-    });
-
-    const sortedBalances = Array.from(balances.entries())
-      .map(([name, data]) => ({ name, ...data }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-
-    const totalInThb = sortedBalances.reduce((sum, acc) => {
-        const amountInThb = convertToTHB(acc.balance, acc.currency, usdToThbRate || 0);
-        return sum + amountInThb;
-    }, 0);
-    
-    console.log('DEBUG balances result:', { balances: sortedBalances, totalInThb });
-    return { balances: sortedBalances, totalInThb };
-  };
-
-  const { balances: investmentBalances, totalInThb: totalInvestment } = useMemo(() => calculateBalances(investmentAccountNames), [transactions, usdToThbRate]);
-  
-  const { balances: savingBalances, totalInThb: totalSaving } = useMemo(() => calculateBalances(savingAccountNames), [transactions, usdToThbRate]);
-  
-  const { balances: generalBalances, totalInThb: totalGeneral } = useMemo(() => {
-    const generalAccountNames = accounts
-        .map(a => a.name)
-        .filter(name => !investmentAccountNames.includes(name) && !savingAccountNames.includes(name));
-    return calculateBalances(generalAccountNames);
-  }, [transactions, usdToThbRate]);
+    return result;
+  }, [accountsByType, transactions, usdToThbRate]);
 
   if (transactions.length === 0) {
       return (
@@ -132,12 +122,11 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
   }
 
   if (flatTable) {
-    // รวมบัญชีทุกประเภทในตารางเดียว
-    const allBalances = [
-      ...generalBalances,
-      ...savingBalances,
-      ...investmentBalances,
-    ];
+    // รวมบัญชีทุกประเภทในตารางเดียว โดยแสดง group type
+    const allBalances: {type: string, name: string, balance: number, currency: 'THB' | 'USD'}[] = [];
+    Object.entries(balancesByType).forEach(([type, { balances }]) => {
+      balances.forEach(acc => allBalances.push({ type, ...acc }));
+    });
     const totalAll = allBalances.reduce((sum, acc) => sum + convertToTHB(acc.balance, acc.currency, usdToThbRate || 0), 0);
     return (
       <div>
@@ -149,13 +138,15 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
           <Table>
             <TableHeader className="sticky top-0 bg-card">
               <TableRow>
+                <TableHead>ประเภท</TableHead>
                 <TableHead>บัญชี</TableHead>
                 <TableHead className="text-right">ยอดคงเหลือ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {allBalances.map((acc) => (
-                <TableRow key={acc.name}>
+                <TableRow key={acc.type + '-' + acc.name}>
+                  <TableCell>{acc.type}</TableCell>
                   <TableCell className="font-medium">{acc.name}</TableCell>
                   <TableCell className={`text-right font-semibold ${acc.balance >= 0 ? '' : 'text-red-600'}`}>{formatCurrency(acc.balance, acc.currency)}</TableCell>
                 </TableRow>
@@ -167,6 +158,7 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
     );
   }
 
+  // แสดงแบบ group ตามประเภท
   return (
     <Card>
       <CardHeader>
@@ -176,22 +168,12 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="general">บัญชีทั่วไป</TabsTrigger>
-                <TabsTrigger value="saving">บัญชีออม</TabsTrigger>
-                <TabsTrigger value="investment">บัญชีลงทุน</TabsTrigger>
-            </TabsList>
-            <TabsContent value="general" className="mt-4">
-                <BalanceTable balances={generalBalances} totalInThb={totalGeneral} noDataMessage="ไม่พบบัญชีทั่วไป" />
-            </TabsContent>
-            <TabsContent value="saving" className="mt-4">
-                <BalanceTable balances={savingBalances} totalInThb={totalSaving} noDataMessage="ไม่พบบัญชีออมทรัพย์" />
-            </TabsContent>
-            <TabsContent value="investment" className="mt-4">
-                <BalanceTable balances={investmentBalances} totalInThb={totalInvestment} noDataMessage="ไม่พบบัญชีลงทุน" />
-            </TabsContent>
-        </Tabs>
+        {Object.entries(balancesByType).map(([type, { balances, totalInThb }]) => (
+          <div key={type} className="mb-8">
+            <div className="mb-2 text-lg font-semibold">{type}</div>
+            <BalanceTable balances={balances} totalInThb={totalInThb} noDataMessage={`ไม่พบบัญชีประเภท ${type}`} />
+          </div>
+        ))}
       </CardContent>
     </Card>
   );

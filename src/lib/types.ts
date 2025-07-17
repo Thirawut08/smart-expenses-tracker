@@ -4,7 +4,7 @@ export interface Account {
   id: string;
   name: string;
   currency: 'THB' | 'USD';
-  type: string; // ประเภทบัญชี เช่น 'ทั่วไป', 'ลงทุน', 'ออม', หรือที่ผู้ใช้ตั้งเอง
+  types: string[]; // ประเภทบัญชีหลายประเภท เช่น ['ทั่วไป', 'ลงทุน']
 }
 
 export interface Transaction {

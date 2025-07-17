@@ -10,14 +10,15 @@ import { Label } from '@/components/ui/label';
 import { useLedger } from '@/hooks/use-ledger';
 import { useAccounts } from '@/hooks/use-accounts';
 import type { Account } from '@/lib/types';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
 
 function getDefaultAccounts(): Account[] {
   return [
-    { id: '1', name: 'เงินสด', currency: 'THB', type: 'ทั่วไป' },
-    { id: '2', name: 'KBANK', currency: 'THB', type: 'ทั่วไป' },
-    { id: '3', name: 'SCB', currency: 'THB', type: 'ทั่วไป' },
+    { id: '1', name: 'เงินสด', currency: 'THB', types: ['ทั่วไป'] },
+    { id: '2', name: 'KBANK', currency: 'THB', types: ['ทั่วไป'] },
+    { id: '3', name: 'SCB', currency: 'THB', types: ['ทั่วไป'] },
   ];
 }
 
@@ -34,26 +35,26 @@ export function ManageAccounts() {
   // Form state
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
-  const [type, setType] = useState('ทั่วไป');
+  const [types, setTypes] = useState<string[]>(['ทั่วไป']);
   const [accountTypes, setAccountTypes] = useState<string[]>(() => {
     // รวมประเภทจากบัญชีที่มีอยู่และ default
-    const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.map(a => a.type).filter(Boolean)];
+    const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)];
     return Array.from(new Set(all));
   });
   const [newType, setNewType] = useState('');
 
   useEffect(() => {
     // sync accountTypes เมื่อ accounts เปลี่ยน
-    setAccountTypes(prev => {
-      const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.map(a => a.type).filter(Boolean)];
-      return Array.from(new Set(all));
-    });
+    setAccountTypes(Array.from(new Set([
+      ...DEFAULT_ACCOUNT_TYPES,
+      ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)
+    ])));
   }, [accounts]);
 
   const resetForm = () => {
     setName('');
     setCurrency('THB');
-    setType('ทั่วไป');
+    setTypes(['ทั่วไป']);
     setNewType('');
   };
 
@@ -62,7 +63,7 @@ export function ManageAccounts() {
     addAccount({
       name: name.trim(),
       currency,
-      type: type.trim() || 'ทั่วไป',
+      types: types.length ? types : ['ทั่วไป'],
     });
     setIsAddDialogOpen(false);
     resetForm();
@@ -73,7 +74,7 @@ export function ManageAccounts() {
     editAccount(editAccountState.id, {
       name: name.trim(),
       currency,
-      type: type.trim() || 'ทั่วไป',
+      types: types.length ? types : ['ทั่วไป'],
     });
     setIsEditDialogOpen(false);
     setEditAccountState(null);
@@ -96,7 +97,7 @@ export function ManageAccounts() {
     setEditAccountState(account);
     setName(account.name);
     setCurrency(account.currency);
-    setType(account.type || 'ทั่วไป');
+    setTypes(Array.isArray(account.types) && account.types.length ? account.types : ['ทั่วไป']);
     setIsEditDialogOpen(true);
   };
 
@@ -128,7 +129,7 @@ export function ManageAccounts() {
                 <TableRow key={acc.id}>
                   <TableCell className="font-medium">{acc.name}</TableCell>
                   <TableCell>{acc.currency}</TableCell>
-                  <TableCell>{acc.type || 'ทั่วไป'}</TableCell>
+                  <TableCell>{(Array.isArray(acc.types) ? acc.types : [acc.types]).join(', ') || 'ทั่วไป'}</TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -183,9 +184,20 @@ export function ManageAccounts() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="account-type" className="text-right">ประเภทบัญชี</Label>
-              <select id="account-type" value={type} onChange={e => setType(e.target.value)} className="col-span-2 border rounded px-2 py-1">
-                {accountTypes.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <div className="col-span-3 flex flex-wrap gap-2">
+                {accountTypes.map(t => (
+                  <label key={t} className="flex items-center gap-1">
+                    <Checkbox
+                      checked={types.includes(t)}
+                      onCheckedChange={checked => {
+                        setTypes(prev => checked ? [...prev, t] : prev.filter(x => x !== t));
+                      }}
+                      id={`add-type-${t}`}
+                    />
+                    <span>{t}</span>
+                  </label>
+                ))}
+              </div>
               <Input
                 placeholder="เพิ่มประเภทใหม่..."
                 value={newType}
@@ -193,7 +205,7 @@ export function ManageAccounts() {
                 onBlur={() => {
                   if (newType.trim() && !accountTypes.includes(newType.trim())) {
                     setAccountTypes(types => [...types, newType.trim()]);
-                    setType(newType.trim());
+                    setTypes(prev => [...prev, newType.trim()]);
                   }
                   setNewType('');
                 }}
@@ -228,9 +240,20 @@ export function ManageAccounts() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-account-type" className="text-right">ประเภทบัญชี</Label>
-              <select id="edit-account-type" value={type} onChange={e => setType(e.target.value)} className="col-span-2 border rounded px-2 py-1">
-                {accountTypes.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <div className="col-span-3 flex flex-wrap gap-2">
+                {accountTypes.map(t => (
+                  <label key={t} className="flex items-center gap-1">
+                    <Checkbox
+                      checked={types.includes(t)}
+                      onCheckedChange={checked => {
+                        setTypes(prev => checked ? [...prev, t] : prev.filter(x => x !== t));
+                      }}
+                      id={`edit-type-${t}`}
+                    />
+                    <span>{t}</span>
+                  </label>
+                ))}
+              </div>
               <Input
                 placeholder="เพิ่มประเภทใหม่..."
                 value={newType}
@@ -238,7 +261,7 @@ export function ManageAccounts() {
                 onBlur={() => {
                   if (newType.trim() && !accountTypes.includes(newType.trim())) {
                     setAccountTypes(types => [...types, newType.trim()]);
-                    setType(newType.trim());
+                    setTypes(prev => [...prev, newType.trim()]);
                   }
                   setNewType('');
                 }}
