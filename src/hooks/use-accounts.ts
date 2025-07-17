@@ -30,11 +30,17 @@ export function useAccounts() {
   useEffect(() => {
     const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
     if (stored) {
-      setAccounts(JSON.parse(stored));
+      try {
+        const parsed = JSON.parse(stored);
+        console.log('[DEBUG] Loaded accounts from localStorage:', parsed);
+        setAccounts(parsed);
+      } catch (e) {
+        console.error('[DEBUG] Failed to parse accounts from localStorage:', e);
+        setAccounts([]);
+      }
     } else {
-      const defaultAccounts: Account[] = defaultAccountsRaw.map(acc => ({ ...acc, types: acc.types ?? ['ทั่วไป'] }));
-      setAccounts(defaultAccounts);
-      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(defaultAccounts));
+      // ไม่ fallback เป็น defaultAccounts อีกต่อไป ให้ user เพิ่มบัญชีเอง
+      setAccounts([]);
     }
   }, []);
 
