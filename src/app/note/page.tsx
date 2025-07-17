@@ -81,10 +81,10 @@ export default function NotePage() {
   const sortedNotes = [...notes].sort((a, b) => b.updated - a.updated);
 
   return (
-    <div className="flex flex-col md:flex-row h-[80vh] max-w-4xl mx-auto mt-8 border rounded-lg overflow-hidden bg-card shadow">
+    <div className="flex flex-col md:flex-row h-[80vh] max-w-4xl mx-auto mt-8">
       {/* Sidebar: Note List */}
-      <div className="w-full md:w-1/3 border-r bg-muted/40 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="w-full md:w-1/3 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b-0">
           <span className="font-bold text-lg">โน้ต</span>
           <Button size="icon" variant="outline" onClick={handleAdd} title="เพิ่มโน้ตใหม่">
             <Plus />
@@ -97,7 +97,7 @@ export default function NotePage() {
           {sortedNotes.map(note => (
             <div
               key={note.id}
-              className={`px-4 py-3 border-b cursor-pointer hover:bg-accent ${selectedId === note.id ? "bg-accent/60" : ""}`}
+              className={`px-4 py-3 cursor-pointer hover:bg-muted ${selectedId === note.id ? "bg-muted" : ""}`}
               onClick={() => setSelectedId(note.id)}
             >
               <div className="flex justify-between items-center gap-2">
@@ -119,7 +119,7 @@ export default function NotePage() {
       <div className="flex-1 flex flex-col">
         {selectedNote ? (
           <>
-            <div className="p-4 border-b bg-muted/40 flex items-center justify-between">
+            <div className="p-4 border-b-0 flex items-center justify-between">
               <span className="font-semibold text-base">แก้ไขโน้ต</span>
             </div>
             <div className="flex-1 p-4 flex flex-col gap-4">

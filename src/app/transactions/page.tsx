@@ -90,12 +90,12 @@ export default function TransactionsPage() {
   };
 
   // Wrapper รองรับ transfer (array)
-  const handleSaveTransactionWrapper = (data: any, saveAsTemplate: boolean) => {
+  const handleSaveTransactionWrapper = (data: any) => {
     if (Array.isArray(data)) {
-      handleSaveTransaction(data, false);
+      handleSaveTransaction(data);
       toast({ title: 'บันทึกการโอนสำเร็จ', description: 'สร้าง 2 รายการโอนระหว่างบัญชีแล้ว' });
     } else {
-      handleSaveTransaction(data, saveAsTemplate);
+      handleSaveTransaction(data);
     }
   };
 
@@ -117,7 +117,6 @@ export default function TransactionsPage() {
                 onSave={handleSaveTransactionWrapper}
                 initialData={dialogInitialData}
                 isEditing={!!editingTransaction}
-                availablePurposes={purposes}
                 transactions={transactions}
               >
                 <Button onClick={() => setIsDialogOpen(true)}>
@@ -127,34 +126,30 @@ export default function TransactionsPage() {
               </AddTransactionDialog>
             </div>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>รายการธุรกรรม</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="expense" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
-                  <TabsTrigger value="income">รายรับ</TabsTrigger>
-                </TabsList>
-                <TabsContent value="expense" className="mt-4">
-                    <TransactionsTable 
-                        transactions={expenseTransactions}
-                        onEdit={handleEditTransaction}
-                        onDelete={handleDeleteRequest}
-                    />
-                </TabsContent>
-                <TabsContent value="income" className="mt-4">
-                    <TransactionsTable 
-                        transactions={incomeTransactions}
-                        onEdit={handleEditTransaction}
-                        onDelete={handleDeleteRequest}
-                    />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          {/* Minimal, no Card, no CardHeader, no CardContent */}
+          <div className="w-full">
+            <div className="text-xl font-semibold mb-2">รายการธุรกรรม</div>
+            <Tabs defaultValue="expense" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
+                <TabsTrigger value="income">รายรับ</TabsTrigger>
+              </TabsList>
+              <TabsContent value="expense" className="mt-4">
+                  <TransactionsTable 
+                      transactions={expenseTransactions}
+                      onEdit={handleEditTransaction}
+                      onDelete={handleDeleteRequest}
+                  />
+              </TabsContent>
+              <TabsContent value="income" className="mt-4">
+                  <TransactionsTable 
+                      transactions={incomeTransactions}
+                      onEdit={handleEditTransaction}
+                      onDelete={handleDeleteRequest}
+                  />
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>

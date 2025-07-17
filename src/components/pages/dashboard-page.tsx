@@ -1,21 +1,19 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MonthlyStats } from '@/components/monthly-stats';
 import { useLedger } from '@/hooks/use-ledger';
 import { thaiMonths } from '@/lib/data';
 import { HighPerfDropdown } from '../ui/high-perf-dropdown';
 import { AccountBalances } from '@/components/account-balances';
 import { TransactionTemplates } from '@/components/transaction-templates';
-import { MonthInfoTable } from '@/components/month-info-table';
+import { UnifiedDashboardChart } from '@/components/unified-dashboard-chart';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { InvestmentChart } from '@/components/investment-chart';
-import { SavingsChart } from '@/components/savings-chart';
 
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedMode, setSelectedMode] = useState<'total' | 'invest' | 'save'>('total');
 
   const filteredTransactions = useMemo(() => {
     if (selectedMonth === 'all') {
@@ -33,60 +31,68 @@ export function DashboardPage() {
   }, [selectedMonth]);
   
   return (
-    <div className="space-y-6">
-       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
-              <span className="text-sm text-muted-foreground border rounded px-2 py-1 bg-muted/50">
-                {new Date().toLocaleDateString('th-TH')}
-              </span>
-            </div>
-            <HighPerfDropdown
-              options={[{ value: 'all', label: 'ทุกเดือน' }, ...thaiMonths.map(month => ({ value: month.value.toString(), label: month.label + (month.value === new Date().getMonth() ? ' (ปัจจุบัน)' : '') }))]}
-              value={selectedMonth}
-              onChange={setSelectedMonth}
-              placeholder="เลือกเดือน"
-              className="w-full md:w-[220px] font-semibold"
-            />
+    <div className="space-y-8 md:space-y-10 lg:space-y-12">
+      {/* Section: Header + Filter + Mode */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 pb-2 md:pb-4">
+        <div className="flex items-center gap-3 md:gap-5">
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
+          <span className="text-sm text-muted-foreground border rounded px-2 py-1 bg-muted/50">
+            {new Date().toLocaleDateString('th-TH')}
+          </span>
+        </div>
+        <div className="flex gap-2 items-center">
+          <HighPerfDropdown
+            options={[{ value: 'all', label: 'ทุกเดือน' }, ...thaiMonths.map(month => ({ value: month.value.toString(), label: month.label + (month.value === new Date().getMonth() ? ' (ปัจจุบัน)' : '') }))]}
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            placeholder="เลือกเดือน"
+            className="w-full md:w-[160px] font-semibold"
+          />
+          <div className="flex gap-1 ml-2">
+            <button
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'total' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+              onClick={() => setSelectedMode('total')}
+            >ทั้งหมด</button>
+            <button
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'invest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+              onClick={() => setSelectedMode('invest')}
+            >ลงทุน</button>
+            <button
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'save' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
+              onClick={() => setSelectedMode('save')}
+            >ออม</button>
           </div>
-          
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <MonthlyStats transactions={filteredTransactions} monthLabel={currentMonthLabel} />
-            </div>
-            <div className="md:col-span-2">
-              <AccountBalances transactions={transactions} />
-            </div>
         </div>
-        <div className="grid grid-cols-1 gap-6">
-            {/* Center the Google Finance link */}
-            <div className="flex justify-center">
-              <a
-                href="https://www.google.com/finance/quote/USD-THB"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-700 dark:text-blue-300 text-center font-semibold hover:underline w-full max-w-xs"
-              >
-                ดูอัตราแลกเปลี่ยน USD/THB ล่าสุด (Google Finance)
-              </a>
-            </div>
-            <InvestmentChart transactions={transactions} />
-            <SavingsChart transactions={transactions} />
-        </div>
-       </div>
+      </div>
 
-      <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+      {/* Unified Interactive Graph */}
+      <UnifiedDashboardChart
+        transactions={filteredTransactions}
+        mode={selectedMode}
+        periodLabel={currentMonthLabel}
+      />
 
-      <Card>
-          <CardHeader>
-              <CardTitle>ข้อมูลเดือน</CardTitle>
-              <CardDescription>
-                  ตารางแสดงรายละเอียดของเดือนต่างๆ
-              </CardDescription>
-          </CardHeader>
-          <MonthInfoTable />
-      </Card>
+      {/* Account Balances (flat table) */}
+      <div className="h-full p-0">
+        <AccountBalances transactions={transactions} flatTable />
+      </div>
+
+      {/* Section: Exchange Rate */}
+      <div className="flex justify-center pt-2 pb-2 md:pt-4 md:pb-4">
+        <a
+          href="https://www.google.com/finance/quote/USD-THB"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-700 dark:text-blue-300 text-center font-semibold hover:underline w-full max-w-xs"
+        >
+          ดูอัตราแลกเปลี่ยน USD/THB ล่าสุด (Google Finance)
+        </a>
+      </div>
+
+      {/* Section: Templates (minimal, ไม่มี Card) */}
+      <div className="p-0">
+        <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
+      </div>
     </div>
   );
 }

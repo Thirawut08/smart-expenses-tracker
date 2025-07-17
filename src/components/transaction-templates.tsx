@@ -32,17 +32,17 @@ export function TransactionTemplates({ templates, onUseTemplate }: TransactionTe
               >
                 <p className="font-semibold"><span className="mr-1 text-xl">{template.name}</span></p>
                 <p className="text-sm text-muted-foreground">
-                  {template.purpose} - {template.accountNumber}
+                  {template.purpose}
                 </p>
                  {template.details && <p className="text-xs text-muted-foreground/80 truncate">"{template.details}"</p>}
               </Button>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[100px] text-center text-muted-foreground bg-muted/30 rounded-lg">
-            <FileText className="w-12 h-12 mb-2" />
-            <h3 className="text-lg font-semibold">ยังไม่มีเทมเพลต</h3>
-            <p className="text-sm">คุณสามารถสร้างเทมเพลตได้โดยการกด "บันทึกเป็นเทมเพลต" เมื่อเพิ่มธุรกรรมใหม่</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+            <FileText className="w-10 h-10 mb-2 opacity-60" />
+            <div className="text-base font-medium">ยังไม่มีเทมเพลต</div>
+            <div className="text-xs mt-1">คุณสามารถสร้างเทมเพลตได้โดยการกด "บันทึกเป็นเทมเพลต" เมื่อเพิ่มธุรกรรมใหม่</div>
           </div>
         )}
       </CardContent>

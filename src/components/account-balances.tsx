@@ -70,7 +70,7 @@ const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name
     );
 }
 
-export function AccountBalances({ transactions }: { transactions: Transaction[] }) {
+export function AccountBalances({ transactions, flatTable }: { transactions: Transaction[], flatTable?: boolean }) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
   const { accounts } = useAccounts();
     
@@ -123,22 +123,48 @@ export function AccountBalances({ transactions }: { transactions: Transaction[] 
 
   if (transactions.length === 0) {
       return (
-        <Card>
-          <CardHeader>
-            <CardTitle>ยอดคงเหลือแต่ละบัญชี</CardTitle>
-            <CardDescription>
-              สรุปยอดเงินคงเหลือในทุกบัญชีของคุณ
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground bg-muted/30 rounded-lg">
-                <WalletCards className="w-16 h-16 mb-4" />
-                <h3 className="text-xl font-semibold">ยังไม่มียอดคงเหลือ</h3>
-                <p>เพิ่มธุรกรรมเพื่อดูยอดคงเหลือในบัญชีของคุณ</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground bg-muted/30 rounded-lg">
+            <WalletCards className="w-16 h-16 mb-4" />
+            <h3 className="text-xl font-semibold">ยังไม่มียอดคงเหลือ</h3>
+            <p>เพิ่มธุรกรรมเพื่อดูยอดคงเหลือในบัญชีของคุณ</p>
+        </div>
       )
+  }
+
+  if (flatTable) {
+    // รวมบัญชีทุกประเภทในตารางเดียว
+    const allBalances = [
+      ...generalBalances,
+      ...savingBalances,
+      ...investmentBalances,
+    ];
+    const totalAll = allBalances.reduce((sum, acc) => sum + convertToTHB(acc.balance, acc.currency, usdToThbRate || 0), 0);
+    return (
+      <div>
+        <div className="text-right mb-4">
+          <p className="text-sm text-muted-foreground">ยอดรวม (เทียบเท่า THB)</p>
+          <p className={`text-xl font-bold ${totalAll >= 0 ? 'text-green-600' : 'text-red-600'}`}>{thbFormatter.format(totalAll)}</p>
+        </div>
+        <div className="overflow-visible">
+          <Table>
+            <TableHeader className="sticky top-0 bg-card">
+              <TableRow>
+                <TableHead>บัญชี</TableHead>
+                <TableHead className="text-right">ยอดคงเหลือ</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {allBalances.map((acc) => (
+                <TableRow key={acc.name}>
+                  <TableCell className="font-medium">{acc.name}</TableCell>
+                  <TableCell className={`text-right font-semibold ${acc.balance >= 0 ? '' : 'text-red-600'}`}>{formatCurrency(acc.balance, acc.currency)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
   }
 
   return (

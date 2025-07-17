@@ -62,87 +62,78 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
   
   if (chartData.length === 0) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>ภาพรวมเงินออม</CardTitle>
-                <CardDescription>ไม่มีข้อมูลเงินออม</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-col items-center justify-center h-[250px] text-center text-muted-foreground bg-muted/30 rounded-lg">
-                    <PiggyBank className="w-16 h-16 mb-4" />
-                    <h3 className="text-xl font-semibold">ยังไม่มีข้อมูลเงินออม</h3>
-                    <p>เพิ่มธุรกรรมในบัญชีออมทรัพย์ของคุณ</p>
-                </div>
-            </CardContent>
-        </Card>
+      <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+        <PiggyBank className="w-12 h-12 mb-2 opacity-60" />
+        <div className="text-base font-medium">ยังไม่มีข้อมูลเงินออม</div>
+        <div className="text-xs mt-1">เพิ่มธุรกรรมในบัญชีออมทรัพย์ของคุณ</div>
+      </div>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>ภาพรวมเงินออม</CardTitle>
-        <CardDescription>สัดส่วนยอดเงินคงเหลือในบัญชีออมทรัพย์</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center">
-        <ChartContainer config={{}} className="mx-auto aspect-square h-[250px]">
-          <ResponsiveContainer>
-            <PieChart>
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent 
-                    formatter={(value, name, props) => `${props.payload.name}: ${currencyFormatter.format(props.payload.value)}`} 
-                    hideLabel 
-                />}
-              />
-              <Pie
-                data={chartData}
-                dataKey="chartValue"
-                nameKey="name"
-                innerRadius="30%"
-                outerRadius="60%"
-                strokeWidth={5}
-                label={({
-                  cx,
-                  cy,
-                  midAngle,
-                  innerRadius,
-                  outerRadius,
-                  value,
-                  index,
-                }) => {
-                  const RADIAN = Math.PI / 180
-                  const radius = 25 + innerRadius + (outerRadius - innerRadius)
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+    <div className="flex flex-col items-center justify-center">
+      <div className="mb-2">
+        <div className="text-xl font-bold">ภาพรวมเงินออม</div>
+        <div className="text-sm text-muted-foreground">สัดส่วนยอดเงินคงเหลือในบัญชีออมทรัพย์</div>
+      </div>
+      <ChartContainer config={{}} className="mx-auto aspect-square h-[250px]">
+        <ResponsiveContainer>
+          <PieChart>
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent 
+                  formatter={(value, name, props) => `${props.payload.name}: ${currencyFormatter.format(props.payload.value)}`} 
+                  hideLabel 
+              />}
+            />
+            <Pie
+              data={chartData}
+              dataKey="chartValue"
+              nameKey="name"
+              innerRadius="30%"
+              outerRadius="60%"
+              strokeWidth={5}
+              labelLine={false}
+              label={({
+                cx,
+                cy,
+                midAngle,
+                innerRadius,
+                outerRadius,
+                value,
+                index,
+              }) => {
+                const RADIAN = Math.PI / 180
+                const radius = 25 + innerRadius + (outerRadius - innerRadius)
+                const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      className="fill-muted-foreground text-xs"
-                      textAnchor={x > cx ? "start" : "end"}
-                      dominantBaseline="central"
-                    >
-                      {currencyFormatter.format(chartData[index].value)}
-                    </text>
-                  )
-                }}
-              >
-                 {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-        <div className="mt-4 flex flex-col items-center text-center">
-            <span className="text-sm text-muted-foreground">ยอดออมรวม</span>
-            <span className={`text-2xl font-bold ${totalSavings >= 0 ? '' : 'text-red-600'}`}>
-              {currencyFormatter.format(totalSavings)}
-            </span>
-        </div>
-      </CardContent>
-    </Card>
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    className="fill-muted-foreground text-xs"
+                    textAnchor={x > cx ? "start" : "end"}
+                    dominantBaseline="central"
+                  >
+                    {currencyFormatter.format(chartData[index].value)}
+                  </text>
+                )
+              }}
+            >
+               {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={["#222", "#8884d8", "#82ca9d", "#ffc658", "#ff8042"][index % 5]} />
+                ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+      <div className="mt-4 flex flex-col items-center text-center">
+        <span className="text-sm text-muted-foreground">ยอดออมรวม</span>
+        <span className={`text-2xl font-bold ${totalSavings >= 0 ? '' : 'text-red-600'}`}>
+          {currencyFormatter.format(totalSavings)}
+        </span>
+      </div>
+    </div>
   );
 }

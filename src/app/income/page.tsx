@@ -85,31 +85,24 @@ export default function IncomePage() {
         />
 
         {isFormOpen && (
-          <Card>
-            <CardContent>
-              <AddIncomeForm
-                key={editingIncome?.id || 'new-income'}
-                initialData={editingIncome}
-                onSubmit={handleFormSubmit}
-                onCancel={() => setIsFormOpen(false)}
-              />
-            </CardContent>
-          </Card>
+          <div>
+            <AddIncomeForm
+              key={editingIncome?.id || 'new-income'}
+              initialData={editingIncome}
+              onSubmit={handleFormSubmit}
+              onCancel={() => setIsFormOpen(false)}
+            />
+          </div>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>ประวัติรายได้</CardTitle>
-            <CardDescription>รายการรายได้ทั้งหมดที่บันทึกไว้</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <IncomeTable 
-              incomes={incomes}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteRequest}
-            />
-          </CardContent>
-        </Card>
+        <div>
+          <div className="text-xl font-semibold mb-2">ประวัติรายได้</div>
+          <IncomeTable 
+            incomes={incomes}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteRequest}
+          />
+        </div>
       </div>
 
       <AlertDialog open={!!incomeToDelete} onOpenChange={(open) => !open && setIncomeToDelete(null)}>
