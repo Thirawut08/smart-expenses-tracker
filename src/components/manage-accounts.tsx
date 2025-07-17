@@ -87,10 +87,12 @@ export function ManageAccounts() {
 
   const handleEdit = () => {
     if (!editAccountState) return;
+    // ล็อกค่าประเภทบัญชีที่เลือกไว้ก่อน
+    const selectedTypes = [...types];
     editAccount(editAccountState.id, {
       name: name.trim(),
       currency,
-      types: types.length ? types : ['ทั่วไป'],
+      types: selectedTypes.length ? selectedTypes : ['ทั่วไป'],
     });
     setIsEditDialogOpen(false);
     setEditAccountState(null);

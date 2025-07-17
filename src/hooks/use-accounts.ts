@@ -1,26 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Account } from '@/lib/types';
-import { accounts as defaultAccounts } from '@/lib/data';
+import { accounts as defaultAccountsRaw } from '@/lib/data';
 
 const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
 
 const DEFAULT_ACCOUNTS: Account[] = [
-  { id: '1', name: 'Cash', currency: 'THB' },
-  { id: '2', name: 'KBANK', currency: 'THB' },
-  { id: '3', name: 'SCB', currency: 'THB' },
-  { id: '4', name: 'Kept', currency: 'THB' },
-  { id: '5', name: 'Dime!', currency: 'THB' },
-  { id: '6', name: 'Bybit', currency: 'USD' },
-  { id: '7', name: 'Binance TH', currency: 'THB' },
-  { id: '8', name: 'TTB', currency: 'THB' },
-  { id: '9', name: 'Money Plus', currency: 'THB' },
-  { id: '10', name: 'KTB', currency: 'THB' },
-  { id: '11', name: 'GSB', currency: 'THB' },
-  { id: '12', name: 'True Wallet', currency: 'THB' },
-  { id: '13', name: 'Shopee Pay', currency: 'THB' },
-  { id: '14', name: 'Webull', currency: 'USD' },
-  { id: '15', name: 'Dime FCD', currency: 'USD' },
-  { id: '16', name: 'Dime! USD', currency: 'USD' },
+  { id: '1', name: 'Cash', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '2', name: 'KBANK', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '3', name: 'SCB', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '4', name: 'Kept', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '5', name: 'Dime!', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '6', name: 'Bybit', currency: 'USD', types: ['ทั่วไป'] },
+  { id: '7', name: 'Binance TH', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '8', name: 'TTB', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '9', name: 'Money Plus', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '10', name: 'KTB', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '11', name: 'GSB', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '12', name: 'True Wallet', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '13', name: 'Shopee Pay', currency: 'THB', types: ['ทั่วไป'] },
+  { id: '14', name: 'Webull', currency: 'USD', types: ['ทั่วไป'] },
+  { id: '15', name: 'Dime FCD', currency: 'USD', types: ['ทั่วไป'] },
+  { id: '16', name: 'Dime! USD', currency: 'USD', types: ['ทั่วไป'] },
 ];
 
 export function useAccounts() {
@@ -32,18 +32,19 @@ export function useAccounts() {
     if (stored) {
       setAccounts(JSON.parse(stored));
     } else {
+      const defaultAccounts: Account[] = defaultAccountsRaw.map(acc => ({ ...acc, types: acc.types ?? ['ทั่วไป'] }));
       setAccounts(defaultAccounts);
       localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(defaultAccounts));
     }
   }, []);
 
-  // เพิ่ม useEffect สำหรับสร้างบัญชี default ถ้า accounts ว่าง
-  useEffect(() => {
-    if (accounts.length === 0) {
-      setAccounts(DEFAULT_ACCOUNTS);
-      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(DEFAULT_ACCOUNTS));
-    }
-  }, [accounts, setAccounts]);
+  // ลบ useEffect นี้ออก เพราะจะทำให้ localStorage ถูกเขียนทับด้วย DEFAULT_ACCOUNTS
+  // useEffect(() => {
+  //   if (accounts.length === 0) {
+  //     setAccounts(DEFAULT_ACCOUNTS);
+  //     localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(DEFAULT_ACCOUNTS));
+  //   }
+  // }, [accounts, setAccounts]);
 
   // Save to localStorage when accounts change
   useEffect(() => {
@@ -92,6 +93,10 @@ export function useAccounts() {
     setAccounts(prev => {
       const updated = prev.map(a => a.id === id ? { ...a, ...update } : a);
       setTimeout(triggerAccountsUpdated, 0);
+      setTimeout(() => {
+        const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+        console.log('[DEBUG] accounts in localStorage after editAccount:', stored);
+      }, 100);
       return updated;
     });
   }, []);
