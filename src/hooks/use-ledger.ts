@@ -6,6 +6,8 @@ import { useAccounts } from '@/hooks/use-accounts';
 import type { UnifiedFormValues } from '@/components/transaction-form';
 import { useToast } from '@/hooks/use-toast';
 import { defaultPurposes } from '@/lib/data';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
+import { convertToTHB } from '@/lib/utils';
 
 const TRANSACTIONS_STORAGE_KEY = 'ledger-ai-transactions';
 const TEMPLATES_STORAGE_KEY = 'ledger-ai-templates';
@@ -18,6 +20,7 @@ const sortTransactions = (transactions: Transaction[]) => {
 
 export function useLedger() {
   const { accounts } = useAccounts();
+  const { rate: usdToThbRate } = useExchangeRate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [purposes, setPurposes] = useState<string[]>([]);
@@ -35,6 +38,9 @@ export function useLedger() {
         const parsedTransactions = JSON.parse(storedTransactions).map((t: any) => ({
           ...t,
           date: new Date(t.date), // Convert date string back to Date object
+          account: t.account && typeof t.account === 'object'
+            ? { id: t.account.id, name: t.account.name, currency: t.account.currency }
+            : t.account,
         }));
         setTransactions(sortTransactions(parsedTransactions));
       }
@@ -159,109 +165,157 @@ export function useLedger() {
     setIsDialogOpen(open);
   }, []);
 
-  const handleSaveTransaction = useCallback((data: Transaction | UnifiedFormValues | (Transaction | UnifiedFormValues)[], saveAsTemplate: boolean) => {
-    console.log('handleSaveTransaction', data);
-    console.log('accounts in useLedger:', accounts);
-    console.log('transactions before save:', transactions);
-    if (Array.isArray(data)) {
-      // กรณีโอนระหว่างบัญชี รับ array ของ Transaction หรือ UnifiedFormValues
-      const newTransactions: Transaction[] = data.map(tx => {
-        const selectedAccount = accounts.find(acc => acc.id === tx.accountId);
-        console.log('DEBUG tx.accountId:', tx.accountId, 'selectedAccount:', selectedAccount?.name);
-        if (!selectedAccount) return null;
-        return {
+  const handleSaveTransaction = useCallback(
+    (data: UnifiedFormValues | UnifiedFormValues[] | Transaction | Transaction[]) => {
+      // Log ข้อมูลที่รับเข้ามาทุกครั้ง
+      console.log('DEBUG handleSaveTransaction data:', data, 'typeof data:', typeof data, 'data.mode:', (data as any)?.mode, 'Array.isArray(data):', Array.isArray(data));
+      console.log('accounts in useLedger:', accounts);
+      console.log('transactions before save:', transactions);
+      // Fallback: treat as transfer if fromAccount/toAccount exist (แม้ไม่มี mode)
+      if (!Array.isArray(data) && ((data as any).mode === 'transfer' || (typeof (data as any).fromAccount === 'string' && typeof (data as any).toAccount === 'string'))) {
+        const tx = data as any;
+        console.log('DEBUG [mode=transfer|fallback] tx:', tx, 'accounts:', accounts);
+        const fromAcc = accounts.find(acc => String(acc.id) === String(tx.fromAccount));
+        const toAcc = accounts.find(acc => String(acc.id) === String(tx.toAccount));
+        console.log('DEBUG [mode=transfer|fallback] fromAcc:', fromAcc, 'toAcc:', toAcc, 'typeof acc.id:', typeof (accounts[0]?.id), 'typeof tx.fromAccount:', typeof tx.fromAccount, 'typeof tx.toAccount:', typeof tx.toAccount);
+        if (!fromAcc || !toAcc) {
+          toast({ variant: 'destructive', title: 'ไม่พบบัญชีต้นทางหรือปลายทาง' });
+          return;
+        }
+        if (!tx.amount || !tx.date) {
+          toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
+          return;
+        }
+        let outAmount = tx.amount;
+        let inAmount = tx.amount;
+        // ถ้าสกุลเงินไม่ตรงกัน ให้แปลงค่าเงิน
+        if (fromAcc.currency !== toAcc.currency && usdToThbRate) {
+          if (fromAcc.currency === 'THB' && toAcc.currency === 'USD') {
+            // THB -> USD
+            inAmount = +(tx.amount / usdToThbRate).toFixed(2);
+          } else if (fromAcc.currency === 'USD' && toAcc.currency === 'THB') {
+            // USD -> THB
+            inAmount = +(tx.amount * usdToThbRate).toFixed(2);
+          }
+        }
+        const outTx: Transaction = {
+          id: new Date().toISOString() + Math.random(),
+          account: fromAcc,
+          purpose: 'โอนออก',
+          amount: outAmount,
+          date: tx.date,
+          type: 'expense',
+          details: tx.details,
+          sender: undefined,
+          recipient: undefined,
+        };
+        const inTx: Transaction = {
+          id: new Date().toISOString() + Math.random(),
+          account: toAcc,
+          purpose: 'โอนเข้า',
+          amount: inAmount,
+          date: tx.date,
+          type: 'income',
+          details: tx.details,
+          sender: undefined,
+          recipient: undefined,
+        };
+        updateAndSaveTransactions([...transactions, outTx, inTx]);
+        toast({ title: 'เพิ่มธุรกรรมสำเร็จ', description: 'เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว' });
+        handleDialogClose(false);
+        return;
+      } else if (Array.isArray(data)) {
+        // กรณีโอนระหว่างบัญชี รับ array ของ Transaction หรือ UnifiedFormValues
+        data.forEach(tx => {
+          console.log('DEBUG [array] tx:', tx, 'typeof tx.accountId:', typeof (tx as any).accountId, 'accounts:', accounts);
+          const selectedAccount = accounts.find(acc => String(acc.id) === String((tx as any).accountId));
+          console.log('DEBUG [array] selectedAccount:', selectedAccount);
+        });
+        const newTransactions = (data.map(tx => {
+          const selectedAccount = accounts.find(acc => String(acc.id) === String((tx as any).accountId));
+          if (!selectedAccount) {
+            console.log('DEBUG [array] ไม่พบบัญชี:', (tx as any).accountId);
+            return null;
+          }
+          return {
+            id: new Date().toISOString() + Math.random(),
+            account: selectedAccount,
+            purpose: (tx as any).purpose,
+            amount: (tx as any).amount,
+            date: (tx as any).date,
+            type: (tx as any).type,
+            details: (tx as any).details,
+            sender: (tx as any).sender,
+            recipient: (tx as any).recipient,
+          } as Transaction;
+        }).filter(Boolean)) as Transaction[];
+        updateAndSaveTransactions([...transactions, ...newTransactions]);
+        toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว` });
+        handleDialogClose(false);
+        console.log('transactions after save:', [...transactions, ...newTransactions]);
+        return;
+      }
+      const selectedAccount = accounts.find(acc => String(acc.id) === String((data as any).accountId));
+      if (!selectedAccount) {
+        toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
+        return;
+      }
+      
+      if (!data.amount || !data.date) {
+          toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
+          return;
+      }
+      
+      const finalData = { ...data };
+      if (data.purpose === 'อื่นๆ' && data.customPurpose) {
+        finalData.purpose = data.customPurpose.trim();
+      }
+      
+      // Add purpose only if it's new. ไม่ต้องเช็ค reservedNames
+      if (!purposes.some(p => p === finalData.purpose)) {
+          addPurpose(finalData.purpose);
+      }
+      
+
+      if (editingTransaction) {
+        // Update existing transaction
+        const updatedTransaction: Transaction = {
+          ...editingTransaction,
+          account: selectedAccount,
+          purpose: finalData.purpose,
+          amount: data.amount,
+          date: data.date,
+          type: data.type,
+          details: data.details,
+          sender: data.sender,
+          recipient: data.recipient,
+        };
+        
+        updateAndSaveTransactions(
+          transactions.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
+        );
+
+        toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${finalData.purpose}" เรียบร้อยแล้ว` });
+
+      } else {
+        // Add new transaction
+        const newTransaction: Transaction = {
           id: new Date().toISOString() + Math.random(),
           account: selectedAccount,
-          purpose: tx.purpose,
-          amount: tx.amount,
-          date: tx.date,
-          type: tx.type,
-          details: tx.details,
-          sender: tx.sender,
-          recipient: tx.recipient,
+          purpose: finalData.purpose,
+          amount: data.amount,
+          date: data.date,
+          type: data.type,
+          details: data.details,
+          sender: data.sender,
+          recipient: data.recipient,
         };
-      }).filter(Boolean) as Transaction[];
-      updateAndSaveTransactions([...transactions, ...newTransactions]);
-      toast({ title: "เพิ่มธุรกรรมสำเร็จ", description: `เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว` });
-      handleDialogClose(false);
-      console.log('transactions after save:', [...transactions, ...newTransactions]);
-      return;
-    }
-    const selectedAccount = accounts.find(acc => acc.id === data.accountId);
-    if (!selectedAccount) {
-      toast({ variant: 'destructive', title: 'ไม่พบบัญชี' });
-      return;
-    }
-    
-    if (!data.amount || !data.date) {
-        toast({ variant: 'destructive', title: 'ข้อมูลไม่ครบถ้วน', description: 'กรุณากรอกจำนวนเงินและวันที่' });
-        return;
-    }
-    
-    const finalData = { ...data };
-    if (data.purpose === 'อื่นๆ' && data.customPurpose) {
-      finalData.purpose = data.customPurpose.trim();
-    }
-    
-    // Add purpose only if it's new. ไม่ต้องเช็ค reservedNames
-    if (!purposes.some(p => p === finalData.purpose)) {
-        addPurpose(finalData.purpose);
-    }
-    
-
-    if (editingTransaction) {
-      // Update existing transaction
-      const updatedTransaction: Transaction = {
-        ...editingTransaction,
-        account: selectedAccount,
-        purpose: finalData.purpose,
-        amount: data.amount,
-        date: data.date,
-        type: data.type,
-        details: data.details,
-        sender: data.sender,
-        recipient: data.recipient,
-      };
+        updateAndSaveTransactions([...transactions, newTransaction]);
+        console.log('transactions after save:', [...transactions, newTransaction]);
+      }
       
-      updateAndSaveTransactions(
-        transactions.map(t => t.id === editingTransaction.id ? updatedTransaction : t)
-      );
-
-      toast({ title: "อัปเดตธุรกรรมสำเร็จ", description: `อัปเดตรายการ "${finalData.purpose}" เรียบร้อยแล้ว` });
-
-    } else {
-      // Add new transaction
-      const newTransaction: Transaction = {
-        id: new Date().toISOString() + Math.random(),
-        account: selectedAccount,
-        purpose: finalData.purpose,
-        amount: data.amount,
-        date: data.date,
-        type: data.type,
-        details: data.details,
-        sender: data.sender,
-        recipient: data.recipient,
-      };
-      updateAndSaveTransactions([...transactions, newTransaction]);
-      console.log('transactions after save:', [...transactions, newTransaction]);
-    }
-    
-    if (saveAsTemplate && !editingTransaction) {
-      const newTemplate: Template = {
-        id: new Date().toISOString() + Math.random(),
-        name: `${finalData.purpose} (${finalData.type === 'income' ? 'รายรับ' : 'รายจ่าย'})`,
-        type: finalData.type,
-        purpose: finalData.purpose,
-        sender: finalData.sender,
-        recipient: finalData.recipient,
-        details: finalData.details,
-      };
-      updateAndSaveTemplates([...templates, newTemplate]);
-      toast({ title: "บันทึกเทมเพลตสำเร็จ", description: `เทมเพลต "${newTemplate.name}" ถูกสร้างแล้ว` });
-    }
-
-    handleDialogClose(false);
-  }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates, addPurpose, purposes]);
+      handleDialogClose(false);
+    }, [editingTransaction, handleDialogClose, toast, templates, transactions, updateAndSaveTransactions, updateAndSaveTemplates, addPurpose, purposes, accounts, usdToThbRate]);
   
   const handleUseTemplate = useCallback((template: Template) => {
     setEditingTemplate(template);

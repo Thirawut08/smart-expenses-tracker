@@ -1,22 +1,22 @@
 import type { Account } from './types';
 
 export const accounts: Account[] = [
-  { id: '6', name: 'Binance TH', color: '#F0B90B', currency: 'THB' },
-  { id: '5', name: 'Bybit', color: '#FFD42C', currency: 'USD' },
-  { id: '4', name: 'Dime!', color: '#7A3FF3', currency: 'THB' },
-  { id: '14', name: 'Dime! FCD', color: '#259b24', currency: 'USD' },
-  { id: '15', name: 'Dime! USD', color: '#5C1FDC', currency: 'USD' },
-  { id: '10', name: 'GSB', color: '#EC008C', currency: 'THB' },
-  { id: '1', name: 'KBANK', color: '#00A950', currency: 'THB' },
-  { id: '3', name: 'Kept', color: '#00AEEF', currency: 'THB' },
-  { id: '9', name: 'KTB', color: '#00A3E0', currency: 'THB' },
-  { id: '8', name: 'Money Plus', color: '#4CAF50', currency: 'THB' }, // Generic green
-  { id: '2', name: 'SCB', color: '#4D2C91', currency: 'THB' },
-  { id: '12', name: 'Shopee Pay', color: '#EE4D2D', currency: 'THB' },
-  { id: '7', name: 'TTB', color: '#0073E6', currency: 'THB' },
-  { id: '11', name: 'True Wallet', color: '#FF8A00', currency: 'THB' },
-  { id: '13', name: 'Webull', color: '#0065FF', currency: 'USD' },
-  { id: '16', name: 'เงินสด', color: '#808080', currency: 'THB' },
+  { id: '6', name: 'Binance TH', currency: 'THB' },
+  { id: '5', name: 'Bybit', currency: 'USD' },
+  { id: '4', name: 'Dime!', currency: 'THB' },
+  { id: '14', name: 'Dime! FCD', currency: 'USD' },
+  { id: '15', name: 'Dime! USD', currency: 'USD' },
+  { id: '10', name: 'GSB', currency: 'THB' },
+  { id: '1', name: 'KBANK', currency: 'THB' },
+  { id: '3', name: 'Kept', currency: 'THB' },
+  { id: '9', name: 'KTB', currency: 'THB' },
+  { id: '8', name: 'Money Plus', currency: 'THB' }, // Generic green
+  { id: '2', name: 'SCB', currency: 'THB' },
+  { id: '12', name: 'Shopee Pay', currency: 'THB' },
+  { id: '7', name: 'TTB', currency: 'THB' },
+  { id: '11', name: 'True Wallet', currency: 'THB' },
+  { id: '13', name: 'Webull', currency: 'USD' },
+  { id: '16', name: 'เงินสด', currency: 'THB' },
 ];
 
 export const investmentAccountNames = [

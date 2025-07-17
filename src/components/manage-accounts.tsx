@@ -15,9 +15,9 @@ const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
 
 function getDefaultAccounts(): Account[] {
   return [
-    { id: '1', name: 'เงินสด', color: '#808080', currency: 'THB' },
-    { id: '2', name: 'KBANK', color: '#00A950', currency: 'THB' },
-    { id: '3', name: 'SCB', color: '#4D2C91', currency: 'THB' },
+    { id: '1', name: 'เงินสด', currency: 'THB' },
+    { id: '2', name: 'KBANK', currency: 'THB' },
+    { id: '3', name: 'SCB', currency: 'THB' },
   ];
 }
 
@@ -31,12 +31,10 @@ export function ManageAccounts() {
 
   // Form state
   const [name, setName] = useState('');
-  const [color, setColor] = useState('#808080');
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
 
   const resetForm = () => {
     setName('');
-    setColor('#808080');
     setCurrency('THB');
   };
 
@@ -44,7 +42,6 @@ export function ManageAccounts() {
     if (!name.trim()) return;
     addAccount({
       name: name.trim(),
-      color,
       currency,
     });
     setIsAddDialogOpen(false);
@@ -55,7 +52,6 @@ export function ManageAccounts() {
     if (!editAccountState) return;
     editAccount(editAccountState.id, {
       name: name.trim(),
-      color,
       currency,
     });
     setIsEditDialogOpen(false);
@@ -78,7 +74,6 @@ export function ManageAccounts() {
   const openEditDialog = (account: Account) => {
     setEditAccountState(account);
     setName(account.name);
-    setColor(account.color || '#808080');
     setCurrency(account.currency);
     setIsEditDialogOpen(true);
   };
@@ -88,7 +83,7 @@ export function ManageAccounts() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>บัญชีของฉัน</CardTitle>
-          <CardDescription>เพิ่ม แก้ไข หรือลบบัญชี และเลือกสีประจำบัญชี</CardDescription>
+          <CardDescription>เพิ่ม แก้ไข หรือลบบัญชี และเลือกสกุลเงิน</CardDescription>
         </div>
         <Button onClick={() => { setIsAddDialogOpen(true); resetForm(); }}>
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -102,7 +97,6 @@ export function ManageAccounts() {
               <TableRow>
                 <TableHead>ชื่อบัญชี</TableHead>
                 <TableHead>สกุลเงิน</TableHead>
-                <TableHead>สี</TableHead>
                 <TableHead className="w-[50px] text-center"></TableHead>
               </TableRow>
             </TableHeader>
@@ -111,9 +105,6 @@ export function ManageAccounts() {
                 <TableRow key={acc.id}>
                   <TableCell className="font-medium">{acc.name}</TableCell>
                   <TableCell>{acc.currency}</TableCell>
-                  <TableCell>
-                    <span className="inline-block w-6 h-6 rounded-full border" style={{ background: acc.color }} title={acc.color}></span>
-                  </TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -152,16 +143,12 @@ export function ManageAccounts() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>เพิ่มบัญชีใหม่</DialogTitle>
-            <DialogDescription>กรอกชื่อบัญชี เลขบัญชี สี และสกุลเงิน</DialogDescription>
+            <DialogDescription>กรอกชื่อบัญชี เลขบัญชี และสกุลเงิน</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="account-name" className="text-right">ชื่อบัญชี</Label>
               <Input id="account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account-color" className="text-right">สีบัญชี</Label>
-              <input id="account-color" type="color" value={color} onChange={e => setColor(e.target.value)} className="col-span-1 w-10 h-10 p-0 border-none bg-transparent" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="account-currency" className="text-right">สกุลเงิน</Label>
@@ -190,10 +177,6 @@ export function ManageAccounts() {
               <Input id="edit-account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-account-color" className="text-right">สีบัญชี</Label>
-              <input id="edit-account-color" type="color" value={color} onChange={e => setColor(e.target.value)} className="col-span-1 w-10 h-10 p-0 border-none bg-transparent" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-account-currency" className="text-right">สกุลเงิน</Label>
               <select id="edit-account-currency" value={currency} onChange={e => setCurrency(e.target.value as 'THB' | 'USD')} className="col-span-2 border rounded px-2 py-1">
                 <option value="THB">THB</option>
@@ -217,7 +200,6 @@ export function ManageAccounts() {
           </DialogHeader>
           <div className="py-4">
             <p>ชื่อบัญชี: <b>{accountToDelete?.name}</b></p>
-            <p>เลขบัญชี: <b>{accountToDelete?.accountNumber}</b></p>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setAccountToDelete(null)}>ยกเลิก</Button>

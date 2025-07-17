@@ -11,6 +11,7 @@ interface HighPerfDropdownProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
@@ -19,6 +20,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   onChange,
   placeholder = 'เลือก...',
   className = '',
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -82,18 +84,19 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
       <button
         ref={triggerRef}
         type="button"
-        className="w-full px-3 py-2 border rounded bg-white dark:bg-zinc-900 text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 border rounded bg-white dark:bg-zinc-900 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        onKeyDown={handleKeyDown}
+        onClick={() => !disabled && setOpen((o) => !o)}
+        onKeyDown={disabled ? undefined : handleKeyDown}
         tabIndex={0}
+        disabled={disabled}
       >
         {options.find((opt) => opt.value === value)?.label || (
           <span className="text-gray-400">{placeholder}</span>
         )}
       </button>
-      {open && (
+      {open && !disabled && (
         <div
           ref={menuRef}
           className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded border bg-white dark:bg-zinc-900 shadow-lg"
@@ -119,7 +122,6 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
                 style={{ minHeight: 40, fontSize: 16 }}
                 onMouseEnter={() => setHighlighted(idx)}
                 onMouseDown={(e) => {
-                  // ใช้ onMouseDown แทน onClick เพื่อป้องกัน dropdown ปิดก่อนเลือก
                   e.preventDefault();
                   onChange(opt.value);
                   setOpen(false);

@@ -52,12 +52,12 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
-    const accountDetails = new Map<string, { name: string, color: string, currency: 'THB' | 'USD' }>();
+    const accountDetails = new Map<string, { name: string, currency: 'THB' | 'USD' }>();
     investmentAccountNames.forEach(name => {
       const account = accounts.find(a => a.name === name);
       if (account) {
           balances.set(name, { balance: 0, currency: account.currency });
-          accountDetails.set(name, { name: account.name, color: account.color || '#8884d8', currency: account.currency });
+          accountDetails.set(name, { name: account.name, currency: account.currency });
       }
     });
     investmentTransactions.forEach(t => {
@@ -77,7 +77,6 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
             value: balance,
             valueInTHB: balanceInTHB,
             currency,
-            color: accountDetails.get(name)?.color,
           }
       })
       .filter(item => item.value !== 0) 
@@ -178,7 +177,7 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
                     strokeWidth={5}
                 >
                     {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`cell-${index}`} />
                     ))}
                 </Pie>
                 </PieChart>

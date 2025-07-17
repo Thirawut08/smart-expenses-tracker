@@ -26,13 +26,13 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
     }
 
     const balances = new Map<string, number>();
-    const accountDetails = new Map<string, { name: string, color: string }>();
+    const accountDetails = new Map<string, { name: string }>();
 
     savingAccountNames.forEach(name => {
       const account = accounts.find(a => a.name === name);
       if (account) {
           balances.set(name, 0);
-          accountDetails.set(name, { name: account.name, color: account.color || '#8884d8' });
+          accountDetails.set(name, { name: account.name });
       }
     });
 
@@ -46,7 +46,6 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
       .map(([name, balance]) => ({ 
         name, 
         value: balance,
-        color: accountDetails.get(name)?.color
       }))
       .filter(item => item.value !== 0)
       .sort((a, b) => b.value - a.value);

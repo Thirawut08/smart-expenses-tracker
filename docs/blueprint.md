@@ -1,3 +1,15 @@
+# Project Blueprint
+
+## Core Concept
+- Fast (เร็ว)
+- Simple (เรียบง่าย)
+- Ordinary, not fancy (ธรรมดาๆ, ไม่หรูหรา)
+- Minimal (มินิมอล)
+- Performance-focused (เน้นประสิทธิภาพ)
+- Customizable (ปรับแต่งได้ตามใจ)
+
+> ทุกฟีเจอร์และโค้ดต้องยึดแนวคิดนี้เป็นหลัก
+
 # **App Name**: Ledger AI
 
 ## Core Features:

@@ -116,8 +116,10 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
   const { accounts } = useAccounts();
   const [customPurpose, setCustomPurpose] = useState('');
 
-  // หาบัญชีเงินสดเป็น default
-  const defaultAccount = accounts.find(acc => acc.name === 'เงินสด' || acc.name === 'Cash');
+  // หาบัญชี default: เงินสด > Cash > บัญชีแรก
+  const defaultAccount = accounts.find(acc => acc.name === 'เงินสด')
+    || accounts.find(acc => acc.name === 'Cash')
+    || accounts[0];
 
   // ป้องกัน initialData ที่ไม่มี mode (เช่น undefined หรือ transaction จริง)
   const safeInitialData: UnifiedFormValues = (initialData && 'mode' in initialData)
@@ -186,6 +188,23 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
   // handleSubmit ใหม่ รองรับ schema ใหม่
   const handleSubmit = (data: UnifiedFormValues) => {
+    // เพิ่ม validation สำหรับโหมดโอน
+    if (isTransfer) {
+      const from = form.getValues('fromAccount');
+      const to = form.getValues('toAccount');
+      const amount = form.getValues('amount');
+      const date = form.getValues('date');
+      console.log('[TRANSFER SUBMIT] accounts:', accounts);
+      console.log('[TRANSFER SUBMIT] fromAccount:', from, 'toAccount:', to, 'amount:', amount, 'date:', date);
+      if (!from || !to) {
+        alert('กรุณาเลือกบัญชีต้นทางและปลายทาง');
+        return;
+      }
+      if (from === to) {
+        alert('บัญชีต้นทางและปลายทางต้องไม่เหมือนกัน');
+        return;
+      }
+    }
     let finalData = { ...data };
     if (finalData.purpose === 'อื่นๆ' && customPurpose.trim()) {
       finalData.purpose = customPurpose.trim();
@@ -257,6 +276,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                       value={field.value || ''}
                       onChange={field.onChange}
                       placeholder="เลือกบัญชีต้นทาง..."
+                      disabled={accounts.length === 0}
                     />
                     <FormMessage />
                   </FormItem>

@@ -50,7 +50,7 @@ export function TransactionsTable({ transactions, onEdit, onDelete }: Transactio
           <TableBody>
             {transactions.map((transaction) => {
               console.log('DEBUG table row transaction:', transaction);
-              console.log('DEBUG table row account:', transaction.account);
+              console.log('DEBUG table row account:', { id: transaction.account.id, name: transaction.account.name, currency: transaction.account.currency });
               return (
                 <TableRow key={transaction.id}>
                   <TableCell className="sticky left-0 bg-card z-10">
