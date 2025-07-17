@@ -36,11 +36,13 @@ export function useAccounts() {
         setAccounts(parsed);
       } catch (e) {
         console.error('[DEBUG] Failed to parse accounts from localStorage:', e);
-        setAccounts([]);
+        // ป้องกัน setAccounts([]) โดยไม่ได้ตั้งใจ
+        // setAccounts([]); // ยกเลิกการ setAccounts ว่าง
       }
     } else {
       // ไม่ fallback เป็น defaultAccounts อีกต่อไป ให้ user เพิ่มบัญชีเอง
-      setAccounts([]);
+      // ป้องกัน setAccounts([]) โดยไม่ได้ตั้งใจ
+      // setAccounts([]); // ยกเลิกการ setAccounts ว่าง
     }
   }, []);
 
@@ -54,6 +56,7 @@ export function useAccounts() {
 
   // Save to localStorage when accounts change
   useEffect(() => {
+    console.log('[DEBUG] Saving accounts to localStorage:', accounts);
     localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
   }, [accounts]);
 
@@ -62,11 +65,13 @@ export function useAccounts() {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === ACCOUNTS_STORAGE_KEY) {
         const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+        console.log('[DEBUG] handleStorageChange: loaded from localStorage:', stored);
         if (stored) setAccounts(JSON.parse(stored));
       }
     };
     const handleCustomEvent = () => {
       const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      console.log('[DEBUG] handleCustomEvent: loaded from localStorage:', stored);
       if (stored) setAccounts(JSON.parse(stored));
     };
     window.addEventListener('storage', handleStorageChange);
