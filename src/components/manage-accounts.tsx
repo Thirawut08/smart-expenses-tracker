@@ -76,6 +76,7 @@ export function ManageAccounts() {
 
   const handleAdd = () => {
     if (!name.trim()) return;
+    console.log('[DEBUG] handleAdd called', { name, currency, types });
     addAccount({
       name: name.trim(),
       currency,
