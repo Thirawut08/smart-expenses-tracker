@@ -15,11 +15,13 @@ const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
 
 function getDefaultAccounts(): Account[] {
   return [
-    { id: '1', name: 'เงินสด', currency: 'THB' },
-    { id: '2', name: 'KBANK', currency: 'THB' },
-    { id: '3', name: 'SCB', currency: 'THB' },
+    { id: '1', name: 'เงินสด', currency: 'THB', type: 'ทั่วไป' },
+    { id: '2', name: 'KBANK', currency: 'THB', type: 'ทั่วไป' },
+    { id: '3', name: 'SCB', currency: 'THB', type: 'ทั่วไป' },
   ];
 }
+
+const DEFAULT_ACCOUNT_TYPES = ['ทั่วไป', 'ลงทุน', 'ออม'];
 
 export function ManageAccounts() {
   const { transactions } = useLedger();
@@ -32,10 +34,27 @@ export function ManageAccounts() {
   // Form state
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
+  const [type, setType] = useState('ทั่วไป');
+  const [accountTypes, setAccountTypes] = useState<string[]>(() => {
+    // รวมประเภทจากบัญชีที่มีอยู่และ default
+    const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.map(a => a.type).filter(Boolean)];
+    return Array.from(new Set(all));
+  });
+  const [newType, setNewType] = useState('');
+
+  useEffect(() => {
+    // sync accountTypes เมื่อ accounts เปลี่ยน
+    setAccountTypes(prev => {
+      const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.map(a => a.type).filter(Boolean)];
+      return Array.from(new Set(all));
+    });
+  }, [accounts]);
 
   const resetForm = () => {
     setName('');
     setCurrency('THB');
+    setType('ทั่วไป');
+    setNewType('');
   };
 
   const handleAdd = () => {
@@ -43,6 +62,7 @@ export function ManageAccounts() {
     addAccount({
       name: name.trim(),
       currency,
+      type: type.trim() || 'ทั่วไป',
     });
     setIsAddDialogOpen(false);
     resetForm();
@@ -53,6 +73,7 @@ export function ManageAccounts() {
     editAccount(editAccountState.id, {
       name: name.trim(),
       currency,
+      type: type.trim() || 'ทั่วไป',
     });
     setIsEditDialogOpen(false);
     setEditAccountState(null);
@@ -75,6 +96,7 @@ export function ManageAccounts() {
     setEditAccountState(account);
     setName(account.name);
     setCurrency(account.currency);
+    setType(account.type || 'ทั่วไป');
     setIsEditDialogOpen(true);
   };
 
@@ -83,7 +105,7 @@ export function ManageAccounts() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>บัญชีของฉัน</CardTitle>
-          <CardDescription>เพิ่ม แก้ไข หรือลบบัญชี และเลือกสกุลเงิน</CardDescription>
+          <CardDescription>เพิ่ม แก้ไข หรือลบบัญชี เลือกสกุลเงิน และกำหนดประเภทบัญชี</CardDescription>
         </div>
         <Button onClick={() => { setIsAddDialogOpen(true); resetForm(); }}>
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -97,6 +119,7 @@ export function ManageAccounts() {
               <TableRow>
                 <TableHead>ชื่อบัญชี</TableHead>
                 <TableHead>สกุลเงิน</TableHead>
+                <TableHead>ประเภท</TableHead>
                 <TableHead className="w-[50px] text-center"></TableHead>
               </TableRow>
             </TableHeader>
@@ -105,6 +128,7 @@ export function ManageAccounts() {
                 <TableRow key={acc.id}>
                   <TableCell className="font-medium">{acc.name}</TableCell>
                   <TableCell>{acc.currency}</TableCell>
+                  <TableCell>{acc.type || 'ทั่วไป'}</TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -143,7 +167,7 @@ export function ManageAccounts() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>เพิ่มบัญชีใหม่</DialogTitle>
-            <DialogDescription>กรอกชื่อบัญชี เลขบัญชี และสกุลเงิน</DialogDescription>
+            <DialogDescription>กรอกชื่อบัญชี เลขบัญชี สกุลเงิน และประเภทบัญชี</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -156,6 +180,25 @@ export function ManageAccounts() {
                 <option value="THB">THB</option>
                 <option value="USD">USD</option>
               </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="account-type" className="text-right">ประเภทบัญชี</Label>
+              <select id="account-type" value={type} onChange={e => setType(e.target.value)} className="col-span-2 border rounded px-2 py-1">
+                {accountTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <Input
+                placeholder="เพิ่มประเภทใหม่..."
+                value={newType}
+                onChange={e => setNewType(e.target.value)}
+                onBlur={() => {
+                  if (newType.trim() && !accountTypes.includes(newType.trim())) {
+                    setAccountTypes(types => [...types, newType.trim()]);
+                    setType(newType.trim());
+                  }
+                  setNewType('');
+                }}
+                className="col-span-3 mt-2"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -182,6 +225,25 @@ export function ManageAccounts() {
                 <option value="THB">THB</option>
                 <option value="USD">USD</option>
               </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-account-type" className="text-right">ประเภทบัญชี</Label>
+              <select id="edit-account-type" value={type} onChange={e => setType(e.target.value)} className="col-span-2 border rounded px-2 py-1">
+                {accountTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <Input
+                placeholder="เพิ่มประเภทใหม่..."
+                value={newType}
+                onChange={e => setNewType(e.target.value)}
+                onBlur={() => {
+                  if (newType.trim() && !accountTypes.includes(newType.trim())) {
+                    setAccountTypes(types => [...types, newType.trim()]);
+                    setType(newType.trim());
+                  }
+                  setNewType('');
+                }}
+                className="col-span-3 mt-2"
+              />
             </div>
           </div>
           <DialogFooter>
