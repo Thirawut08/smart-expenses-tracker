@@ -94,7 +94,7 @@ export function ManageAccounts() {
     });
     setIsEditDialogOpen(false);
     setEditAccountState(null);
-    resetForm();
+    // resetForm(); // ย้ายออก
   };
 
   const handleDelete = () => {
@@ -128,6 +128,13 @@ export function ManageAccounts() {
       }
     });
   };
+
+  // Reset form หลัง dialog ปิดจริง ๆ
+  useEffect(() => {
+    if (!isEditDialogOpen) {
+      resetForm();
+    }
+  }, [isEditDialogOpen]);
 
   return (
     <Card>
