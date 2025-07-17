@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2, Ban, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Ban, PlusCircle, XCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import type { Account } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
+const ACCOUNT_TYPES_STORAGE_KEY = 'ledger-ai-account-types';
 
 function getDefaultAccounts(): Account[] {
   return [
@@ -37,6 +38,9 @@ export function ManageAccounts() {
   const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
   const [types, setTypes] = useState<string[]>(['ทั่วไป']);
   const [accountTypes, setAccountTypes] = useState<string[]>(() => {
+    // โหลดจาก localStorage ถ้ามี
+    const stored = typeof window !== 'undefined' ? localStorage.getItem(ACCOUNT_TYPES_STORAGE_KEY) : null;
+    if (stored) return JSON.parse(stored);
     // รวมประเภทจากบัญชีที่มีอยู่และ default
     const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)];
     return Array.from(new Set(all));
@@ -45,11 +49,23 @@ export function ManageAccounts() {
 
   useEffect(() => {
     // sync accountTypes เมื่อ accounts เปลี่ยน
-    setAccountTypes(Array.from(new Set([
+    const newTypes = Array.from(new Set([
       ...DEFAULT_ACCOUNT_TYPES,
       ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)
-    ])));
+    ]));
+    setAccountTypes(prev => {
+      // ถ้า prev มีประเภทที่ user เพิ่มไว้แต่ไม่มีใน newTypes ให้คงไว้
+      const merged = Array.from(new Set([...newTypes, ...prev]));
+      return merged;
+    });
   }, [accounts]);
+
+  // บันทึก accountTypes ลง localStorage ทุกครั้งที่เปลี่ยน
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ACCOUNT_TYPES_STORAGE_KEY, JSON.stringify(accountTypes));
+    }
+  }, [accountTypes]);
 
   const resetForm = () => {
     setName('');
@@ -99,6 +115,18 @@ export function ManageAccounts() {
     setCurrency(account.currency);
     setTypes(Array.isArray(account.types) && account.types.length ? account.types : ['ทั่วไป']);
     setIsEditDialogOpen(true);
+  };
+
+  // ลบประเภทบัญชีออกจาก accountTypes และจากบัญชีทุกบัญชี
+  const handleRemoveAccountType = (typeToRemove: string) => {
+    setAccountTypes(prev => prev.filter(t => t !== typeToRemove));
+    setTypes(prev => prev.filter(t => t !== typeToRemove));
+    // ลบประเภทนี้ออกจากบัญชีทุกบัญชี (editAccount แบบ batch)
+    accounts.forEach(acc => {
+      if (Array.isArray(acc.types) && acc.types.includes(typeToRemove)) {
+        editAccount(acc.id, { types: acc.types.filter(t => t !== typeToRemove) });
+      }
+    });
   };
 
   return (
@@ -195,6 +223,11 @@ export function ManageAccounts() {
                       id={`add-type-${t}`}
                     />
                     <span>{t}</span>
+                    {DEFAULT_ACCOUNT_TYPES.includes(t) ? null : (
+                      <button type="button" onClick={() => handleRemoveAccountType(t)} className="ml-1 text-red-500 hover:text-red-700">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
                   </label>
                 ))}
               </div>
@@ -251,6 +284,11 @@ export function ManageAccounts() {
                       id={`edit-type-${t}`}
                     />
                     <span>{t}</span>
+                    {DEFAULT_ACCOUNT_TYPES.includes(t) ? null : (
+                      <button type="button" onClick={() => handleRemoveAccountType(t)} className="ml-1 text-red-500 hover:text-red-700">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    )}
                   </label>
                 ))}
               </div>
