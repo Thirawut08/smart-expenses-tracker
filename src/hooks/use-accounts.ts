@@ -24,41 +24,31 @@ const DEFAULT_ACCOUNTS: Account[] = [
 ];
 
 export function useAccounts() {
+  // เริ่มต้น accounts เป็น [] เสมอ (เพื่อ SSR/CSR ตรงกัน)
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage or preload from data.ts
+  // โหลดจาก localStorage เฉพาะฝั่ง client (หลัง mount)
   useEffect(() => {
-    const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        console.log('[DEBUG] Loaded accounts from localStorage:', parsed);
-        setAccounts(parsed);
-      } catch (e) {
-        console.error('[DEBUG] Failed to parse accounts from localStorage:', e);
-        // ป้องกัน setAccounts([]) โดยไม่ได้ตั้งใจ
-        // setAccounts([]); // ยกเลิกการ setAccounts ว่าง
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+      if (stored) {
+        try {
+          setAccounts(JSON.parse(stored));
+        } catch (e) {
+          setAccounts([]);
+        }
       }
-    } else {
-      // ไม่ fallback เป็น defaultAccounts อีกต่อไป ให้ user เพิ่มบัญชีเอง
-      // ป้องกัน setAccounts([]) โดยไม่ได้ตั้งใจ
-      // setAccounts([]); // ยกเลิกการ setAccounts ว่าง
+      setIsLoaded(true);
     }
   }, []);
 
-  // ลบ useEffect นี้ออก เพราะจะทำให้ localStorage ถูกเขียนทับด้วย DEFAULT_ACCOUNTS
-  // useEffect(() => {
-  //   if (accounts.length === 0) {
-  //     setAccounts(DEFAULT_ACCOUNTS);
-  //     localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(DEFAULT_ACCOUNTS));
-  //   }
-  // }, [accounts, setAccounts]);
-
-  // Save to localStorage when accounts change
+  // Save to localStorage when accounts change (หลังโหลดแล้วเท่านั้น)
   useEffect(() => {
-    console.log('[DEBUG] Saving accounts to localStorage:', accounts);
-    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
-  }, [accounts]);
+    if (isLoaded) {
+      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
+    }
+  }, [accounts, isLoaded]);
 
   // Auto-refresh accounts if localStorage changes (in this tab)
   useEffect(() => {
@@ -126,5 +116,6 @@ export function useAccounts() {
     editAccount,
     deleteAccount,
     setAccounts, // for advanced use
+    isLoaded, // เพิ่ม flag สำหรับเช็คสถานะโหลดข้อมูล
   };
 } 

@@ -17,6 +17,7 @@ import { useAccounts } from '@/hooks/use-accounts';
 import { TimePicker } from './time-picker';
 import { useEffect, useMemo } from 'react';
 import { HighPerfDropdown } from './ui/high-perf-dropdown';
+import { DateTimePicker } from './date-time-picker';
 
 const incomeFormSchema = z.object({
   date: z.date({ required_error: 'กรุณาระบุวันที่' }),
@@ -79,25 +80,11 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
         <h2 className="text-xl font-bold mb-4">เพิ่มรายการรายรับ</h2>
         <div className="flex gap-2">
           <div className="flex-1">
+            {/* ใช้ DateTimePicker แทน Date+Time เดิม */}
             <FormField control={form.control} name="date" render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem>
                 <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
-                        {field.value ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
-                    <div className="p-2 border-t border-border">
-                      <TimePicker date={field.value} setDate={field.onChange} />
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <DateTimePicker value={field.value} onChange={field.onChange} />
                 <FormMessage />
               </FormItem>
             )} />
@@ -131,7 +118,7 @@ export function AddIncomeForm({ initialData, onSubmit, onCancel }: AddIncomeForm
                     {...field} 
                     value={field.value ?? ''} 
                     onChange={event => field.onChange(event.target.valueAsNumber || undefined)}
-                    className={cn(selectedAccount && 'pl-8', 'h-10 text-base')}
+                    className={cn(selectedAccount && 'pl-8', 'h-12 text-lg w-full px-4')}
                   />
                   {selectedAccount && (
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">

@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import { investmentAccountNames, savingAccountNames } from '@/lib/data';
 import type { Transaction } from '@/lib/types';
 import { HighPerfDropdown } from './ui/high-perf-dropdown';
+import { DateTimePicker } from './date-time-picker';
 
 // สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
 const normalSchema = z.object({
@@ -242,8 +243,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
               <div className="flex-1">
                 <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
                 <div className="flex items-center">
-                  <span className="mr-1">{currencySymbol}</span>
-                  <Input type="number" placeholder="0.00" {...form.register('amount')} className="h-10 text-base" />
+                  <span className="mr-2 text-2xl text-muted-foreground">{currencySymbol}</span>
+                  <Input type="number" placeholder="0.00" {...form.register('amount')} className="h-12 w-full max-w-xs text-2xl px-4 pr-8 rounded border" />
                 </div>
               </div>
               <FormField
@@ -264,25 +265,10 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             {/* วันที่ (เพิ่มใหม่) */}
             <div className="flex gap-2 mt-2">
               <div className="flex-1">
-                <FormLabel className="text-sm">วันที่</FormLabel>
+                <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
                 <FormField control={form.control} name="date" render={({ field }) => (
                   <FormItem>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
-                            {field.value instanceof Date && !isNaN(field.value.getTime()) ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
-                        <div className="p-2 border-t border-border">
-                          <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <DateTimePicker value={field.value} onChange={field.onChange} />
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -328,32 +314,20 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 <FormField control={form.control} name="amount" render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input type="number" placeholder="0.00" {...field} className="h-10 text-base" />
+                      <div className="flex items-center">
+                        <span className="mr-2 text-2xl text-muted-foreground">{currencySymbol}</span>
+                        <Input type="number" placeholder="0.00" {...field} className="h-12 w-full max-w-xs text-2xl px-4 pr-8 rounded border" />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
               </div>
               <div className="flex-1">
-                <FormLabel className="text-sm">วันที่</FormLabel>
+                <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
                 <FormField control={form.control} name="date" render={({ field }) => (
                   <FormItem>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button variant="outline" className="w-full pl-3 text-left font-normal h-10">
-                            {field.value instanceof Date && !isNaN(field.value.getTime()) ? format(field.value, "PPP p", { locale: th }) : <span>เลือกวันที่</span>}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar locale={th} mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date > new Date() || date < new Date("1900-01-01")}/>
-                        <div className="p-2 border-t border-border">
-                          <TimePicker date={field.value instanceof Date ? field.value : (typeof field.value === 'string' ? new Date(field.value ?? '') : new Date())} setDate={field.onChange} />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <DateTimePicker value={field.value} onChange={field.onChange} />
                     <FormMessage />
                   </FormItem>
                 )} />

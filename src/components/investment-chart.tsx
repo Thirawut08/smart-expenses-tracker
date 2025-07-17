@@ -46,18 +46,17 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
     if (isRateLoading || !usdToThbRate) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
-    const investmentTransactions = transactions.filter(t => investmentAccountNames.includes(t.account.name));
+    const investmentTransactions = transactions.filter(t => Array.isArray(t.account.types) && t.account.types.includes('ลงทุน'));
     console.debug("[INVESTMENT] investmentTransactions", investmentTransactions);
     if (investmentTransactions.length === 0) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
     const accountDetails = new Map<string, { name: string, currency: 'THB' | 'USD' }>();
-    investmentAccountNames.forEach(name => {
-      const account = accounts.find(a => a.name === name);
-      if (account) {
-          balances.set(name, { balance: 0, currency: account.currency });
-          accountDetails.set(name, { name: account.name, currency: account.currency });
+    accounts.forEach(account => {
+      if (Array.isArray(account.types) && account.types.includes('ลงทุน')) {
+        balances.set(account.name, { balance: 0, currency: account.currency });
+        accountDetails.set(account.name, { name: account.name, currency: account.currency });
       }
     });
     investmentTransactions.forEach(t => {

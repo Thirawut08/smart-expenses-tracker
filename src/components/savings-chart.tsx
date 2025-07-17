@@ -19,7 +19,7 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
 export function SavingsChart({ transactions }: { transactions: Transaction[] }) {
   const { accounts } = useAccounts();
   const { chartData, totalSavings } = useMemo(() => {
-    const savingTransactions = transactions.filter(t => savingAccountNames.includes(t.account.name));
+    const savingTransactions = transactions.filter(t => Array.isArray(t.account.types) && t.account.types.includes('ออม'));
 
     if (savingTransactions.length === 0) {
       return { chartData: [], totalSavings: 0 };
@@ -28,11 +28,10 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
     const balances = new Map<string, number>();
     const accountDetails = new Map<string, { name: string }>();
 
-    savingAccountNames.forEach(name => {
-      const account = accounts.find(a => a.name === name);
-      if (account) {
-          balances.set(name, 0);
-          accountDetails.set(name, { name: account.name });
+    accounts.forEach(account => {
+      if (Array.isArray(account.types) && account.types.includes('ออม')) {
+        balances.set(account.name, 0);
+        accountDetails.set(account.name, { name: account.name });
       }
     });
 
@@ -58,7 +57,7 @@ export function SavingsChart({ transactions }: { transactions: Transaction[] }) 
     const totalSavings = dataWithValues.reduce((sum, item) => sum + item.value, 0);
     
     return { chartData, totalSavings };
-  }, [transactions]);
+  }, [transactions, accounts]);
   
   if (chartData.length === 0) {
     return (

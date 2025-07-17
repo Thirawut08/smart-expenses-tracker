@@ -40,12 +40,12 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
 
   return (
     <div>
-        <Table>
+        <Table className="bg-transparent">
           {transactions.length === 0 && <TableCaption>ยังไม่มีการบันทึกธุรกรรม</TableCaption>}
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 bg-card z-10 w-[50px]"></TableHead>
-              <TableHead className="sticky left-[50px] bg-card z-10 min-w-[150px]">บัญชี</TableHead>
+              <TableHead className="sticky left-0 bg-transparent z-10 w-[50px]"></TableHead>
+              <TableHead className="sticky left-[50px] bg-transparent z-10 min-w-[150px]">บัญชี</TableHead>
               <TableHead className="min-w-[150px]">วันที่</TableHead>
               <TableHead className="min-w-[200px]">รายละเอียด</TableHead>
               <TableHead className="text-right min-w-[120px]">จำนวนเงิน</TableHead>
@@ -63,7 +63,7 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
 
               return (
               <TableRow key={transaction.id}>
-                <TableCell className="sticky left-0 bg-card z-10">
+                <TableCell className="sticky left-0 bg-transparent z-10">
                   {transaction.type === 'income' ? (
                     <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
                       <TrendingUp className="h-3 w-3" />
@@ -74,7 +74,7 @@ export function InvestmentTransactionsTable({ transactions, onEdit, onDelete }: 
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="sticky left-[50px] bg-card z-10">
+                <TableCell className="sticky left-[50px] bg-transparent z-10">
                   <div className="font-medium">{transaction.account.name}</div>
                 </TableCell>
                 <TableCell>{format(transaction.date, 'd MMM yyyy, HH:mm', { locale: th })}</TableCell>

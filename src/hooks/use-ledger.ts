@@ -206,8 +206,8 @@ export function useLedger() {
           date: tx.date,
           type: 'expense',
           details: tx.details,
-          sender: undefined,
-          recipient: undefined,
+          sender: fromAcc.name,
+          recipient: toAcc.name,
         };
         const inTx: Transaction = {
           id: new Date().toISOString() + Math.random(),
@@ -217,8 +217,8 @@ export function useLedger() {
           date: tx.date,
           type: 'income',
           details: tx.details,
-          sender: undefined,
-          recipient: undefined,
+          sender: fromAcc.name,
+          recipient: toAcc.name,
         };
         updateAndSaveTransactions([...transactions, outTx, inTx]);
         toast({ title: 'เพิ่มธุรกรรมสำเร็จ', description: 'เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว' });

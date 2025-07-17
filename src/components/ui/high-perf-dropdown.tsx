@@ -12,6 +12,7 @@ interface HighPerfDropdownProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  onAddNew?: (label: string) => void; // เพิ่ม prop สำหรับ callback กรณีเพิ่มใหม่
 }
 
 export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
@@ -21,11 +22,19 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   placeholder = 'เลือก...',
   className = '',
   disabled = false,
+  onAddNew,
 }) => {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState<number>(-1);
+  const [search, setSearch] = useState('');
+
+  // Filtered options
+  const filteredOptions = options.filter(opt =>
+    opt.label.toLowerCase().includes(search.toLowerCase())
+  );
 
   // ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
@@ -42,7 +51,19 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  // Keyboard navigation
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (open && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [open]);
+
+  // Reset search when closing
+  useEffect(() => {
+    if (!open) setSearch('');
+  }, [open]);
+
+  // Keyboard navigation (update to allow add new)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!open) {
@@ -54,24 +75,32 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
         return;
       }
       if (e.key === 'ArrowDown') {
-        setHighlighted((h) => Math.min(h + 1, options.length - 1));
+        setHighlighted((h) => Math.min(h + 1, filteredOptions.length - 1));
         e.preventDefault();
       } else if (e.key === 'ArrowUp') {
         setHighlighted((h) => Math.max(h - 1, 0));
         e.preventDefault();
-      } else if (e.key === 'Enter' && highlighted >= 0) {
-        onChange(options[highlighted].value);
-        setOpen(false);
+      } else if (e.key === 'Enter') {
+        if (highlighted >= 0 && filteredOptions[highlighted]) {
+          onChange(filteredOptions[highlighted].value);
+          setOpen(false);
+        } else if (search.trim() && !filteredOptions.some(opt => opt.label.toLowerCase() === search.trim().toLowerCase())) {
+          // ถ้าไม่มีในตัวเลือกเดิมและมี onAddNew
+          if (onAddNew) {
+            onAddNew(search.trim());
+            setOpen(false);
+          }
+        }
         e.preventDefault();
       } else if (e.key === 'Escape') {
         setOpen(false);
         e.preventDefault();
       }
     },
-    [open, highlighted, options, onChange]
+    [open, highlighted, filteredOptions, onChange, search, onAddNew]
   );
 
-  // Scroll to highlighted item
+  // Scroll to highlighted item (update to use filteredOptions)
   useEffect(() => {
     if (open && highlighted >= 0) {
       const el = document.getElementById(`dropdown-opt-${highlighted}`);
@@ -103,10 +132,24 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
           role="listbox"
           tabIndex={-1}
         >
-          {options.length === 0 ? (
-            <div className="px-4 py-2 text-gray-400">ไม่มีตัวเลือก</div>
+          <div className="p-2 border-b bg-gray-50 dark:bg-zinc-800">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={search}
+              onChange={e => {
+                setSearch(e.target.value);
+                setHighlighted(0);
+              }}
+              placeholder="พิมพ์ค้นหา..."
+              className="w-full px-2 py-1 rounded border text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={e => { e.stopPropagation(); handleKeyDown(e as any); }}
+            />
+          </div>
+          {filteredOptions.length === 0 ? (
+            <div className="px-4 py-2 text-gray-400">ไม่พบตัวเลือก</div>
           ) : (
-            options.map((opt, idx) => (
+            filteredOptions.map((opt, idx) => (
               <div
                 key={opt.value}
                 id={`dropdown-opt-${idx}`}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { PlusCircle, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AddTransactionDialog } from '@/components/add-transaction-dialog';
+import { AddTransactionModal } from '@/components/add-transaction-modal';
 import { TransactionsTable } from '@/components/transactions-table';
 import { useLedger } from '@/hooks/use-ledger';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -89,14 +89,10 @@ export default function TransactionsPage() {
     });
   };
 
-  // Wrapper รองรับ transfer (array)
-  const handleSaveTransactionWrapper = (data: any) => {
-    if (Array.isArray(data)) {
-      handleSaveTransaction(data);
-      toast({ title: 'บันทึกการโอนสำเร็จ', description: 'สร้าง 2 รายการโอนระหว่างบัญชีแล้ว' });
-    } else {
-      handleSaveTransaction(data);
-    }
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const handleAddTransaction = (data: any) => {
+    handleSaveTransaction(data);
+    setIsAddModalOpen(false);
   };
 
   return (
@@ -110,20 +106,15 @@ export default function TransactionsPage() {
                 <FileDown className="mr-2 h-4 w-4" />
                 Export to CSV
               </Button>
-              <AddTransactionDialog
-                key={editingTransaction?.id || 'new'}
-                open={isDialogOpen}
-                onOpenChange={handleDialogClose}
-                onSave={handleSaveTransactionWrapper}
-                initialData={dialogInitialData}
-                isEditing={!!editingTransaction}
-                transactions={transactions}
-              >
-                <Button onClick={() => setIsDialogOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  เพิ่มธุรกรรม
-                </Button>
-              </AddTransactionDialog>
+              <Button onClick={() => setIsAddModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                เพิ่มธุรกรรม
+              </Button>
+              <AddTransactionModal
+                open={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSave={handleAddTransaction}
+              />
             </div>
           </div>
           {/* Minimal, no Card, no CardHeader, no CardContent */}

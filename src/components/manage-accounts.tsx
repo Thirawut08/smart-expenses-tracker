@@ -27,7 +27,7 @@ const DEFAULT_ACCOUNT_TYPES = ['ทั่วไป', 'ลงทุน', 'ออ�
 
 export function ManageAccounts() {
   const { transactions } = useLedger();
-  const { accounts, addAccount, editAccount, deleteAccount } = useAccounts();
+  const { accounts, addAccount, editAccount, deleteAccount, isLoaded } = useAccounts();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editAccountState, setEditAccountState] = useState<Account | null>(null);
@@ -138,6 +138,9 @@ export function ManageAccounts() {
       resetForm();
     }
   }, [isEditDialogOpen]);
+
+  // เพิ่มการเช็ค isLoaded ก่อน render UI
+  if (!isLoaded) return null;
 
   return (
     <Card>
