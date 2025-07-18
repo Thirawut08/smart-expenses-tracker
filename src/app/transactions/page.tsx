@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AddTransactionDialog } from '@/components/add-transaction-dialog';
 
 export default function TransactionsPage() {
   const {
@@ -143,6 +144,15 @@ export default function TransactionsPage() {
           </div>
         </div>
       </div>
+      {/* เพิ่ม Dialog สำหรับแก้ไขธุรกรรม */}
+      <AddTransactionDialog
+        open={isDialogOpen}
+        onOpenChange={handleDialogClose}
+        onSave={handleSaveTransaction}
+        initialData={editingTransaction}
+        isEditing={!!editingTransaction}
+        transactions={transactions}
+      />
       <AlertDialog open={!!transactionToDelete} onOpenChange={(open) => !open && setTransactionToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

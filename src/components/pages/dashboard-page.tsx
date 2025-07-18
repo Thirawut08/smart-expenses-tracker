@@ -80,12 +80,12 @@ export function DashboardPage() {
       {/* Section: Exchange Rate */}
       <div className="flex justify-center pt-2 pb-2 md:pt-4 md:pb-4">
         <a
-          href="https://www.google.com/finance/quote/USD-THB"
+          href="https://th.tradingview.com/chart/?symbol=OANDA%3AUSDTHB"
           target="_blank"
           rel="noopener noreferrer"
           className="block p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-700 dark:text-blue-300 text-center font-semibold hover:underline w-full max-w-xs"
         >
-          ดูอัตราแลกเปลี่ยน USD/THB ล่าสุด (Google Finance)
+          ดูกราฟอัตราแลกเปลี่ยน USD/THB (TradingView)
         </a>
       </div>
 

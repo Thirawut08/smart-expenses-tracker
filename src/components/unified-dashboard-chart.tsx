@@ -62,12 +62,18 @@ export function UnifiedDashboardChart({ transactions, mode, periodLabel }: {
         ],
       };
     } else if (mode === 'invest') {
-      // Investment by account (THB)
+      // กรองธุรกรรมที่ purpose มีคำว่า 'ลงทุน'
+      const investmentTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ลงทุน'));
       const balances = new Map<string, number>();
-      investmentAccountNames.forEach(name => balances.set(name, 0));
-      transactions.filter(t => investmentAccountNames.includes(t.account.name)).forEach(t => {
-        const amount = t.type === 'income' ? t.amount : -t.amount;
-        balances.set(t.account.name, (balances.get(t.account.name) ?? 0) + amount);
+      investmentTransactions.forEach(t => {
+        const accName = t.account.name;
+        const prev = balances.get(accName) || 0;
+        // แปลง USD เป็น THB ก่อนรวมยอด
+        const amountInTHB = t.account && t.account.currency === 'USD'
+          ? t.amount * usdToThbRate
+          : t.amount;
+        const amount = t.type === 'income' ? amountInTHB : -amountInTHB;
+        balances.set(accName, prev + amount);
       });
       const data = Array.from(balances.entries())
         .map(([name, value]) => ({ name, value }))
@@ -81,12 +87,18 @@ export function UnifiedDashboardChart({ transactions, mode, periodLabel }: {
         legend: data.map((item, i) => ({ label: item.name, color: COLORS[i % COLORS.length] })),
       };
     } else if (mode === 'save') {
-      // Savings by account (THB)
+      // กรองธุรกรรมที่ purpose มีคำว่า 'ออม'
+      const savingTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ออม'));
       const balances = new Map<string, number>();
-      savingAccountNames.forEach(name => balances.set(name, 0));
-      transactions.filter(t => savingAccountNames.includes(t.account.name)).forEach(t => {
-        const amount = t.type === 'income' ? t.amount : -t.amount;
-        balances.set(t.account.name, (balances.get(t.account.name) ?? 0) + amount);
+      savingTransactions.forEach(t => {
+        const accName = t.account.name;
+        const prev = balances.get(accName) || 0;
+        // แปลง USD เป็น THB ก่อนรวมยอด
+        const amountInTHB = t.account && t.account.currency === 'USD'
+          ? t.amount * usdToThbRate
+          : t.amount;
+        const amount = t.type === 'income' ? amountInTHB : -amountInTHB;
+        balances.set(accName, prev + amount);
       });
       const data = Array.from(balances.entries())
         .map(([name, value]) => ({ name, value }))
@@ -175,6 +187,7 @@ export function UnifiedDashboardChart({ transactions, mode, periodLabel }: {
           </div>
         ))}
       </div>
+      {/* ยอดรวม THB และ USD */}
       <div className="mt-4 flex flex-col items-center text-center">
         <span className="text-sm text-muted-foreground">
           {mode === 'total' ? 'คงเหลือสุทธิ' : mode === 'invest' ? 'ยอดลงทุนรวม' : 'ยอดออมรวม'}
@@ -182,6 +195,32 @@ export function UnifiedDashboardChart({ transactions, mode, periodLabel }: {
         <span className={`text-2xl font-bold ${total >= 0 ? '' : 'text-red-600'}`}>
           {isRateLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : currencyFormatter.format(total)}
         </span>
+        {/* แสดงยอด USD ถ้ามี */}
+        {(() => {
+          let usdSum = 0;
+          if (mode === 'invest') {
+            // รวม USD เฉพาะธุรกรรมลงทุน
+            const investmentTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ลงทุน'));
+            investmentTransactions.forEach(t => {
+              if (t.account && t.account.currency === 'USD') {
+                usdSum += t.type === 'income' ? t.amount : -t.amount;
+              }
+            });
+          } else if (mode === 'save') {
+            // รวม USD เฉพาะธุรกรรมออม
+            const savingTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ออม'));
+            savingTransactions.forEach(t => {
+              if (t.account && t.account.currency === 'USD') {
+                usdSum += t.type === 'income' ? t.amount : -t.amount;
+              }
+            });
+          }
+          if (usdSum !== 0) {
+            // แสดงเป็น 892.00 USD (ไม่มี $ ซ้ำ)
+            return <span className="text-xs text-muted-foreground mt-1">({usdSum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)</span>;
+          }
+          return null;
+        })()}
       </div>
     </div>
   );

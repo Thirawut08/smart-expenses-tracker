@@ -89,39 +89,60 @@ export function AddTransactionDialog({ children, open, onOpenChange, onSave, ini
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="max-w-md w-full">
         <DialogHeader>
           <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
-        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'manual' | 'slip')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
-            <TabsTrigger value="slip" disabled={isEditing || !!(initialData?.purpose && !initialData?.id)}>อัปโหลดสลิป</TabsTrigger>
-          </TabsList>
-          <TabsContent value="manual">
-            <TransactionForm
-              key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
-              initialData={extractedData ? {
-                mode: 'normal',
-                accountId: '',
-                purpose: extractedData.purpose || '',
-                amount: extractedData.amount,
-                date: new Date(extractedData.date),
-                type: 'expense',
-                sender: extractedData.sender,
-                recipient: extractedData.recipient,
-              } : getInitialFormData(initialData)}
-              onSubmit={handleFormSubmit}
-              isEditing={isEditing}
-              isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
-              availablePurposes={purposes}
-              transactions={transactions} // ส่ง prop นี้เข้าไป
-            />
-          </TabsContent>
-          <TabsContent value="slip">
-             <SlipUploader onExtractionComplete={setExtractedData} />
-          </TabsContent>
-        </Tabs>
+        {isEditing ? (
+          <TransactionForm
+            key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
+            initialData={extractedData ? {
+              mode: 'normal',
+              accountId: '',
+              purpose: extractedData.purpose || '',
+              amount: extractedData.amount,
+              date: new Date(extractedData.date),
+              type: 'expense',
+              sender: extractedData.sender,
+              recipient: extractedData.recipient,
+            } : getInitialFormData(initialData)}
+            onSubmit={handleFormSubmit}
+            isEditing={isEditing}
+            isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
+            availablePurposes={purposes}
+            transactions={transactions}
+          />
+        ) : (
+          <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'manual' | 'slip')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
+              <TabsTrigger value="slip" disabled={isEditing || !!(initialData?.purpose && !initialData?.id)}>อัปโหลดสลิป</TabsTrigger>
+            </TabsList>
+            <TabsContent value="manual">
+              <TransactionForm
+                key={JSON.stringify(initialData ?? extractedData) || 'manual-form'}
+                initialData={extractedData ? {
+                  mode: 'normal',
+                  accountId: '',
+                  purpose: extractedData.purpose || '',
+                  amount: extractedData.amount,
+                  date: new Date(extractedData.date),
+                  type: 'expense',
+                  sender: extractedData.sender,
+                  recipient: extractedData.recipient,
+                } : getInitialFormData(initialData)}
+                onSubmit={handleFormSubmit}
+                isEditing={isEditing}
+                isTemplate={!!initialData?.purpose && !initialData?.id && !isEditing}
+                availablePurposes={purposes}
+                transactions={transactions}
+              />
+            </TabsContent>
+            <TabsContent value="slip">
+               <SlipUploader onExtractionComplete={setExtractedData} />
+            </TabsContent>
+          </Tabs>
+        )}
       </DialogContent>
     </Dialog>
   );

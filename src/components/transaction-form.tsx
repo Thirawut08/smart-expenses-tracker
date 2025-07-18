@@ -33,8 +33,15 @@ const normalSchema = z.object({
   accountId: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
   purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
   customPurpose: z.string().optional(),
-  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+  amount: z.union([
+    z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+    z.nan()
+  ]),
+  date: z.union([
+    z.date({ required_error: 'กรุณาระบุวันที่' }),
+    z.undefined(),
+    z.null()
+  ]),
   sender: z.string().optional(),
   recipient: z.string().optional(),
   details: z.string().optional(),
@@ -224,8 +231,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 pt-2">
-        {/* โหมดธุรกรรม */}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <Switch
             checked={isTransfer}
@@ -236,196 +242,164 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             โอนระหว่างบัญชี
           </label>
         </div>
-        {/* จำนวนเงิน + ประเภทธุรกรรม */}
-        {!isTransfer ? (
-          <>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
-                <div className="flex items-center">
-                  <span className="mr-2 text-2xl text-muted-foreground">{currencySymbol}</span>
-                  <Input type="number" placeholder="0.00" {...form.register('amount')} className="h-12 w-full max-w-xs text-2xl px-4 pr-8 rounded border" />
-                </div>
-              </div>
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <div className="flex w-full gap-2">
-                    <Button type="button" variant={field.value === 'expense' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('expense')}>
-                      💸 รายจ่าย
-                    </Button>
-                    <Button type="button" variant={field.value === 'income' ? 'secondary' : 'outline'} className="flex-1 h-10 px-0" onClick={() => field.onChange('income')}>
-                      💰 รายรับ
-                    </Button>
-                  </div>
-                )}
-              />
-            </div>
-            {/* วันที่ (เพิ่มใหม่) */}
-            <div className="flex gap-2 mt-2">
-              <div className="flex-1">
-                <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
-                <FormField control={form.control} name="date" render={({ field }) => (
-                  <FormItem>
-                    <DateTimePicker value={field.value} onChange={field.onChange} />
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <FormLabel className="text-sm">บัญชีต้นทาง</FormLabel>
-                <FormField control={form.control} name="fromAccount" render={({ field }) => (
-                  <FormItem>
-                    <HighPerfDropdown
-                      options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                      placeholder="เลือกบัญชีต้นทาง..."
-                      disabled={accounts.length === 0}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <div className="flex-1">
-                <FormLabel className="text-sm">บัญชีปลายทาง</FormLabel>
-                <FormField control={form.control} name="toAccount" render={({ field }) => (
-                  <FormItem>
-                    <HighPerfDropdown
-                      options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                      placeholder="เลือกบัญชีปลายทาง..."
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <div className="flex-1">
-                <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
-                <FormField control={form.control} name="amount" render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <span className="mr-2 text-2xl text-muted-foreground">{currencySymbol}</span>
-                        <Input type="number" placeholder="0.00" {...field} className="h-12 w-full max-w-xs text-2xl px-4 pr-8 rounded border" />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <div className="flex-1">
-                <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
-                <FormField control={form.control} name="date" render={({ field }) => (
-                  <FormItem>
-                    <DateTimePicker value={field.value} onChange={field.onChange} />
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-            <div className="mt-2">
-              <FormLabel className="text-sm">รายละเอียด (ถ้ามี)</FormLabel>
-              <FormField control={form.control} name="details" render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </div>
-          </>
-        )}
-        {/* วันที่ */}
-        {/* บัญชี + วัตถุประสงค์ */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">จำนวนเงิน</FormLabel>
+          <Input
+            type="number"
+            placeholder="0.00"
+            {...form.register('amount')}
+            className="h-14 text-3xl px-4 w-full"
+            autoFocus
+            required={!isTemplate}
+          />
+        </div>
         {!isTransfer && (
           <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={form.watch('type') === 'expense' ? 'secondary' : 'outline'}
+              className="flex-1"
+              onClick={() => form.setValue('type', 'expense')}
+            >รายจ่าย</Button>
+            <Button
+              type="button"
+              variant={form.watch('type') === 'income' ? 'secondary' : 'outline'}
+              className="flex-1"
+              onClick={() => form.setValue('type', 'income')}
+            >รายรับ</Button>
+          </div>
+        )}
+        <div>
+          <FormLabel className="block mb-1 font-medium">วันที่และเวลา</FormLabel>
+          <FormField control={form.control} name="date" render={({ field }) => (
+            <FormItem>
+              <DateTimePicker value={field.value} onChange={field.onChange} />
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+        {isTransfer ? (
+          <div className="flex gap-2">
             <div className="flex-1">
-              <FormLabel className="text-sm">บัญชี</FormLabel>
-              <FormField control={form.control} name="accountId" render={({ field }) => (
+              <FormLabel className="block mb-1 font-medium">บัญชีต้นทาง</FormLabel>
+              <FormField control={form.control} name="fromAccount" render={({ field }) => (
                 <FormItem>
                   <HighPerfDropdown
-                    options={accounts.map(acc => ({ value: acc.id, label: acc.name }))}
+                    options={accounts.map(acc => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
                     value={field.value || ''}
                     onChange={field.onChange}
-                    placeholder="เลือกบัญชี..."
+                    placeholder="เลือกบัญชีต้นทาง..."
+                    className="w-full"
                   />
-                  {/* ยอดเงินคงเหลือ */}
-                  {(() => { const accBalance = getAccountBalance(field.value || '', transactions); return accBalance && (
-                    <div className="text-xs text-muted-foreground mt-1">ยอดเงิน: {formatCurrency(accBalance.balance, accBalance.currency)}</div>
-                  )})()}
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
             <div className="flex-1">
-              <FormLabel className="text-sm">วัตถุประสงค์</FormLabel>
-              <FormField control={form.control} name="purpose" render={({ field }) => (
+              <FormLabel className="block mb-1 font-medium">บัญชีปลายทาง</FormLabel>
+              <FormField control={form.control} name="toAccount" render={({ field }) => (
                 <FormItem>
                   <HighPerfDropdown
-                    options={allPurposes.filter(Boolean).map(purpose => ({ value: purpose, label: purpose }))}
+                    options={accounts.map(acc => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
                     value={field.value || ''}
-                    onChange={value => { field.onChange(value); if (value !== 'อื่นๆ') setCustomPurpose(''); }}
-                    placeholder="เลือกวัตถุประสงค์..."
+                    onChange={field.onChange}
+                    placeholder="เลือกบัญชีปลายทาง..."
+                    className="w-full"
                   />
-                  {field.value === 'อื่นๆ' && (
-                    <div className="mt-2">
-                      <Input
-                        placeholder="กรอกวัตถุประสงค์ใหม่"
-                        value={customPurpose}
-                        onChange={e => setCustomPurpose(e.target.value)}
-                        className="h-9 text-sm"
-                      />
-                    </div>
-                  )}
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
           </div>
-        )}
-        {/* รายละเอียดเพิ่มเติม (collapsible) */}
-        {!isTransfer && (
-          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField control={form.control} name="sender" render={({ field }) => (
+        ) : (
+          // ฟิลด์บัญชี: แสดงทั้งในโหมดปกติและ isTemplate
+          <div>
+            <FormLabel className="block mb-1 font-medium">บัญชี</FormLabel>
+            <FormField control={form.control} name="accountId" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm">ผู้จ่าย (ถ้ามี)</FormLabel>
-                <FormControl><Input placeholder="ชื่อผู้จ่าย" {...field} value={field.value ?? ''} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="recipient" render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm">ผู้รับ (ถ้ามี)</FormLabel>
-                <FormControl><Input placeholder="ชื่อผู้รับ" {...field} value={field.value ?? ''} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="details" render={({ field }) => (
-              <FormItem className="col-span-2">
-                <FormLabel className="text-sm">รายละเอียด (ถ้ามี)</FormLabel>
-                <FormControl><Textarea placeholder="บันทึกรายละเอียดเพิ่มเติม" {...field} value={field.value ?? ''} /></FormControl>
+                <HighPerfDropdown
+                  options={accounts.map(acc => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  placeholder="เลือกบัญชี..."
+                  className="w-full"
+                />
+                {/* ยอดเงินคงเหลือ */}
+                {(() => { const accBalance = getAccountBalance(field.value || '', transactions); return accBalance && (
+                  <div className="text-xs text-muted-foreground mt-1">ยอดเงิน: {formatCurrency(accBalance.balance, accBalance.currency)}</div>
+                )})()}
                 <FormMessage />
               </FormItem>
             )} />
           </div>
         )}
-        {/* Toggle เทมเพลต + ปุ่มบันทึก */}
-        <div className="flex items-center gap-2 mb-2">
-          <Switch checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} id="save-as-template" />
-          <label htmlFor="save-as-template" className="text-sm">บันทึกเป็นเทมเพลต</label>
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <FormLabel className="block mb-1 font-medium">ผู้จ่าย (ถ้ามี)</FormLabel>
+            <FormField control={form.control} name="sender" render={({ field }) => (
+              <FormItem>
+                <Input placeholder="ชื่อผู้จ่าย" {...field} value={field.value ?? ''} className="w-full" />
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+          <div className="flex-1">
+            <FormLabel className="block mb-1 font-medium">ผู้รับ (ถ้ามี)</FormLabel>
+            <FormField control={form.control} name="recipient" render={({ field }) => (
+              <FormItem>
+                <Input placeholder="ชื่อผู้รับ" {...field} value={field.value ?? ''} className="w-full" />
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
         </div>
-        <Button className="w-full h-10 text-base font-bold mt-2">เพิ่มธุรกรรม</Button>
+        <div>
+          <FormLabel className="block mb-1 font-medium">รายละเอียด (ถ้ามี)</FormLabel>
+          <FormField control={form.control} name="details" render={({ field }) => (
+            <FormItem>
+              <Textarea placeholder="บันทึกรายละเอียดเพิ่มเติมพิมพ์เทิม" {...field} value={field.value ?? ''} className="w-full h-20 px-4 py-2 rounded border text-base bg-background resize-none" />
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+        <div>
+          <FormLabel className="block mb-1 font-medium">วัตถุประสงค์</FormLabel>
+          <FormField control={form.control} name="purpose" render={({ field }) => (
+            <FormItem>
+              <HighPerfDropdown
+                options={allPurposes.filter(Boolean).map(purpose => ({ value: purpose, label: purpose }))}
+                value={field.value || ''}
+                onChange={value => { field.onChange(value); if (value !== 'อื่นๆ') setCustomPurpose(''); }}
+                placeholder="เลือกวัตถุประสงค์..."
+                className="w-full"
+              />
+              {field.value === 'อื่นๆ' && (
+                <div className="mt-2">
+                  <Input
+                    placeholder="กรอกวัตถุประสงค์ใหม่"
+                    value={customPurpose}
+                    onChange={e => setCustomPurpose(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              )}
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+        {/* Toggle เทมเพลต + ปุ่มบันทึก */}
+        {!isEditing && (
+          <div className="flex items-center gap-2 mb-2">
+            <Switch checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} id="save-as-template" />
+            <label htmlFor="save-as-template" className="text-sm">บันทึกเป็นเทมเพลต</label>
+          </div>
+        )}
+        <div className="flex justify-end gap-2 pt-2">
+          {isEditing && (
+            <Button type="button" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent('close-transaction-dialog'))}>ยกเลิก</Button>
+          )}
+          <Button type="submit" className="font-bold">{isEditing ? 'บันทึก' : 'เพิ่มธุรกรรม'}</Button>
+        </div>
       </form>
     </Form>
   );

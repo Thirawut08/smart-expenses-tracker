@@ -362,6 +362,42 @@ export function useLedger() {
     return undefined;
   }, [editingTransaction, editingTemplate]);
 
+  // เพิ่มฟังก์ชัน addTemplate
+  const addTemplate = useCallback((data: any) => {
+    // data: UnifiedFormValues
+    const { type, purpose, details, sender, recipient, accountId } = data;
+    let name = data.name || purpose || 'ไม่ระบุชื่อ';
+    // ถ้าเลือก "อื่นๆ" และกรอก customPurpose ให้ใช้ customPurpose
+    const finalPurpose = (purpose === 'อื่นๆ' && data.customPurpose) ? data.customPurpose.trim() : purpose;
+    const newTemplate: Template = {
+      id: new Date().toISOString() + Math.random(),
+      name,
+      type,
+      purpose: finalPurpose,
+      accountId: accountId || '',
+      details,
+      sender,
+      recipient,
+    };
+    const newTemplates = [...templates, newTemplate];
+    updateAndSaveTemplates(newTemplates);
+    toast({ title: 'เพิ่มเทมเพลตสำเร็จ', description: `เพิ่มเทมเพลต "${name}" เรียบร้อยแล้ว` });
+  }, [templates, updateAndSaveTemplates, toast]);
+
+  // เพิ่มฟังก์ชัน editTemplate
+  const editTemplate = useCallback((id: string, data: any) => {
+    const { type, purpose, details, sender, recipient, accountId } = data;
+    let name = data.name || purpose || 'ไม่ระบุชื่อ';
+    const finalPurpose = (purpose === 'อื่นๆ' && data.customPurpose) ? data.customPurpose.trim() : purpose;
+    const updatedTemplates = templates.map(t =>
+      t.id === id
+        ? { ...t, name, type, purpose: finalPurpose, accountId: accountId || '', details, sender, recipient }
+        : t
+    );
+    updateAndSaveTemplates(updatedTemplates);
+    toast({ title: 'แก้ไขเทมเพลตสำเร็จ', description: `อัปเดตเทมเพลต "${name}" เรียบร้อยแล้ว` });
+  }, [templates, updateAndSaveTemplates, toast]);
+
   return {
     transactions,
     templates,
@@ -383,5 +419,7 @@ export function useLedger() {
     dialogInitialData,
     editPurpose,
     removePurpose,
+    addTemplate, // <--- export addTemplate
+    editTemplate, // <--- export editTemplate
   };
 }

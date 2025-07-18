@@ -39,60 +39,34 @@ export function InvestmentChart({ transactions }: { transactions: Transaction[] 
   const { accounts } = useAccounts();
 
   const { chartData, totalInvestmentInTHB } = useMemo(() => {
-    // DEBUG: log ข้อมูลสำคัญ
-    console.debug("[INVESTMENT] useMemo: isRateLoading", isRateLoading, "usdToThbRate", usdToThbRate);
-    console.debug("[INVESTMENT] useMemo: accounts", accounts);
-    console.debug("[INVESTMENT] useMemo: transactions", transactions);
     if (isRateLoading || !usdToThbRate) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
-    const investmentTransactions = transactions.filter(t => Array.isArray(t.account.types) && t.account.types.includes('ลงทุน'));
-    console.debug("[INVESTMENT] investmentTransactions", investmentTransactions);
+    // กรองธุรกรรมที่ purpose มีคำว่า 'ลงทุน'
+    const investmentTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ลงทุน'));
     if (investmentTransactions.length === 0) {
       return { chartData: [], totalInvestmentInTHB: 0 };
     }
+    // สร้าง balances ตามบัญชีที่พบในธุรกรรมลงทุน
     const balances = new Map<string, { balance: number, currency: 'THB' | 'USD' }>();
-    const accountDetails = new Map<string, { name: string, currency: 'THB' | 'USD' }>();
-    accounts.forEach(account => {
-      if (Array.isArray(account.types) && account.types.includes('ลงทุน')) {
-        balances.set(account.name, { balance: 0, currency: account.currency });
-        accountDetails.set(account.name, { name: account.name, currency: account.currency });
-      }
-    });
     investmentTransactions.forEach(t => {
-      const accountBalance = balances.get(t.account.name);
-      if (accountBalance) {
-        const amount = t.type === 'income' ? t.amount : -t.amount;
-        balances.set(t.account.name, { ...accountBalance, balance: accountBalance.balance + amount });
-      }
+      const accName = t.account.name;
+      const accCurrency = t.account.currency;
+      const prev = balances.get(accName) || { balance: 0, currency: accCurrency };
+      const amount = t.type === 'income' ? t.amount : -t.amount;
+      balances.set(accName, { balance: prev.balance + amount, currency: accCurrency });
     });
     const dataWithValues = Array.from(balances.entries())
       .map(([name, { balance, currency }]) => {
-          const balanceInTHB = convertToTHB(balance, currency, usdToThbRate || 0);
-          // DEBUG: log การแปลงค่าเงิน
-          console.debug("[INVESTMENT] convertToTHB", { name, balance, currency, usdToThbRate, balanceInTHB });
-          return { 
-            name, 
-            value: balance,
-            valueInTHB: balanceInTHB,
-            currency,
-          }
+        const balanceInTHB = convertToTHB(balance, currency, usdToThbRate || 0);
+        return { name, value: balance, valueInTHB: balanceInTHB, currency };
       })
-      .filter(item => item.value !== 0) 
+      .filter(item => item.value !== 0)
       .sort((a, b) => b.valueInTHB - a.valueInTHB);
-    // DEBUG: log dataWithValues
-    console.debug("[INVESTMENT] dataWithValues", dataWithValues);
-    const chartData = dataWithValues.map(item => ({
-        ...item,
-        chartValue: Math.abs(item.valueInTHB) // Use THB value for sizing pie slices
-    }));
-    // DEBUG: log chartData
-    console.debug("[INVESTMENT] chartData", chartData);
+    const chartData = dataWithValues.map(item => ({ ...item, chartValue: Math.abs(item.valueInTHB) }));
     const totalInvestmentInTHB = dataWithValues.reduce((sum, item) => sum + item.valueInTHB, 0);
-    // DEBUG: log totalInvestmentInTHB
-    console.debug("[INVESTMENT] totalInvestmentInTHB", totalInvestmentInTHB);
     return { chartData, totalInvestmentInTHB };
-  }, [transactions, usdToThbRate, isRateLoading, accounts]);
+  }, [transactions, usdToThbRate, isRateLoading]);
 
   // Guard: ถ้าข้อมูลยังไม่พร้อมหรือ format ผิด
   if (isRateLoading || !usdToThbRate || !Array.isArray(chartData) || !Array.isArray(accounts) || accounts.length === 0) {

@@ -24,6 +24,7 @@ export type Template = {
   name: string;
   type: 'income' | 'expense';
   purpose: string;
+  accountId?: string; // เพิ่ม accountId
   sender?: string;
   recipient?: string;
   details?: string;

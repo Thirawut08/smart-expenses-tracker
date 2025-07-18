@@ -29,7 +29,19 @@ export function AddTransactionModal({ open, onClose, onSave }: AddTransactionMod
   const [sender, setSender] = useState('');
   const [recipient, setRecipient] = useState('');
   const { accounts, addAccount } = useAccounts();
-  const { purposes, addPurpose } = useLedger();
+  const { purposes, addPurpose, templates } = useLedger();
+
+  // ให้เหลือฟังก์ชัน handleUseTemplate แค่ตัวเดียวใน component เท่านั้น
+  function handleUseTemplate(template: any) {
+    setAmount(template.amount ? String(template.amount) : '');
+    setType(template.type || 'expense');
+    setAccount(template.accountId || '');
+    setPurpose(template.purpose || '');
+    setDetails(template.details || '');
+    setSender(template.sender || '');
+    setRecipient(template.recipient || '');
+    // ไม่ set date, ไม่ set isTransfer (template ปกติ)
+  }
 
   useEffect(() => {
     if (isTransfer) {
@@ -82,6 +94,28 @@ export function AddTransactionModal({ open, onClose, onSave }: AddTransactionMod
         <DialogHeader>
           <DialogTitle>เพิ่มธุรกรรมใหม่</DialogTitle>
         </DialogHeader>
+        {/* UI เลือกเทมเพลต */}
+        {templates && templates.length > 0 && (
+          <div className="mb-4">
+            <div className="font-semibold mb-2">เลือกจากเทมเพลต</div>
+            {templates.length === 0 ? (
+              <div className="text-xs text-muted-foreground">ยังไม่มีเทมเพลต</div>
+            ) : (
+              <div className="flex gap-2 flex-wrap">
+                {templates.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={() => handleUseTemplate(t)}
+                  >
+                    {t.purpose || 'ไม่ระบุวัตถุประสงค์'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <Switch checked={isTransfer} onCheckedChange={setIsTransfer} id="toggle-transfer-mode" />

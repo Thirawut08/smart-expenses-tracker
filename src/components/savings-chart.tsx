@@ -19,45 +19,27 @@ const currencyFormatter = new Intl.NumberFormat('th-TH', {
 export function SavingsChart({ transactions }: { transactions: Transaction[] }) {
   const { accounts } = useAccounts();
   const { chartData, totalSavings } = useMemo(() => {
-    const savingTransactions = transactions.filter(t => Array.isArray(t.account.types) && t.account.types.includes('ออม'));
-
+    // กรองธุรกรรมที่ purpose มีคำว่า 'ออม'
+    const savingTransactions = transactions.filter(t => t.purpose && t.purpose.includes('ออม'));
     if (savingTransactions.length === 0) {
       return { chartData: [], totalSavings: 0 };
     }
-
+    // สร้าง balances ตามบัญชีที่พบในธุรกรรมออม
     const balances = new Map<string, number>();
-    const accountDetails = new Map<string, { name: string }>();
-
-    accounts.forEach(account => {
-      if (Array.isArray(account.types) && account.types.includes('ออม')) {
-        balances.set(account.name, 0);
-        accountDetails.set(account.name, { name: account.name });
-      }
-    });
-
     savingTransactions.forEach(t => {
-      const currentBalance = balances.get(t.account.name) ?? 0;
+      const accName = t.account.name;
+      const prev = balances.get(accName) || 0;
       const amount = t.type === 'income' ? t.amount : -t.amount;
-      balances.set(t.account.name, currentBalance + amount);
+      balances.set(accName, prev + amount);
     });
-    
     const dataWithValues = Array.from(balances.entries())
-      .map(([name, balance]) => ({ 
-        name, 
-        value: balance,
-      }))
+      .map(([name, balance]) => ({ name, value: balance }))
       .filter(item => item.value !== 0)
       .sort((a, b) => b.value - a.value);
-
-    const chartData = dataWithValues.map(item => ({
-        ...item,
-        chartValue: Math.abs(item.value)
-    }));
-
+    const chartData = dataWithValues.map(item => ({ ...item, chartValue: Math.abs(item.value) }));
     const totalSavings = dataWithValues.reduce((sum, item) => sum + item.value, 0);
-    
     return { chartData, totalSavings };
-  }, [transactions, accounts]);
+  }, [transactions]);
   
   if (chartData.length === 0) {
     return (
