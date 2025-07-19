@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@floating-ui/react-dom": "^2.1.4",
+    "@floating-ui/react-dom-interactions": "^0.13.3",
     "@genkit-ai/googleai": "^1.13.0",
     "@genkit-ai/next": "^1.13.0",
     "@hookform/resolvers": "^4.1.3",

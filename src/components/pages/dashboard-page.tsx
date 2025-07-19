@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useLedger } from '@/hooks/use-ledger';
+import { useAccounts } from '@/hooks/use-accounts';
 import { thaiMonths } from '@/lib/data';
 import { HighPerfDropdown } from '../ui/high-perf-dropdown';
 import { AccountBalances } from '@/components/account-balances';
@@ -12,8 +13,14 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 
 export function DashboardPage() {
   const { transactions, templates, handleUseTemplate } = useLedger();
+  const { accounts } = useAccounts();
+  const allAccountTypes = useMemo(() => {
+    const types = accounts.flatMap(a => Array.isArray(a.types) ? a.types : [a.types]).filter(Boolean);
+    return ['all', ...Array.from(new Set(types))];
+  }, [accounts]);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedMode, setSelectedMode] = useState<'total' | 'invest' | 'save'>('total');
+  const [selectedAccountType, setSelectedAccountType] = useState<string>('all');
 
   const filteredTransactions = useMemo(() => {
     if (selectedMonth === 'all') {

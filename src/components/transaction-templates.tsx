@@ -85,13 +85,15 @@ export function TransactionTemplates({ templates, onUseTemplate }: TransactionTe
           <DialogHeader>
             <DialogTitle>เพิ่มเทมเพลตใหม่</DialogTitle>
           </DialogHeader>
-          <TransactionForm
-            onSubmit={handleAddTemplateSubmit}
-            isEditing={false}
-            isTemplate={true}
-            availablePurposes={purposes}
-            initialData={{ accountId: '' }}
-          />
+          <div style={{ position: 'relative' }}>
+            <TransactionForm
+              onSubmit={handleAddTemplateSubmit}
+              isEditing={false}
+              isTemplate={true}
+              availablePurposes={purposes}
+              initialData={{ accountId: '', date: undefined }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       {/* Modal แก้ไขเทมเพลต */}
@@ -101,24 +103,26 @@ export function TransactionTemplates({ templates, onUseTemplate }: TransactionTe
             <DialogTitle>แก้ไขเทมเพลต</DialogTitle>
           </DialogHeader>
           {editTarget && (
-            <TransactionForm
-              onSubmit={handleEditTemplateSubmit}
-              isEditing={true}
-              isTemplate={true}
-              availablePurposes={purposes}
-              initialData={{
-                name: editTarget.name,
-                type: editTarget.type,
-                purpose: editTarget.purpose,
-                details: editTarget.details,
-                sender: editTarget.sender,
-                recipient: editTarget.recipient,
-                mode: 'normal',
-                accountId: editTarget.accountId || '',
-                amount: undefined,
-                date: undefined,
-              }}
-            />
+            <div style={{ position: 'relative' }}>
+              <TransactionForm
+                onSubmit={handleEditTemplateSubmit}
+                isEditing={true}
+                isTemplate={true}
+                availablePurposes={purposes}
+                initialData={{
+                  name: editTarget.name,
+                  type: editTarget.type,
+                  purpose: editTarget.purpose,
+                  details: editTarget.details,
+                  sender: editTarget.sender,
+                  recipient: editTarget.recipient,
+                  mode: 'normal',
+                  accountId: editTarget.accountId || '',
+                  amount: undefined,
+                  date: undefined,
+                }}
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>

@@ -70,14 +70,19 @@ const BalanceTable = ({ balances, totalInThb, noDataMessage }: { balances: {name
     );
 }
 
-export function AccountBalances({ transactions, flatTable }: { transactions: Transaction[], flatTable?: boolean }) {
+export function AccountBalances({ transactions, flatTable, filterType }: { transactions: Transaction[], flatTable?: boolean, filterType?: string }) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
   const { accounts } = useAccounts();
 
   // Group accounts by type (multi-group: 1 account in many types)
+  const filteredAccounts = useMemo(() => {
+    if (!filterType || filterType === 'all') return accounts;
+    return accounts.filter(acc => Array.isArray(acc.types) ? acc.types.includes(filterType) : acc.types === filterType);
+  }, [accounts, filterType]);
+
   const accountsByType = useMemo(() => {
     const groups: Record<string, typeof accounts> = {};
-    accounts.forEach(acc => {
+    filteredAccounts.forEach(acc => {
       const types = Array.isArray(acc.types) && acc.types.length > 0 ? acc.types : ['ทั่วไป'];
       types.forEach(type => {
         if (!groups[type]) groups[type] = [];
@@ -85,7 +90,7 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
       });
     });
     return groups;
-  }, [accounts]);
+  }, [filteredAccounts]);
 
   // Calculate balances for each group
   const balancesByType = useMemo(() => {
@@ -123,10 +128,13 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
 
   if (flatTable) {
     // รวมบัญชีทุกประเภทในตารางเดียว โดยแสดง group type
-    const allBalances: {type: string, name: string, balance: number, currency: 'THB' | 'USD'}[] = [];
+    let allBalances: {type: string, name: string, balance: number, currency: 'THB' | 'USD'}[] = [];
     Object.entries(balancesByType).forEach(([type, { balances }]) => {
       balances.forEach(acc => allBalances.push({ type, ...acc }));
     });
+    if (filterType && filterType !== 'all') {
+      allBalances = allBalances.filter(acc => acc.type === filterType);
+    }
     const totalAll = allBalances.reduce((sum, acc) => sum + convertToTHB(acc.balance, acc.currency, usdToThbRate || 0), 0);
     return (
       <div>
@@ -158,7 +166,8 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
     );
   }
 
-  // แสดงแบบ group ตามประเภท
+  // แสดงแบบ group ตามประเภท (filterType มีผลด้วย)
+  const groupTypes = filterType && filterType !== 'all' ? [filterType] : Object.keys(balancesByType);
   return (
     <Card>
       <CardHeader>
@@ -168,11 +177,13 @@ export function AccountBalances({ transactions, flatTable }: { transactions: Tra
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {Object.entries(balancesByType).map(([type, { balances, totalInThb }]) => (
-          <div key={type} className="mb-8">
-            <div className="mb-2 text-lg font-semibold">{type}</div>
-            <BalanceTable balances={balances} totalInThb={totalInThb} noDataMessage={`ไม่พบบัญชีประเภท ${type}`} />
-          </div>
+        {groupTypes.map(type => (
+          balancesByType[type] ? (
+            <div key={type} className="mb-8">
+              <div className="mb-2 text-lg font-semibold">{type}</div>
+              <BalanceTable balances={balancesByType[type].balances} totalInThb={balancesByType[type].totalInThb} noDataMessage={`ไม่พบบัญชีประเภท ${type}`} />
+            </div>
+          ) : null
         ))}
       </CardContent>
     </Card>

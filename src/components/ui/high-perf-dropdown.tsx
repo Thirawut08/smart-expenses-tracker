@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useFloating, autoPlacement, offset, FloatingPortal } from '@floating-ui/react-dom-interactions';
 
 type DropdownOption = {
   value: string;
@@ -13,6 +14,16 @@ interface HighPerfDropdownProps {
   className?: string;
   disabled?: boolean;
   onAddNew?: (label: string) => void; // เพิ่ม prop สำหรับ callback กรณีเพิ่มใหม่
+}
+
+// mergeRefs utility
+function mergeRefs<T>(...refs: (React.Ref<T> | undefined)[]): React.RefCallback<T> {
+  return (value) => {
+    refs.forEach(ref => {
+      if (typeof ref === 'function') ref(value);
+      else if (ref && typeof ref === 'object') (ref as any).current = value;
+    });
+  };
 }
 
 export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
@@ -30,7 +41,11 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState<number>(-1);
   const [search, setSearch] = useState('');
-  const [dropUp, setDropUp] = useState(false);
+  // Floating UI
+  const { x, y, strategy, update, refs } = useFloating({
+    middleware: [offset(4), autoPlacement()],
+    placement: 'bottom-start',
+  });
 
   // Filtered options
   const filteredOptions = options.filter(opt =>
@@ -64,14 +79,10 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
     if (!open) setSearch('');
   }, [open]);
 
-  // ตรวจสอบตำแหน่ง dropdown ก่อนแสดง
+  // อัปเดตตำแหน่ง Floating UI เมื่อเปิด dropdown หรือขนาดเปลี่ยน
   useEffect(() => {
-    if (open && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setDropUp(spaceBelow < 220); // ถ้าพื้นที่ด้านล่างน้อยกว่า 220px ให้ flip ขึ้นบน
-    }
-  }, [open]);
+    if (open) update();
+  }, [open, update, options.length]);
 
   // Keyboard navigation (update to allow add new)
   const handleKeyDown = useCallback(
@@ -120,72 +131,84 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      <button
-        ref={triggerRef}
-        type="button"
-        className="w-full px-3 py-2 border rounded bg-white dark:bg-zinc-900 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+      <div
+        ref={mergeRefs(refs.reference, triggerRef)}
+        role="button"
         aria-haspopup="listbox"
         aria-expanded={open}
+        tabIndex={0}
+        className="w-full px-3 py-2 border rounded bg-white dark:bg-zinc-900 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={disabled ? undefined : handleKeyDown}
-        tabIndex={0}
-        disabled={disabled}
+        style={{ cursor: disabled ? 'not-allowed' : 'pointer', userSelect: 'none' }}
+        aria-disabled={disabled}
       >
-        {options.find((opt) => opt.value === value)?.label || (
-          <span className="text-gray-400">{placeholder}</span>
-        )}
-      </button>
+        {(() => {
+          const found = options.find((opt) => opt.value === value)?.label;
+          if (typeof found === 'string' || typeof found === 'number' || React.isValidElement(found)) return found;
+          if (found) return String(found);
+          return <span className="text-gray-400">{placeholder}</span>;
+        })()}
+      </div>
       {open && !disabled && (
-        <div
-          ref={menuRef}
-          className={`absolute z-50 w-full left-0 right-0 max-h-[50vh] overflow-y-auto overscroll-contain rounded border bg-white dark:bg-zinc-900 shadow-lg ${dropUp ? 'bottom-full mb-1' : 'mt-1 top-full'}`}
-          role="listbox"
-          tabIndex={-1}
-        >
-          <div className="p-2 border-b bg-gray-50 dark:bg-zinc-800">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={search}
-              onChange={e => {
-                setSearch(e.target.value);
-                setHighlighted(0);
-              }}
-              placeholder="พิมพ์ค้นหา..."
-              className="w-full px-2 py-1 rounded border text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyDown={e => { e.stopPropagation(); handleKeyDown(e as any); }}
-            />
-          </div>
-          {filteredOptions.length === 0 ? (
-            <div className="px-4 py-2 text-gray-400">ไม่พบตัวเลือก</div>
-          ) : (
-            filteredOptions.map((opt, idx) => (
-              <div
-                key={opt.value}
-                id={`dropdown-opt-${idx}`}
-                role="option"
-                aria-selected={value === opt.value}
-                className={`px-4 py-2 cursor-pointer select-none ${
-                  value === opt.value
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                    : highlighted === idx
-                    ? 'bg-gray-100 dark:bg-zinc-800'
-                    : ''
-                }`}
-                style={{ minHeight: 40, fontSize: 16 }}
-                onMouseEnter={() => setHighlighted(idx)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  onChange(opt.value);
-                  setOpen(false);
+          <div
+            ref={mergeRefs(refs.floating, menuRef)}
+            className="z-[9999] max-h-[50vh] overflow-y-auto overscroll-contain rounded border bg-white dark:bg-zinc-900 shadow-lg"
+            role="listbox"
+            tabIndex={-1}
+            style={{
+              position: strategy,
+              top: y ?? 0,
+              left: x ?? 0,
+              width: (refs.reference.current as HTMLElement | null)?.offsetWidth || 240,
+            }}
+          >
+            <div className="p-2 border-b bg-gray-50 dark:bg-zinc-800">
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={search}
+                onChange={e => {
+                  setSearch(e.target.value);
+                  setHighlighted(0);
                 }}
-              >
-                {opt.label}
-              </div>
-            ))
-          )}
-        </div>
-      )}
+                placeholder="พิมพ์ค้นหา..."
+                className="w-full px-2 py-1 rounded border text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={e => { e.stopPropagation(); handleKeyDown(e as any); }}
+              />
+            </div>
+            {filteredOptions.length === 0 ? (
+              <div className="px-4 py-2 text-gray-400">ไม่พบตัวเลือก</div>
+            ) : (
+              filteredOptions.map((opt, idx) => (
+                <div
+                  key={opt.value}
+                  id={`dropdown-opt-${idx}`}
+                  role="option"
+                  aria-selected={value === opt.value}
+                  className={`px-4 py-2 cursor-pointer select-none ${
+                    value === opt.value
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
+                      : highlighted === idx
+                      ? 'bg-gray-100 dark:bg-zinc-800'
+                      : ''
+                  }`}
+                  style={{ minHeight: 40, fontSize: 16 }}
+                  onMouseEnter={() => setHighlighted(idx)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onChange(opt.value);
+                    setOpen(false);
+                  }}
+                >
+                  {typeof opt.label === 'string' || typeof opt.label === 'number' || React.isValidElement(opt.label)
+                    ? opt.label
+                    : String(opt.label)}
+                </div>
+              ))
+            )}
+          </div>
+        )}
     </div>
   );
 }; 

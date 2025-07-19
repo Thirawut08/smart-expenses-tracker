@@ -368,7 +368,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             </FormItem>
           )} />
         </div>
-        <div>
+        <div style={{ position: 'relative' }}>
           <FormLabel className="block mb-1 font-medium">วัตถุประสงค์</FormLabel>
           <FormField control={form.control} name="purpose" render={({ field }) => (
             <FormItem>
@@ -379,16 +379,6 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
                 placeholder="เลือกวัตถุประสงค์..."
                 className="w-full"
               />
-              {!field.value && (
-                <div className="mt-2">
-                  <Input
-                    placeholder="กรุณากรอกวัตถุประสงค์"
-                    value={customPurpose}
-                    onChange={e => setCustomPurpose(e.target.value)}
-                    className="h-9 text-sm"
-                  />
-                </div>
-              )}
               <FormMessage />
             </FormItem>
           )} />
