@@ -11,7 +11,7 @@ import { thaiMonths } from "@/lib/data";
 import { HighPerfDropdown } from "../ui/high-perf-dropdown";
 import { AccountBalances } from "@/components/account-balances";
 import { TransactionTemplates } from "@/components/transaction-templates";
-import { UnifiedDashboardChart } from "@/components/unified-dashboard-chart";
+import { UnifiedDashboardChart } from "@/components/dashboard-summary-chart";
 import {
   Card,
   CardHeader,
