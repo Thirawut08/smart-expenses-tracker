@@ -47,6 +47,7 @@ import { Label } from "@/components/ui/label";
 import type { Transaction } from "@/lib/types";
 import { HighPerfDropdown } from "./ui/high-perf-dropdown";
 import { DateTimePicker } from "./date-time-picker";
+import { parseDayMonthToDate, isValidTime24h } from "@/lib/utils";
 
 // --- Types ---
 export type UnifiedFormValues = any; // จะกำหนดในฟังก์ชัน
@@ -156,11 +157,21 @@ export function TransactionForm({
           z.coerce.number().positive("จำนวนเงินต้องเป็นบวก"),
           z.nan(),
         ]),
-    date: z.union([
-      z.date({ required_error: "กรุณาระบุวันที่" }),
-      z.undefined(),
-      z.null(),
-    ]),
+    day: z
+      .string({ required_error: "กรุณาระบุวัน" })
+      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 31, {
+        message: "วันต้องเป็นตัวเลข 1-31",
+      }),
+    month: z
+      .string({ required_error: "กรุณาระบุเดือน" })
+      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
+        message: "เดือนต้องเป็นตัวเลข 1-12",
+      }),
+    time: z
+      .string({ required_error: "กรุณาระบุเวลา" })
+      .refine((val) => isValidTime24h(val), {
+        message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
+      }),
     sender: z.string().optional(),
     recipient: z.string().optional(),
     details: z.string().optional(),
@@ -171,7 +182,21 @@ export function TransactionForm({
     fromAccount: z.string().min(1, "กรุณาเลือกบัญชีต้นทาง"),
     toAccount: z.string().min(1, "กรุณาเลือกบัญชีปลายทาง"),
     amount: z.coerce.number().positive("จำนวนเงินต้องเป็นบวก"),
-    date: z.date({ required_error: "กรุณาระบุวันที่" }),
+    day: z
+      .string({ required_error: "กรุณาระบุวัน" })
+      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 31, {
+        message: "วันต้องเป็นตัวเลข 1-31",
+      }),
+    month: z
+      .string({ required_error: "กรุณาระบุเดือน" })
+      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
+        message: "เดือนต้องเป็นตัวเลข 1-12",
+      }),
+    time: z
+      .string({ required_error: "กรุณาระบุเวลา" })
+      .refine((val) => isValidTime24h(val), {
+        message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
+      }),
     details: z.string().optional(),
   });
 
@@ -193,16 +218,30 @@ export function TransactionForm({
     accounts[0];
 
   // --- Safe Initial Data ---
+  const todayStr = format(new Date(), "dd/MM/yyyy");
   const safeInitialData: UnifiedFormValues =
     initialData && "mode" in initialData
-      ? (initialData as UnifiedFormValues)
+      ? {
+          ...initialData,
+          day: initialData.date instanceof Date
+            ? initialData.date.getDate().toString().padStart(2, "0")
+            : (typeof initialData.day === "string" ? initialData.day : ""),
+          month: initialData.date instanceof Date
+            ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
+            : (typeof initialData.month === "string" ? initialData.month : ""),
+          time: initialData.date instanceof Date
+            ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
+            : (initialData.time || ""),
+        }
       : {
           mode: "normal",
           type: "expense",
           accountId: defaultAccount?.id ?? "",
           purpose: "",
           amount: undefined,
-          date: new Date(),
+          day: todayStr.split("/")[0],
+          month: todayStr.split("/")[1],
+          time: "",
           customPurpose: "",
           details: "",
           sender: "",
@@ -226,7 +265,8 @@ export function TransactionForm({
         fromAccount: defaultAccount?.id ?? "",
         toAccount: "",
         amount: undefined,
-        date: new Date(),
+        day: new Date().getDate().toString().padStart(2, "0"),
+        month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
         details: "",
       });
     } else {
@@ -251,7 +291,19 @@ export function TransactionForm({
   // --- Effect: Reset form when initialData changes (เช่น เลือกเทมเพลตใหม่) ---
   useEffect(() => {
     if (initialData) {
-      form.reset({ ...safeInitialData, ...initialData });
+      form.reset({
+        ...safeInitialData,
+        ...initialData,
+        day: initialData.date instanceof Date
+          ? initialData.date.getDate().toString().padStart(2, "0")
+          : (typeof initialData.day === "string" ? initialData.day : ""),
+        month: initialData.date instanceof Date
+          ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
+          : (typeof initialData.month === "string" ? initialData.month : ""),
+        time: initialData.date instanceof Date
+          ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
+          : (initialData.time || ""),
+      });
     }
   }, [JSON.stringify(initialData)]);
 
@@ -291,7 +343,16 @@ export function TransactionForm({
         return;
       }
     }
-    let finalData = { ...data };
+    // แปลงวัน/เดือน/เวลาเป็น Date ก่อนส่งออก
+    const dateObj = parseDayMonthToDate(data.day, data.month);
+    if (!dateObj) {
+      form.setError("day", { message: "วันหรือเดือนไม่ถูกต้อง" });
+      form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
+      return;
+    }
+    const [h, m] = data.time.split(":").map(Number);
+    dateObj.setHours(h, m, 0, 0);
+    const finalData = { ...data, date: dateObj };
     if (finalData.purpose === "อื่นๆ" && customPurpose.trim()) {
       finalData.purpose = customPurpose.trim();
     }
@@ -300,6 +361,8 @@ export function TransactionForm({
   };
 
   // --- Render ---
+  // กำหนด tabIndex อัตโนมัติด้วยตัวแปร counter เพื่อรองรับการเพิ่ม/ลบฟิลด์ในอนาคต
+  let tabIndexCounter = 1;
   return (
     <Form {...form}>
       <form
@@ -316,36 +379,35 @@ export function TransactionForm({
         }}
       >
         {/* เทมเพลต selector (ถ้ามี) */}
-        {showTemplateSelector && templateSelector}
-        {/* ประเภทธุรกรรม หรือโหมดโอน */}
-        <div className="flex flex-col gap-1">
-          <FormLabel className="font-medium text-xs">ประเภท</FormLabel>
-          <div className="flex gap-2 items-center">
-            <RadioGroup
-              value={form.watch("type")}
-              onValueChange={(val) => form.setValue("type", val)}
-              className="flex gap-2"
-              name="type"
-              tabIndex={1}
-            >
-              <RadioGroupItem value="expense" id="type-expense" className="scale-90" />
-              <label htmlFor="type-expense" className="mr-2 cursor-pointer text-xs">รายจ่าย</label>
-              <RadioGroupItem value="income" id="type-income" className="scale-90" />
-              <label htmlFor="type-income" className="cursor-pointer text-xs">รายรับ</label>
-            </RadioGroup>
-            <div className="flex-1 flex items-center justify-end">
-              <Switch
-                checked={isTransfer}
-                onCheckedChange={setIsTransfer}
-                id="toggle-transfer-mode"
-                tabIndex={2}
-                className="scale-90"
-              />
-              <label htmlFor="toggle-transfer-mode" className="ml-2 cursor-pointer select-none text-xs font-medium">โอนระหว่างบัญชี</label>
-            </div>
+        {showTemplateSelector && (
+          <div tabIndex={tabIndexCounter++}>{templateSelector}</div>
+        )}
+        {/* ประเภท รายรับ/รายจ่าย */}
+        <div className="flex flex-row gap-2 items-center">
+          <RadioGroup
+            value={form.watch("type")}
+            onValueChange={(val) => form.setValue("type", val)}
+            className="flex gap-2"
+            name="type"
+            tabIndex={tabIndexCounter++}
+          >
+            <RadioGroupItem value="expense" id="type-expense" className="scale-90" tabIndex={tabIndexCounter++} />
+            <label htmlFor="type-expense" className="mr-2 cursor-pointer text-xs">รายจ่าย</label>
+            <RadioGroupItem value="income" id="type-income" className="scale-90" tabIndex={tabIndexCounter++} />
+            <label htmlFor="type-income" className="cursor-pointer text-xs">รายรับ</label>
+          </RadioGroup>
+          <div className="flex-1 flex items-center justify-end">
+            <Switch
+              checked={isTransfer}
+              onCheckedChange={setIsTransfer}
+              id="toggle-transfer-mode"
+              tabIndex={tabIndexCounter++}
+              className="scale-90"
+            />
+            <label htmlFor="toggle-transfer-mode" className="ml-2 cursor-pointer select-none text-xs font-medium">โอนระหว่างบัญชี</label>
           </div>
         </div>
-        {/* โหมดโอน: บัญชีต้นทาง/ปลายทาง */}
+        {/* โหมดโอน: บัญชีต้นทาง/ปลายทาง หรือบัญชีเดียว */}
         {isTransfer ? (
           <div className="flex flex-col gap-1">
             <FormLabel className="font-medium text-xs">บัญชีต้นทาง</FormLabel>
@@ -361,6 +423,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
+                        tabIndex={tabIndexCounter++}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -383,6 +446,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
+                        tabIndex={tabIndexCounter++}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -408,6 +472,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
+                        tabIndex={tabIndexCounter++}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -421,7 +486,7 @@ export function TransactionForm({
         )}
         {/* จำนวนเงิน */}
         <div className="flex flex-col gap-1">
-          <FormLabel className="font-medium text-xs">จำนวนเงิน</FormLabel>
+          <FormLabel className="font-medium text-xs">จำนวนเงิน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
           <Input
             type="number"
             step="any"
@@ -429,49 +494,84 @@ export function TransactionForm({
             {...form.register("amount")}
             className="h-10 text-base px-2 w-full rounded-md"
             required={!isTemplate && !isTransfer}
-            tabIndex={5}
+            tabIndex={tabIndexCounter++}
           />
         </div>
-        {/* วันที่ */}
-        <div className="flex flex-col gap-1">
-          <FormLabel className="font-medium text-xs">วันที่</FormLabel>
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <Input
-                  type="date"
-                  value={field.value ? (typeof field.value === 'string' ? field.value : field.value.toISOString().slice(0,10)) : ''}
-                  onChange={e => field.onChange(e.target.value)}
-                  className="w-full"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <FormLabel className="font-medium text-xs">เวลา</FormLabel>
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <Input
-                  type="time"
-                  value={field.value || ''}
-                  onChange={e => field.onChange(e.target.value)}
-                  className="w-full"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* วันที่ + เวลา (แนวเดียวกัน) */}
+        <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 flex-1 items-end">
+            <div className="flex-1">
+              <FormLabel className="font-medium text-xs">วัน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+              <FormField
+                control={form.control}
+                name="day"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <Input
+                      type="text"
+                      placeholder="DD"
+                      maxLength={2}
+                      {...field}
+                      className={cn("w-full", fieldState.invalid && "border-red-500")}
+                      tabIndex={tabIndexCounter++}
+                    />
+                    {/* ไม่ต้องแสดง <FormMessage /> */}
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex-1">
+              <FormLabel className="font-medium text-xs">เดือน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+              <FormField
+                control={form.control}
+                name="month"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <Input
+                      type="text"
+                      placeholder="MM"
+                      maxLength={2}
+                      {...field}
+                      className={cn("w-full", fieldState.invalid && "border-red-500")}
+                      tabIndex={tabIndexCounter++}
+                    />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex-1 flex flex-col justify-end">
+              <FormLabel className="font-medium text-xs opacity-60">ปี</FormLabel>
+              <Input
+                type="text"
+                value={new Date().getFullYear()}
+                readOnly
+                tabIndex={-1}
+                className="w-full bg-muted text-muted-foreground cursor-not-allowed"
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <FormLabel className="font-medium text-xs">เวลา<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <Input
+                    type="text"
+                    placeholder="09:41"
+                    {...field}
+                    className={cn("w-full", fieldState.invalid && "border-red-500")}
+                    tabIndex={tabIndexCounter++}
+                  />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         {/* วัตถุประสงค์ */}
         <div className="flex flex-col gap-1">
-          <FormLabel className="font-medium text-xs">วัตถุประสงค์</FormLabel>
+          <FormLabel className="font-medium text-xs">วัตถุประสงค์<span className="text-red-500 text-xs align-super">*</span></FormLabel>
           <FormField
             control={form.control}
             name="purpose"
@@ -484,6 +584,7 @@ export function TransactionForm({
                       key={purpose}
                       className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === purpose ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                       onClick={() => field.onChange(purpose)}
+                      tabIndex={tabIndexCounter++}
                     >
                       {purpose}
                     </button>
@@ -507,7 +608,7 @@ export function TransactionForm({
                   {...field}
                   value={field.value ?? ""}
                   className="w-full h-14 px-2 py-1 rounded-md border text-xs bg-background resize-none"
-                  tabIndex={8}
+                  tabIndex={tabIndexCounter++}
                 />
                 <FormMessage />
               </FormItem>
@@ -528,7 +629,7 @@ export function TransactionForm({
                     {...field}
                     value={field.value ?? ""}
                     className="w-full px-2 py-1 rounded-md border text-xs bg-background"
-                    tabIndex={9}
+                    tabIndex={tabIndexCounter++}
                   />
                   <FormMessage />
                 </FormItem>
@@ -547,7 +648,7 @@ export function TransactionForm({
                     {...field}
                     value={field.value ?? ""}
                     className="w-full px-2 py-1 rounded-md border text-xs bg-background"
-                    tabIndex={10}
+                    tabIndex={tabIndexCounter++}
                   />
                   <FormMessage />
                 </FormItem>
@@ -562,12 +663,12 @@ export function TransactionForm({
               type="button"
               variant="ghost"
               onClick={() => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
-              tabIndex={12}
+              tabIndex={tabIndexCounter++}
             >
               ยกเลิก
             </Button>
           )}
-          <Button type="submit" className="font-bold text-xs h-8 px-4" tabIndex={11}>
+          <Button type="submit" className="font-bold text-xs h-8 px-4" tabIndex={tabIndexCounter++}>
             {isEditing ? "บันทึก" : "เพิ่มธุรกรรม"}
           </Button>
         </div>

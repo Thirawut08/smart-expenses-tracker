@@ -35,9 +35,24 @@ import { TimePicker } from "./time-picker";
 import { useEffect, useMemo } from "react";
 import { HighPerfDropdown } from "./ui/high-perf-dropdown";
 import { DateTimePicker } from "./date-time-picker";
+import { parseDayMonthToDate, isValidTime24h } from "@/lib/utils";
 
 const incomeFormSchema = z.object({
-  date: z.date({ required_error: "กรุณาระบุวันที่" }),
+  day: z
+    .string({ required_error: "กรุณาระบุวัน" })
+    .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 31, {
+      message: "วันต้องเป็นตัวเลข 1-31",
+    }),
+  month: z
+    .string({ required_error: "กรุณาระบุเดือน" })
+    .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
+      message: "เดือนต้องเป็นตัวเลข 1-12",
+    }),
+  time: z
+    .string({ required_error: "กรุณาระบุเวลา" })
+    .refine((val) => isValidTime24h(val), {
+      message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
+    }),
   accountId: z
     .string({ required_error: "กรุณาเลือกบัญชี" })
     .min(1, "กรุณาเลือกบัญชี"),
@@ -74,10 +89,19 @@ export function AddIncomeForm({
   onCancel,
 }: AddIncomeFormProps) {
   const { accounts } = useAccounts();
+  const todayStr = format(new Date(), "dd/MM/yyyy");
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
     defaultValues: {
-      date: initialData?.date ?? new Date(),
+      day: initialData?.date instanceof Date
+        ? initialData.date.getDate().toString().padStart(2, "0")
+        : (typeof initialData?.day === "string" ? initialData.day : todayStr.split("/")[0]),
+      month: initialData?.date instanceof Date
+        ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
+        : (typeof initialData?.month === "string" ? initialData.month : todayStr.split("/")[1]),
+      time: initialData?.date instanceof Date
+        ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
+        : (initialData?.time || ""),
       accountId: initialData?.accountId ?? "",
       amount: initialData?.amount ?? undefined,
     },
@@ -86,7 +110,15 @@ export function AddIncomeForm({
   // Reset form when initialData changes
   useEffect(() => {
     form.reset({
-      date: initialData?.date ?? new Date(),
+      day: initialData?.date instanceof Date
+        ? initialData.date.getDate().toString().padStart(2, "0")
+        : (typeof initialData?.day === "string" ? initialData.day : todayStr.split("/")[0]),
+      month: initialData?.date instanceof Date
+        ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
+        : (typeof initialData?.month === "string" ? initialData.month : todayStr.split("/")[1]),
+      time: initialData?.date instanceof Date
+        ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
+        : (initialData?.time || ""),
       accountId: initialData?.accountId ?? "",
       amount: initialData?.amount ?? undefined,
     });
@@ -99,10 +131,26 @@ export function AddIncomeForm({
     [selectedAccountId, accounts],
   );
 
+  const handleSubmit = (data: IncomeFormValues) => {
+    const dateObj = parseDayMonthToDate(data.day, data.month);
+    if (!dateObj) {
+      form.setError("day", { message: "วันหรือเดือนไม่ถูกต้อง" });
+      form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
+      return;
+    }
+    const [h, m] = data.time.split(":").map(Number);
+    dateObj.setHours(h, m, 0, 0);
+    const finalData = { ...data, date: dateObj };
+    onSubmit(finalData as any);
+  };
+
+  // กำหนด tabIndex อัตโนมัติด้วยตัวแปร counter เพื่อรองรับการเพิ่ม/ลบฟิลด์ในอนาคต
+  let tabIndexCounter = 1;
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="space-y-5 p-4 max-w-md mx-auto"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -111,11 +159,9 @@ export function AddIncomeForm({
         }}
       >
         <h2 className="text-xl font-bold mb-4">เพิ่มรายการรายรับ</h2>
-        {/* 1. จำนวนเงิน */}
+        {/* จำนวนเงิน */}
         <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">1</span> จำนวนเงิน
-          </FormLabel>
+          <FormLabel className="block mb-1 font-medium">จำนวนเงิน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
           <Input
             type="number"
             step="any"
@@ -125,51 +171,110 @@ export function AddIncomeForm({
             className={cn(selectedAccount && "pl-8", "h-12 text-lg w-full px-4")}
             autoFocus
             required
-            tabIndex={1}
+            tabIndex={tabIndexCounter++}
           />
           {selectedAccount && (
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
               {selectedAccount.currency === "USD" ? "$" : "฿"}
             </span>
           )}
-                    </div>
-        {/* 2. บัญชี */}
+        </div>
+        {/* บัญชี (button group) */}
         <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">2</span> บัญชี
-          </FormLabel>
+          <FormLabel className="block mb-1 font-medium">บัญชี<span className="text-red-500 text-xs align-super">*</span></FormLabel>
           <FormField
             control={form.control}
             name="accountId"
             render={({ field }) => (
               <FormItem>
-                <HighPerfDropdown
-                  options={accounts.map((acc) => ({ value: acc.id, label: acc.name }))}
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="เลือกบัญชี..."
-                  className="w-full"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {accounts.map((acc) => (
+                    <button
+                      type="button"
+                      key={acc.id}
+                      className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
+                      onClick={() => field.onChange(acc.id)}
+                      tabIndex={tabIndexCounter++}
+                    >
+                      {acc.name} ({acc.currency})
+                    </button>
+                  ))}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        {/* 3. วันที่ */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">3</span> วันที่
-          </FormLabel>
-        <FormField
-          control={form.control}
-            name="date"
-          render={({ field }) => (
-            <FormItem>
-                <DateTimePicker value={field.value} onChange={field.onChange} />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* วันที่ + เวลา (แนวเดียวกัน) */}
+        <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 flex-1 items-end">
+            <div className="flex-1">
+              <FormLabel className="block mb-1 font-medium">วัน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+              <FormField
+                control={form.control}
+                name="day"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <Input
+                      type="text"
+                      placeholder="DD"
+                      maxLength={2}
+                      {...field}
+                      className={cn("w-full", fieldState.invalid && "border-red-500")}
+                      tabIndex={tabIndexCounter++}
+                    />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex-1">
+              <FormLabel className="block mb-1 font-medium">เดือน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+              <FormField
+                control={form.control}
+                name="month"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <Input
+                      type="text"
+                      placeholder="MM"
+                      maxLength={2}
+                      {...field}
+                      className={cn("w-full", fieldState.invalid && "border-red-500")}
+                      tabIndex={tabIndexCounter++}
+                    />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex-1 flex flex-col justify-end">
+              <FormLabel className="block mb-1 font-medium opacity-60">ปี</FormLabel>
+              <Input
+                type="text"
+                value={new Date().getFullYear()}
+                readOnly
+                tabIndex={-1}
+                className="w-full bg-muted text-muted-foreground cursor-not-allowed"
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <FormLabel className="block mb-1 font-medium">เวลา<span className="text-red-500 text-xs align-super">*</span></FormLabel>
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <Input
+                    type="text"
+                    placeholder="09:41"
+                    {...field}
+                    className={cn("w-full", fieldState.invalid && "border-red-500")}
+                    tabIndex={tabIndexCounter++}
+                  />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         {/* ปุ่มบันทึก/ยกเลิก */}
         <div className="flex justify-end gap-2 pt-4">
@@ -178,11 +283,11 @@ export function AddIncomeForm({
             variant="ghost"
             onClick={onCancel}
             className="h-9 px-4 text-sm font-semibold"
-            tabIndex={4}
+            tabIndex={tabIndexCounter++}
           >
             ยกเลิก
           </Button>
-          <Button type="submit" className="h-9 px-6 text-sm font-bold" tabIndex={5}>
+          <Button type="submit" className="h-9 px-6 text-sm font-bold" tabIndex={tabIndexCounter++}>
             {initialData ? "บันทึกการเปลี่ยนแปลง" : "บันทึกรายรับ"}
           </Button>
         </div>
