@@ -12,8 +12,8 @@ import { useAccounts } from '@/hooks/use-accounts';
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 export function SavingsChart({ transactions }: { transactions: Transaction[] }) {

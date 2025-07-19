@@ -22,8 +22,8 @@ const COLORS = [
 const currencyFormatter = new Intl.NumberFormat('th-TH', {
   style: 'currency',
   currency: 'THB',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
 export function UnifiedDashboardChart({ transactions, mode, periodLabel }: {

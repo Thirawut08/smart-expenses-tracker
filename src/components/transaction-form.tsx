@@ -26,40 +26,7 @@ import type { Transaction } from '@/lib/types';
 import { HighPerfDropdown } from './ui/high-perf-dropdown';
 import { DateTimePicker } from './date-time-picker';
 
-// สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
-const normalSchema = z.object({
-  mode: z.literal('normal'),
-  type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
-  accountId: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
-  purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
-  customPurpose: z.string().optional(),
-  amount: z.union([
-    z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-    z.nan()
-  ]),
-  date: z.union([
-    z.date({ required_error: 'กรุณาระบุวันที่' }),
-    z.undefined(),
-    z.null()
-  ]),
-  sender: z.string().optional(),
-  recipient: z.string().optional(),
-  details: z.string().optional(),
-});
-
-const transferSchema = z.object({
-  mode: z.literal('transfer'),
-  fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
-  toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
-  amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
-  date: z.date({ required_error: 'กรุณาระบุวันที่' }),
-  details: z.string().optional(),
-});
-
-const unifiedSchema = z.discriminatedUnion('mode', [normalSchema, transferSchema]) as any;
-
-
-export type UnifiedFormValues = z.infer<typeof unifiedSchema>;
+export type UnifiedFormValues = any; // จะกำหนดในฟังก์ชัน
 
 interface TransactionFormProps {
   initialData?: Partial<UnifiedFormValues & { validationResult?: string }>;
@@ -119,6 +86,45 @@ function simplePurposeEmoji(name: string): string {
 }
 
 export function TransactionForm({ initialData, onSubmit, isEditing = false, isTemplate = false, availablePurposes = [], transactions = [] }: TransactionFormProps) {
+  // สร้าง schema แบบแยกก่อนค่อยรวม discriminated union
+  const normalSchema = z.object({
+    mode: z.literal('normal'),
+    type: z.enum(['income', 'expense'], { required_error: 'กรุณาเลือกประเภทธุรกรรม' }),
+    accountId: z.string({ required_error: 'กรุณาเลือกบัญชี' }).min(1, 'กรุณาเลือกบัญชี'),
+    purpose: z.string().min(1, 'วัตถุประสงค์เป็นสิ่งจำเป็น'),
+    customPurpose: z.string().optional(),
+    amount: isTemplate
+      ? z.union([
+          z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+          z.nan(),
+          z.undefined(),
+          z.null()
+        ]).optional()
+      : z.union([
+          z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+          z.nan()
+        ]),
+    date: z.union([
+      z.date({ required_error: 'กรุณาระบุวันที่' }),
+      z.undefined(),
+      z.null()
+    ]),
+    sender: z.string().optional(),
+    recipient: z.string().optional(),
+    details: z.string().optional(),
+  });
+
+  const transferSchema = z.object({
+    mode: z.literal('transfer'),
+    fromAccount: z.string().min(1, 'กรุณาเลือกบัญชีต้นทาง'),
+    toAccount: z.string().min(1, 'กรุณาเลือกบัญชีปลายทาง'),
+    amount: z.coerce.number().positive('จำนวนเงินต้องเป็นบวก'),
+    date: z.date({ required_error: 'กรุณาระบุวันที่' }),
+    details: z.string().optional(),
+  });
+
+  const unifiedSchema = z.discriminatedUnion('mode', [normalSchema, transferSchema]) as any;
+
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [isTransfer, setIsTransfer] = useState(false);
   const { accounts } = useAccounts();
@@ -250,7 +256,7 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             {...form.register('amount')}
             className="h-14 text-3xl px-4 w-full"
             autoFocus
-            required={!isTemplate}
+            required={!isTemplate && !isTransfer}
           />
         </div>
         {!isTransfer && (
@@ -387,13 +393,8 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
             </FormItem>
           )} />
         </div>
-        {/* Toggle เทมเพลต + ปุ่มบันทึก */}
-        {!isEditing && (
-          <div className="flex items-center gap-2 mb-2">
-            <Switch checked={saveAsTemplate} onCheckedChange={setSaveAsTemplate} id="save-as-template" />
-            <label htmlFor="save-as-template" className="text-sm">บันทึกเป็นเทมเพลต</label>
-          </div>
-        )}
+        
+        {/* ปุ่มบันทึก */}
         <div className="flex justify-end gap-2 pt-2">
           {isEditing && (
             <Button type="button" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent('close-transaction-dialog'))}>ยกเลิก</Button>
