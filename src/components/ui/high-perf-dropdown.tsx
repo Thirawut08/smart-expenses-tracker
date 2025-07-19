@@ -30,6 +30,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [highlighted, setHighlighted] = useState<number>(-1);
   const [search, setSearch] = useState('');
+  const [dropUp, setDropUp] = useState(false);
 
   // Filtered options
   const filteredOptions = options.filter(opt =>
@@ -61,6 +62,15 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   // Reset search when closing
   useEffect(() => {
     if (!open) setSearch('');
+  }, [open]);
+
+  // ตรวจสอบตำแหน่ง dropdown ก่อนแสดง
+  useEffect(() => {
+    if (open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setDropUp(spaceBelow < 220); // ถ้าพื้นที่ด้านล่างน้อยกว่า 220px ให้ flip ขึ้นบน
+    }
   }, [open]);
 
   // Keyboard navigation (update to allow add new)
@@ -128,7 +138,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
       {open && !disabled && (
         <div
           ref={menuRef}
-          className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded border bg-white dark:bg-zinc-900 shadow-lg"
+          className={`absolute z-50 w-full left-0 right-0 max-h-[50vh] overflow-y-auto overscroll-contain rounded border bg-white dark:bg-zinc-900 shadow-lg ${dropUp ? 'bottom-full mb-1' : 'mt-1 top-full'}`}
           role="listbox"
           tabIndex={-1}
         >

@@ -373,16 +373,16 @@ export function TransactionForm({ initialData, onSubmit, isEditing = false, isTe
           <FormField control={form.control} name="purpose" render={({ field }) => (
             <FormItem>
               <HighPerfDropdown
-                options={allPurposes.filter(Boolean).map(purpose => ({ value: purpose, label: purpose }))}
+                options={allPurposes.filter(p => p && p !== 'อื่นๆ').map(purpose => ({ value: purpose, label: purpose }))}
                 value={field.value || ''}
-                onChange={value => { field.onChange(value); if (value !== 'อื่นๆ') setCustomPurpose(''); }}
+                onChange={value => field.onChange(value)}
                 placeholder="เลือกวัตถุประสงค์..."
                 className="w-full"
               />
-              {field.value === 'อื่นๆ' && (
+              {!field.value && (
                 <div className="mt-2">
                   <Input
-                    placeholder="กรอกวัตถุประสงค์ใหม่"
+                    placeholder="กรุณากรอกวัตถุประสงค์"
                     value={customPurpose}
                     onChange={e => setCustomPurpose(e.target.value)}
                     className="h-9 text-sm"

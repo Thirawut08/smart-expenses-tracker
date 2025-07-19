@@ -23,7 +23,13 @@ export function useLedger() {
   const { rate: usdToThbRate } = useExchangeRate();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [purposes, setPurposes] = useState<string[]>([]);
+  const [purposes, setPurposes] = useState<string[]>(() => {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('purposes') : null;
+    let arr = stored ? JSON.parse(stored) : [
+      'อาหาร', 'เดินทาง', 'ที่พัก', 'เงินเดือน', 'ของใช้', 'บันเทิง', 'สุขภาพ', 'การศึกษา'
+    ];
+    return arr.filter((p: string) => p && p !== 'อื่นๆ');
+  });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | undefined>(undefined);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
