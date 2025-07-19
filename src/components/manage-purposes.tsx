@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { Purpose } from '@/lib/types';
 
 export function ManagePurposes() {
   const { purposes, addPurpose, editPurpose, removePurpose, transactions } = useLedger();
@@ -187,22 +186,21 @@ export function ManagePurposes() {
           <AlertDialogHeader>
             <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าจะลบ "{purposeToDelete}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              การกระทำนี้ไม่สามารถย้อนกลับได้ มีธุรกรรมที่ใช้วัตถุประสงค์นี้อยู่ คุณต้องการทำอะไรกับธุรกรรมเหล่านี้
+              การกระทำนี้ไม่สามารถย้อนกลับได้ ธุรกรรมทั้งหมดที่ใช้วัตถุประสงค์นี้จะถูกลบออกจากระบบถาวร
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <RadioGroup defaultValue="reclassify" className="my-4 space-y-2" onValueChange={(value: 'reclassify' | 'deleteAll') => setDeleteAction(value)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="reclassify" id="r1" />
-              <Label htmlFor="r1">ย้ายธุรกรรมไปที่ "อื่นๆ"</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="deleteAll" id="r2" />
-              <Label htmlFor="r2">ลบธุรกรรมทั้งหมดที่เกี่ยวข้อง</Label>
-            </div>
-          </RadioGroup>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPurposeToDelete(null)}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>ดำเนินการต่อ</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                if (purposeToDelete) {
+                  removePurpose(purposeToDelete, 'deleteAll');
+                  setPurposeToDelete(null);
+                }
+              }}
+            >
+              ดำเนินการต่อ
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
