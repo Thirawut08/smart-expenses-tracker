@@ -308,6 +308,7 @@ export function TransactionForm({
           <FormLabel className="block mb-1 font-medium">จำนวนเงิน</FormLabel>
           <Input
             type="number"
+            step="any"
             placeholder="0.00"
             {...form.register("amount")}
             className="h-14 text-3xl px-4 w-full"

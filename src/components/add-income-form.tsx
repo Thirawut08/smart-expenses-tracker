@@ -153,6 +153,7 @@ export function AddIncomeForm({
                 <div className="relative">
                   <Input
                     type="number"
+                    step="any"
                     placeholder="0.00"
                     {...field}
                     value={field.value ?? ""}

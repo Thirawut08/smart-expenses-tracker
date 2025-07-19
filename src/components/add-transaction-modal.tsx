@@ -140,6 +140,7 @@ export function AddTransactionModal({
             <label className="block mb-1 font-medium">จำนวนเงิน</label>
             <Input
               type="number"
+              step="any"
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
