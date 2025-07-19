@@ -3,7 +3,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartTooltip, ChartTooltipContent } from "./ui/chart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useAccounts } from "@/hooks/use-accounts";
-import { investmentAccountNames, savingAccountNames } from "@/lib/data";
 import type { Transaction } from "@/lib/types";
 import { Loader2, PieChartIcon, TrendingUp, PiggyBank } from "lucide-react";
 import { ChartContainer } from "./ui/chart";
@@ -76,9 +75,8 @@ export function UnifiedDashboardChart({
         ],
       };
     } else if (mode === "invest") {
-      // กรองธุรกรรมที่ purpose มีคำว่า 'ลงทุน'
       const investmentTransactions = transactions.filter(
-        (t) => t.purpose && t.purpose.includes("ลงทุน"),
+        (t) => t.purpose && t.purpose.includes('ลงทุน')
       );
       const balances = new Map<string, number>();
       investmentTransactions.forEach((t) => {
@@ -110,9 +108,8 @@ export function UnifiedDashboardChart({
         })),
       };
     } else if (mode === "save") {
-      // กรองธุรกรรมที่ purpose มีคำว่า 'ออม'
       const savingTransactions = transactions.filter(
-        (t) => t.purpose && t.purpose.includes("ออม"),
+        (t) => t.purpose && t.purpose.includes('ออม')
       );
       const balances = new Map<string, number>();
       savingTransactions.forEach((t) => {

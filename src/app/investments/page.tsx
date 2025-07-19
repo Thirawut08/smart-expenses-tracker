@@ -8,8 +8,13 @@ export default function InvestmentsPage() {
   const { transactions, handleEditTransaction, handleDeleteRequest } =
     useLedger();
 
-  // ใช้ transactions ทั้งหมด (ถ้าอยาก filter เฉพาะ investment แจ้ง logic ใหม่ได้)
-  const investmentTransactions = transactions;
+  // ใช้ transactions เฉพาะที่ purpose มีคำว่า 'ลงทุน'
+  const investmentTransactions = useMemo(() =>
+    transactions.filter(
+      (t) => t.purpose && t.purpose.includes('ลงทุน')
+    ),
+    [transactions]
+  );
 
   return (
     <div className="space-y-8">

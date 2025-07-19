@@ -167,11 +167,8 @@ export function TransactionForm({
       .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
         message: "เดือนต้องเป็นตัวเลข 1-12",
       }),
-    time: z
-      .string({ required_error: "กรุณาระบุเวลา" })
-      .refine((val) => isValidTime24h(val), {
-        message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
-      }),
+    hour: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 23, { message: "ชั่วโมงไม่ถูกต้อง" }),
+    minute: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 59, { message: "นาทีไม่ถูกต้อง" }),
     sender: z.string().optional(),
     recipient: z.string().optional(),
     details: z.string().optional(),
@@ -192,11 +189,8 @@ export function TransactionForm({
       .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
         message: "เดือนต้องเป็นตัวเลข 1-12",
       }),
-    time: z
-      .string({ required_error: "กรุณาระบุเวลา" })
-      .refine((val) => isValidTime24h(val), {
-        message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
-      }),
+    hour: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 23, { message: "ชั่วโมงไม่ถูกต้อง" }),
+    minute: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 59, { message: "นาทีไม่ถูกต้อง" }),
     details: z.string().optional(),
   });
 
@@ -229,9 +223,12 @@ export function TransactionForm({
           month: initialData.date instanceof Date
             ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
             : (typeof initialData.month === "string" ? initialData.month : ""),
-          time: initialData.date instanceof Date
-            ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
-            : (initialData.time || ""),
+          hour: initialData.date instanceof Date
+            ? initialData.date.getHours().toString().padStart(2, "0")
+            : (typeof initialData.hour === "string" ? initialData.hour : ""),
+          minute: initialData.date instanceof Date
+            ? initialData.date.getMinutes().toString().padStart(2, "0")
+            : (typeof initialData.minute === "string" ? initialData.minute : ""),
         }
       : {
           mode: "normal",
@@ -241,7 +238,8 @@ export function TransactionForm({
           amount: undefined,
           day: todayStr.split("/")[0],
           month: todayStr.split("/")[1],
-          time: "",
+          hour: "",
+          minute: "",
           customPurpose: "",
           details: "",
           sender: "",
@@ -267,6 +265,8 @@ export function TransactionForm({
         amount: undefined,
         day: new Date().getDate().toString().padStart(2, "0"),
         month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+        hour: new Date().getHours().toString().padStart(2, "0"),
+        minute: new Date().getMinutes().toString().padStart(2, "0"),
         details: "",
       });
     } else {
@@ -300,9 +300,12 @@ export function TransactionForm({
         month: initialData.date instanceof Date
           ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
           : (typeof initialData.month === "string" ? initialData.month : ""),
-        time: initialData.date instanceof Date
-          ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
-          : (initialData.time || ""),
+        hour: initialData.date instanceof Date
+          ? initialData.date.getHours().toString().padStart(2, "0")
+          : (typeof initialData.hour === "string" ? initialData.hour : ""),
+        minute: initialData.date instanceof Date
+          ? initialData.date.getMinutes().toString().padStart(2, "0")
+          : (typeof initialData.minute === "string" ? initialData.minute : ""),
       });
     }
   }, [JSON.stringify(initialData)]);
@@ -350,7 +353,8 @@ export function TransactionForm({
       form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
       return;
     }
-    const [h, m] = data.time.split(":").map(Number);
+    const h = Number(data.hour);
+    const m = Number(data.minute);
     dateObj.setHours(h, m, 0, 0);
     const finalData = { ...data, date: dateObj };
     if (finalData.purpose === "อื่นๆ" && customPurpose.trim()) {
@@ -361,8 +365,18 @@ export function TransactionForm({
   };
 
   // --- Render ---
-  // กำหนด tabIndex อัตโนมัติด้วยตัวแปร counter เพื่อรองรับการเพิ่ม/ลบฟิลด์ในอนาคต
-  let tabIndexCounter = 1;
+  // ปรับ tabIndex ของ input ทุกฟิลด์ให้เป็นค่าคงที่ (manual) ตามลำดับฟอร์ม
+  // ตัวอย่าง:
+  // <Input ... tabIndex={1} /> // จำนวนเงิน
+  // <button ... tabIndex={2} /> // บัญชี
+  // <Input ... tabIndex={3} /> // วัน
+  // <Input ... tabIndex={4} /> // เดือน
+  // <Input ... tabIndex={5} /> // ชั่วโมง
+  // <Input ... tabIndex={6} /> // นาที
+  // <Input ... tabIndex={7} /> // วัตถุประสงค์
+  // <Input ... tabIndex={8} /> // รายละเอียด
+  // <Button ... tabIndex={9} /> // ปุ่มบันทึก
+  // <Button ... tabIndex={10} /> // ปุ่มยกเลิก
   return (
     <Form {...form}>
       <form
@@ -380,7 +394,7 @@ export function TransactionForm({
       >
         {/* เทมเพลต selector (ถ้ามี) */}
         {showTemplateSelector && (
-          <div tabIndex={tabIndexCounter++}>{templateSelector}</div>
+          <div tabIndex={1}>{templateSelector}</div>
         )}
         {/* ประเภท รายรับ/รายจ่าย */}
         <div className="flex flex-row gap-2 items-center">
@@ -389,11 +403,11 @@ export function TransactionForm({
             onValueChange={(val) => form.setValue("type", val)}
             className="flex gap-2"
             name="type"
-            tabIndex={tabIndexCounter++}
+            tabIndex={2}
           >
-            <RadioGroupItem value="expense" id="type-expense" className="scale-90" tabIndex={tabIndexCounter++} />
+            <RadioGroupItem value="expense" id="type-expense" className="scale-90" tabIndex={3} />
             <label htmlFor="type-expense" className="mr-2 cursor-pointer text-xs">รายจ่าย</label>
-            <RadioGroupItem value="income" id="type-income" className="scale-90" tabIndex={tabIndexCounter++} />
+            <RadioGroupItem value="income" id="type-income" className="scale-90" tabIndex={4} />
             <label htmlFor="type-income" className="cursor-pointer text-xs">รายรับ</label>
           </RadioGroup>
           <div className="flex-1 flex items-center justify-end">
@@ -401,7 +415,7 @@ export function TransactionForm({
               checked={isTransfer}
               onCheckedChange={setIsTransfer}
               id="toggle-transfer-mode"
-              tabIndex={tabIndexCounter++}
+              tabIndex={5}
               className="scale-90"
             />
             <label htmlFor="toggle-transfer-mode" className="ml-2 cursor-pointer select-none text-xs font-medium">โอนระหว่างบัญชี</label>
@@ -423,7 +437,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
-                        tabIndex={tabIndexCounter++}
+                        tabIndex={6}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -446,7 +460,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
-                        tabIndex={tabIndexCounter++}
+                        tabIndex={7}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -472,7 +486,7 @@ export function TransactionForm({
                         key={acc.id}
                         className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                         onClick={() => field.onChange(acc.id)}
-                        tabIndex={tabIndexCounter++}
+                        tabIndex={8}
                       >
                         {acc.name} ({acc.currency})
                       </button>
@@ -494,7 +508,7 @@ export function TransactionForm({
             {...form.register("amount")}
             className="h-10 text-base px-2 w-full rounded-md"
             required={!isTemplate && !isTransfer}
-            tabIndex={tabIndexCounter++}
+            tabIndex={9}
           />
         </div>
         {/* วันที่ + เวลา (แนวเดียวกัน) */}
@@ -513,7 +527,7 @@ export function TransactionForm({
                       maxLength={2}
                       {...field}
                       className={cn("w-full", fieldState.invalid && "border-red-500")}
-                      tabIndex={tabIndexCounter++}
+                      tabIndex={10}
                     />
                     {/* ไม่ต้องแสดง <FormMessage /> */}
                   </FormItem>
@@ -533,7 +547,7 @@ export function TransactionForm({
                       maxLength={2}
                       {...field}
                       className={cn("w-full", fieldState.invalid && "border-red-500")}
-                      tabIndex={tabIndexCounter++}
+                      tabIndex={11}
                     />
                   </FormItem>
                 )}
@@ -550,23 +564,42 @@ export function TransactionForm({
               />
             </div>
           </div>
-          <div className="flex-1">
+          {/* เวลา */}
+          <div className="flex flex-col gap-1">
             <FormLabel className="font-medium text-xs">เวลา<span className="text-red-500 text-xs align-super">*</span></FormLabel>
-            <FormField
-              control={form.control}
-              name="time"
-              render={({ field, fieldState }) => (
-                <FormItem>
+            <div className="flex flex-row gap-2">
+              <FormField
+                control={form.control}
+                name="hour"
+                render={({ field }) => (
                   <Input
-                    type="text"
-                    placeholder="09:41"
                     {...field}
-                    className={cn("w-full", fieldState.invalid && "border-red-500")}
-                    tabIndex={tabIndexCounter++}
+                    type="number"
+                    min={0}
+                    max={23}
+                    placeholder="HH"
+                    className={cn("w-16 text-center", form.formState.errors.hour && "border-red-500")}
+                    tabIndex={12}
                   />
-                </FormItem>
-              )}
-            />
+                )}
+              />
+              <span className="self-center">:</span>
+              <FormField
+                control={form.control}
+                name="minute"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    min={0}
+                    max={59}
+                    placeholder="MM"
+                    className={cn("w-16 text-center", form.formState.errors.minute && "border-red-500")}
+                    tabIndex={13}
+                  />
+                )}
+              />
+            </div>
           </div>
         </div>
         {/* วัตถุประสงค์ */}
@@ -584,7 +617,7 @@ export function TransactionForm({
                       key={purpose}
                       className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === purpose ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
                       onClick={() => field.onChange(purpose)}
-                      tabIndex={tabIndexCounter++}
+                      tabIndex={14}
                     >
                       {purpose}
                     </button>
@@ -608,7 +641,7 @@ export function TransactionForm({
                   {...field}
                   value={field.value ?? ""}
                   className="w-full h-14 px-2 py-1 rounded-md border text-xs bg-background resize-none"
-                  tabIndex={tabIndexCounter++}
+                  tabIndex={15}
                 />
                 <FormMessage />
               </FormItem>
@@ -629,7 +662,7 @@ export function TransactionForm({
                     {...field}
                     value={field.value ?? ""}
                     className="w-full px-2 py-1 rounded-md border text-xs bg-background"
-                    tabIndex={tabIndexCounter++}
+                    tabIndex={16}
                   />
                   <FormMessage />
                 </FormItem>
@@ -648,7 +681,7 @@ export function TransactionForm({
                     {...field}
                     value={field.value ?? ""}
                     className="w-full px-2 py-1 rounded-md border text-xs bg-background"
-                    tabIndex={tabIndexCounter++}
+                    tabIndex={17}
                   />
                   <FormMessage />
                 </FormItem>
@@ -663,12 +696,12 @@ export function TransactionForm({
               type="button"
               variant="ghost"
               onClick={() => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
-              tabIndex={tabIndexCounter++}
+              tabIndex={18}
             >
               ยกเลิก
             </Button>
           )}
-          <Button type="submit" className="font-bold text-xs h-8 px-4" tabIndex={tabIndexCounter++}>
+          <Button type="submit" className="font-bold text-xs h-8 px-4" tabIndex={19}>
             {isEditing ? "บันทึก" : "เพิ่มธุรกรรม"}
           </Button>
         </div>

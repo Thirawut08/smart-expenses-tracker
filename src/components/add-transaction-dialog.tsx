@@ -162,11 +162,11 @@ export function AddTransactionDialog({
                         mode: "normal",
                         accountId: "",
                         purpose: extractedData.purpose || "",
-                        amount: extractedData.amount,
-                        date: new Date(extractedData.date),
+                amount: extractedData.amount,
+                date: new Date(extractedData.date),
                         type: "expense",
-                        sender: extractedData.sender,
-                        recipient: extractedData.recipient,
+                sender: extractedData.sender,
+                recipient: extractedData.recipient,
                       }
                     : getInitialFormData(initialData)
                 }

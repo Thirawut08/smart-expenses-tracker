@@ -48,11 +48,8 @@ const incomeFormSchema = z.object({
     .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
       message: "เดือนต้องเป็นตัวเลข 1-12",
     }),
-  time: z
-    .string({ required_error: "กรุณาระบุเวลา" })
-    .refine((val) => isValidTime24h(val), {
-      message: "รูปแบบเวลาไม่ถูกต้อง (เช่น 09:41)",
-    }),
+  hour: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 23, { message: "ชั่วโมงไม่ถูกต้อง" }),
+  minute: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 59, { message: "นาทีไม่ถูกต้อง" }),
   accountId: z
     .string({ required_error: "กรุณาเลือกบัญชี" })
     .min(1, "กรุณาเลือกบัญชี"),
@@ -99,9 +96,12 @@ export function AddIncomeForm({
       month: initialData?.date instanceof Date
         ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
         : (typeof initialData?.month === "string" ? initialData.month : todayStr.split("/")[1]),
-      time: initialData?.date instanceof Date
-        ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
-        : (initialData?.time || ""),
+      hour: initialData?.date instanceof Date
+        ? initialData.date.getHours().toString().padStart(2, "0")
+        : (initialData?.time?.split(":")[0] || ""),
+      minute: initialData?.date instanceof Date
+        ? initialData.date.getMinutes().toString().padStart(2, "0")
+        : (initialData?.time?.split(":")[1] || ""),
       accountId: initialData?.accountId ?? "",
       amount: initialData?.amount ?? undefined,
     },
@@ -116,13 +116,25 @@ export function AddIncomeForm({
       month: initialData?.date instanceof Date
         ? (initialData.date.getMonth() + 1).toString().padStart(2, "0")
         : (typeof initialData?.month === "string" ? initialData.month : todayStr.split("/")[1]),
-      time: initialData?.date instanceof Date
-        ? `${initialData.date.getHours().toString().padStart(2, "0")}:${initialData.date.getMinutes().toString().padStart(2, "0")}`
-        : (initialData?.time || ""),
+      hour: initialData?.date instanceof Date
+        ? initialData.date.getHours().toString().padStart(2, "0")
+        : (initialData?.time?.split(":")[0] || ""),
+      minute: initialData?.date instanceof Date
+        ? initialData.date.getMinutes().toString().padStart(2, "0")
+        : (initialData?.time?.split(":")[1] || ""),
       accountId: initialData?.accountId ?? "",
       amount: initialData?.amount ?? undefined,
     });
   }, [initialData, form]);
+
+  // ถ้า initialData มีเวลาเดิม ให้แยกชั่วโมง/นาทีมา setValue
+  useEffect(() => {
+    if (initialData?.time) {
+      const [h, m] = initialData.time.split(":");
+      form.setValue("hour", h);
+      form.setValue("minute", m);
+    }
+  }, [initialData?.time]);
 
   const selectedAccountId = form.watch("accountId");
   
@@ -138,7 +150,7 @@ export function AddIncomeForm({
       form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
       return;
     }
-    const [h, m] = data.time.split(":").map(Number);
+    const [h, m] = [data.hour, data.minute].map(Number);
     dateObj.setHours(h, m, 0, 0);
     const finalData = { ...data, date: dateObj };
     onSubmit(finalData as any);
@@ -257,23 +269,42 @@ export function AddIncomeForm({
               />
             </div>
           </div>
-          <div className="flex-1">
+          {/* เวลา */}
+          <div className="flex flex-col gap-1">
             <FormLabel className="block mb-1 font-medium">เวลา<span className="text-red-500 text-xs align-super">*</span></FormLabel>
-            <FormField
-              control={form.control}
-              name="time"
-              render={({ field, fieldState }) => (
-                <FormItem>
+            <div className="flex flex-row gap-2">
+              <FormField
+                control={form.control}
+                name="hour"
+                render={({ field }) => (
                   <Input
-                    type="text"
-                    placeholder="09:41"
                     {...field}
-                    className={cn("w-full", fieldState.invalid && "border-red-500")}
+                    type="number"
+                    min={0}
+                    max={23}
+                    placeholder="HH"
+                    className={cn("w-16 text-center", form.formState.errors.hour && "border-red-500")}
                     tabIndex={tabIndexCounter++}
                   />
-                </FormItem>
-              )}
-            />
+                )}
+              />
+              <span className="self-center">:</span>
+              <FormField
+                control={form.control}
+                name="minute"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="number"
+                    min={0}
+                    max={59}
+                    placeholder="MM"
+                    className={cn("w-16 text-center", form.formState.errors.minute && "border-red-500")}
+                    tabIndex={tabIndexCounter++}
+                  />
+                )}
+              />
+            </div>
           </div>
         </div>
         {/* ปุ่มบันทึก/ยกเลิก */}

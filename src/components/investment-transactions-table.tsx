@@ -65,6 +65,8 @@ export function InvestmentTransactionsTable({
 }: InvestmentTransactionsTableProps) {
   const { rate: usdToThbRate, isLoading: isRateLoading } = useExchangeRate();
 
+  // ลบ filter ที่ใช้ account.types ออก ให้แสดงรายการตาม prop.transactions ที่ส่งเข้ามา
+
   return (
     <div>
       <Table className="bg-transparent">

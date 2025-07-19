@@ -83,13 +83,13 @@ export function TransactionTemplates({
         <div className="flex flex-wrap gap-2">
           {filteredTemplates.map((template) => (
             <div key={template.id} className="relative w-full">
-              <button
-                type="button"
+            <button
+              type="button"
                 className={`px-2 py-1 rounded-md text-xs font-medium border border-gray-500 bg-muted/40 transition-colors duration-75 w-full text-left truncate
                   ${selectedId === template.id ? "ring-2 ring-primary border-primary bg-primary/10 text-primary" : "hover:border-primary/40 hover:bg-muted/60"}`}
-                onClick={() => handleSelect(template)}
+              onClick={() => handleSelect(template)}
                 style={{ minWidth: 0, minHeight: 0, maxWidth: '100%' }}
-              >
+            >
                 <span className="font-semibold truncate block">{template.purpose}</span>
               </button>
               <div className="pl-2 pb-1 text-xs text-muted-foreground">
@@ -114,10 +114,10 @@ export function TransactionTemplates({
                   <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.3 9.3-2.12.71.71-2.12 9.3-9.3z" fill="currentColor"/>
                   <path d="M3 17h14v2H3v-2z" fill="currentColor"/>
                 </svg>
-              </button>
+            </button>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
       </CardContent>
       {/* Modal เพิ่มเทมเพลต */}
       <Dialog open={open} onOpenChange={setOpen}>

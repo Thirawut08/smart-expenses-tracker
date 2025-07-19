@@ -157,7 +157,12 @@ function AccountSummaryCards({ accounts, transactions, usdToThbRate }: { account
         return (
           <Card key={acc.id} className="p-3 flex flex-col gap-2">
             <CardHeader className="pb-1">
-              <CardTitle className="text-base font-bold">{acc.name} ({acc.currency})</CardTitle>
+              <CardTitle className="text-base font-bold">
+                {acc.name} ({acc.currency})
+                {Array.isArray(acc.types) && acc.types.length > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">• {acc.types.join(', ')}</span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardDescription className="text-xs pb-1">สรุปธุรกรรมบัญชีนี้</CardDescription>
             <div className="text-xs flex flex-col gap-1">

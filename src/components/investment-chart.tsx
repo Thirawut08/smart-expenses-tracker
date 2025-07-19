@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import type { Transaction } from "@/lib/types";
-import { investmentAccountNames } from "@/lib/data";
 import { useAccounts } from "@/hooks/use-accounts";
 import { TrendingUp, Loader2 } from "lucide-react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
@@ -57,7 +56,7 @@ export function InvestmentChart({
     }
     // กรองธุรกรรมที่ purpose มีคำว่า 'ลงทุน'
     const investmentTransactions = transactions.filter(
-      (t) => t.purpose && t.purpose.includes("ลงทุน"),
+      (t) => t.purpose && t.purpose.includes('ลงทุน')
     );
     if (investmentTransactions.length === 0) {
       return { chartData: [], totalInvestmentInTHB: 0 };

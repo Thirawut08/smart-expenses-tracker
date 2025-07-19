@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import type { Transaction } from "@/lib/types";
-import { savingAccountNames } from "@/lib/data";
 import { PiggyBank } from "lucide-react";
 import { useAccounts } from "@/hooks/use-accounts";
 
@@ -35,7 +34,7 @@ export function SavingsChart({
   const { chartData, totalSavings } = useMemo(() => {
     // กรองธุรกรรมที่ purpose มีคำว่า 'ออม'
     const savingTransactions = transactions.filter(
-      (t) => t.purpose && t.purpose.includes("ออม"),
+      (t) => t.purpose && t.purpose.includes('ออม')
     );
     if (savingTransactions.length === 0) {
       return { chartData: [], totalSavings: 0 };
