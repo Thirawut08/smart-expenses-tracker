@@ -92,6 +92,17 @@ export function TransactionTemplates({
               >
                 <span className="font-semibold truncate block">{template.purpose}</span>
               </button>
+              <div className="pl-2 pb-1 text-xs text-muted-foreground">
+                <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                  <span><b>ประเภท:</b> {template.type === 'income' ? 'รายรับ' : template.type === 'expense' ? 'รายจ่าย' : '-'}</span>
+                  {template.accountId && accounts.length > 0 && (
+                    <span><b>บัญชี:</b> {accounts.find(a => a.id === template.accountId)?.name || '-'}</span>
+                  )}
+                  {template.details && <span><b>รายละเอียด:</b> {template.details}</span>}
+                  {template.sender && <span><b>ผู้จ่าย:</b> {template.sender}</span>}
+                  {template.recipient && <span><b>ผู้รับ:</b> {template.recipient}</span>}
+                </div>
+              </div>
               <button
                 type="button"
                 className="absolute top-1 right-1 p-1 rounded hover:bg-gray-200 text-gray-500"
