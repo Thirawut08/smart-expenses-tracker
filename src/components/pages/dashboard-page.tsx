@@ -155,17 +155,16 @@ function AccountSummaryCards({ accounts, transactions, usdToThbRate }: { account
         const depositSum = deposits.reduce((sum, tx) => sum + tx.amount, 0);
         const isUSD = acc.currency === "USD";
         return (
-          <Card key={acc.id} className="p-3 flex flex-col gap-2">
-            <CardHeader className="pb-1">
-              <CardTitle className="text-base font-bold">
+          <Card key={acc.id} className="p-2 flex flex-col gap-1">
+            <CardHeader className="pb-0">
+              <CardTitle className="text-base font-bold text-left mb-1">
                 {acc.name} ({acc.currency})
                 {Array.isArray(acc.types) && acc.types.length > 0 && (
                   <span className="ml-2 text-xs text-muted-foreground font-normal">• {acc.types.join(', ')}</span>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardDescription className="text-xs pb-1">สรุปธุรกรรมบัญชีนี้</CardDescription>
-            <div className="text-xs flex flex-col gap-1">
+            <div className="text-xs flex flex-col gap-1 text-left">
               <div><b>ยอดรวม:</b> {isUSD ? `$${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `฿${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`}
                 {isUSD && usdToThbRate && (
                   <span className="ml-2 text-muted-foreground">(≈ ฿{(balance * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
