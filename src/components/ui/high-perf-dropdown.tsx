@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from "react";
 import {
   useFloating,
-  autoPlacement,
+  flip,
   offset,
   FloatingPortal,
 } from "@floating-ui/react-dom-interactions";
@@ -98,7 +98,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
   const [search, setSearch] = useState("");
   // Floating UI
   const { x, y, strategy, update, refs } = useFloating({
-    middleware: [offset(4), autoPlacement()],
+    middleware: [offset(4), flip({ fallbackPlacements: ["top-start"] })],
     placement: "bottom-start",
   });
 
@@ -234,7 +234,8 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
               240,
           }}
         >
-          <div className="p-2 border-b bg-gray-50 dark:bg-zinc-800">
+          {/* Search box อยู่ใน dropdown เดียวกับ options */}
+          <div className="p-2 bg-gray-50 dark:bg-zinc-800">
             <input
               ref={searchInputRef}
               type="text"
@@ -251,6 +252,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
               }}
             />
           </div>
+          {/* Options */}
           {filteredOptions.length === 0 ? (
             <div className="px-4 py-2 text-gray-400">ไม่พบตัวเลือก</div>
           ) : (

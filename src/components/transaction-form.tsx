@@ -291,24 +291,43 @@ export function TransactionForm({
   // --- Render ---
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {/* โหมดโอนระหว่างบัญชี */}
-        <div className="flex items-center gap-2 mb-2">
-          <Switch
-            checked={isTransfer}
-            onCheckedChange={setIsTransfer}
-            id="toggle-transfer-mode"
-          />
-          <label
-            htmlFor="toggle-transfer-mode"
-            className="cursor-pointer select-none text-sm font-medium"
-          >
-            โอนระหว่างบัญชี
-          </label>
-        </div>
-        {/* จำนวนเงิน */}
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-5 p-4 max-w-md mx-auto"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            if (isEditing) {
+              window.dispatchEvent(new CustomEvent("close-transaction-dialog"));
+            }
+          }
+        }}
+      >
+        {/* 1. ประเภท */}
         <div>
-          <FormLabel className="block mb-1 font-medium">จำนวนเงิน</FormLabel>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">1</span> ประเภท
+          </FormLabel>
+          <RadioGroup
+            value={form.watch("type")}
+            onValueChange={(val) => form.setValue("type", val)}
+            className="flex gap-4"
+            name="type"
+          >
+            <RadioGroupItem value="expense" id="type-expense" />
+            <label htmlFor="type-expense" className="mr-4 cursor-pointer">
+              รายจ่าย
+            </label>
+            <RadioGroupItem value="income" id="type-income" />
+            <label htmlFor="type-income" className="cursor-pointer">
+              รายรับ
+            </label>
+          </RadioGroup>
+        </div>
+        {/* 2. จำนวนเงิน */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">2</span> จำนวนเงิน
+          </FormLabel>
           <Input
             type="number"
             step="any"
@@ -317,37 +336,38 @@ export function TransactionForm({
             className="h-14 text-3xl px-4 w-full"
             autoFocus
             required={!isTemplate && !isTransfer}
+            tabIndex={2}
           />
         </div>
-        {/* ประเภทธุรกรรม (รายรับ/รายจ่าย) */}
-        {!isTransfer && (
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={
-                form.watch("type") === "expense" ? "secondary" : "outline"
-              }
-              className="flex-1"
-              onClick={() => form.setValue("type", "expense")}
-            >
-              รายจ่าย
-            </Button>
-            <Button
-              type="button"
-              variant={
-                form.watch("type") === "income" ? "secondary" : "outline"
-              }
-              className="flex-1"
-              onClick={() => form.setValue("type", "income")}
-            >
-              รายรับ
-            </Button>
-          </div>
-        )}
-        {/* วันที่และเวลา */}
+        {/* 3. บัญชี */}
         <div>
           <FormLabel className="block mb-1 font-medium">
-            วันที่และเวลา
+            <span className="text-xs mr-1 text-muted-foreground">3</span> บัญชี
+          </FormLabel>
+          <FormField
+            control={form.control}
+            name={isTransfer ? "fromAccount" : "accountId"}
+            render={({ field }) => (
+              <FormItem>
+                <HighPerfDropdown
+                  options={accounts.map((acc) => ({
+                    value: acc.id,
+                    label: `${acc.name} (${acc.currency})`,
+                  }))}
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder={isTransfer ? "เลือกบัญชีต้นทาง..." : "เลือกบัญชี..."}
+                  className="w-full"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {/* 4. วันที่ */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">4</span> วันที่
           </FormLabel>
           <FormField
             control={form.control}
@@ -360,147 +380,10 @@ export function TransactionForm({
             )}
           />
         </div>
-        {/* ฟิลด์บัญชี (โอน/ปกติ) */}
-        {isTransfer ? (
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <FormLabel className="block mb-1 font-medium">
-                บัญชีต้นทาง
-              </FormLabel>
-              <FormField
-                control={form.control}
-                name="fromAccount"
-                render={({ field }) => (
-                  <FormItem>
-                    <HighPerfDropdown
-                      options={accounts.map((acc) => ({
-                        value: acc.id,
-                        label: `${acc.name} (${acc.currency})`,
-                      }))}
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      placeholder="เลือกบัญชีต้นทาง..."
-                      className="w-full"
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="flex-1">
-              <FormLabel className="block mb-1 font-medium">
-                บัญชีปลายทาง
-              </FormLabel>
-              <FormField
-                control={form.control}
-                name="toAccount"
-                render={({ field }) => (
-                  <FormItem>
-                    <HighPerfDropdown
-                      options={accounts.map((acc) => ({
-                        value: acc.id,
-                        label: `${acc.name} (${acc.currency})`,
-                      }))}
-                      value={field.value || ""}
-                      onChange={field.onChange}
-                      placeholder="เลือกบัญชีปลายทาง..."
-                      className="w-full"
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-        ) : (
-          <div>
-            <FormLabel className="block mb-1 font-medium">บัญชี</FormLabel>
-            <FormField
-              control={form.control}
-              name="accountId"
-              render={({ field }) => (
-                <FormItem>
-                  <HighPerfDropdown
-                    options={accounts.map((acc) => ({
-                      value: acc.id,
-                      label: `${acc.name} (${acc.currency})`,
-                    }))}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="เลือกบัญชี..."
-                    className="w-full"
-                  />
-                  {/* ยอดเงินคงเหลือ */}
-                  {(() => {
-                    const accBalance = getAccountBalance(
-                      field.value || "",
-                      transactions,
-                    );
-                    return (
-                      accBalance && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          ยอดเงิน:{" "}
-                          {formatCurrency(
-                            accBalance.balance,
-                            accBalance.currency,
-                          )}
-                        </div>
-                      )
-                    );
-                  })()}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        )}
-        {/* ผู้จ่าย/ผู้รับ */}
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <FormLabel className="block mb-1 font-medium">
-              ผู้จ่าย (ถ้ามี)
-            </FormLabel>
-            <FormField
-              control={form.control}
-              name="sender"
-              render={({ field }) => (
-                <FormItem>
-                  <Input
-                    placeholder="ชื่อผู้จ่าย"
-                    {...field}
-                    value={field.value ?? ""}
-                    className="w-full"
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="flex-1">
-            <FormLabel className="block mb-1 font-medium">
-              ผู้รับ (ถ้ามี)
-            </FormLabel>
-            <FormField
-              control={form.control}
-              name="recipient"
-              render={({ field }) => (
-                <FormItem>
-                  <Input
-                    placeholder="ชื่อผู้รับ"
-                    {...field}
-                    value={field.value ?? ""}
-                    className="w-full"
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        {/* รายละเอียด */}
+        {/* 5. รายละเอียด */}
         <div>
           <FormLabel className="block mb-1 font-medium">
-            รายละเอียด (ถ้ามี)
+            <span className="text-xs mr-1 text-muted-foreground">5</span> รายละเอียด (ถ้ามี)
           </FormLabel>
           <FormField
             control={form.control}
@@ -508,19 +391,28 @@ export function TransactionForm({
             render={({ field }) => (
               <FormItem>
                 <Textarea
-                  placeholder="บันทึกรายละเอียดเพิ่มเติมพิมพ์เทิม"
+                  placeholder="บันทึกรายละเอียดเพิ่มเติม..."
                   {...field}
                   value={field.value ?? ""}
                   className="w-full h-20 px-4 py-2 rounded border text-base bg-background resize-none"
+                  tabIndex={5}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      (e.target as HTMLTextAreaElement).form?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+                    }
+                  }}
                 />
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        {/* วัตถุประสงค์ */}
-        <div style={{ position: "relative" }}>
-          <FormLabel className="block mb-1 font-medium">วัตถุประสงค์</FormLabel>
+        {/* 6. วัตถุประสงค์ */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">6</span> วัตถุประสงค์
+          </FormLabel>
           <FormField
             control={form.control}
             name="purpose"
@@ -534,6 +426,7 @@ export function TransactionForm({
                   onChange={(value) => field.onChange(value)}
                   placeholder="เลือกวัตถุประสงค์..."
                   className="w-full"
+                  // (ถ้า HighPerfDropdown รองรับ prop สำหรับตำแหน่ง search ให้ส่ง prop เช่น searchPosition="bottom")
                 />
                 {fieldState.error && fieldState.error.message && (
                   <FormMessage />
@@ -542,22 +435,19 @@ export function TransactionForm({
             )}
           />
         </div>
-        {/* ปุ่มบันทึก */}
-        <div className="flex justify-end gap-2 pt-2">
+        {/* ปุ่มบันทึก/ยกเลิก */}
+        <div className="flex justify-end gap-2 pt-4">
           {isEditing && (
             <Button
               type="button"
               variant="ghost"
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent("close-transaction-dialog"),
-                )
-              }
+              onClick={() => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
+              tabIndex={7}
             >
               ยกเลิก
             </Button>
           )}
-          <Button type="submit" className="font-bold">
+          <Button type="submit" className="font-bold" tabIndex={8}>
             {isEditing ? "บันทึก" : "เพิ่มธุรกรรม"}
           </Button>
         </div>

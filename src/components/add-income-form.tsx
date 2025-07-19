@@ -101,91 +101,88 @@ export function AddIncomeForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 p-3">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-5 p-4 max-w-md mx-auto"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            onCancel();
+          }
+        }}
+      >
         <h2 className="text-xl font-bold mb-4">เพิ่มรายการรายรับ</h2>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            {/* ใช้ DateTimePicker แทน Date+Time เดิม */}
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">วันที่และเวลา</FormLabel>
-                  <DateTimePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="flex-1">
-            <FormField
-              control={form.control}
-              name="accountId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm">บัญชี</FormLabel>
-                  <HighPerfDropdown
-                    options={accounts.map((acc) => ({
-                      value: acc.id,
-                      label: acc.name,
-                    }))}
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="เลือกบัญชี..."
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-sm">จำนวนเงิน</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    step="any"
-                    placeholder="0.00"
-                    {...field}
-                    value={field.value ?? ""}
-                    onChange={(event) =>
-                      field.onChange(event.target.valueAsNumber || undefined)
-                    }
-                    className={cn(
-                      selectedAccount && "pl-8",
-                      "h-12 text-lg w-full px-4",
-                    )}
-                  />
-                  {selectedAccount && (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
-                      {selectedAccount.currency === "USD" ? "$" : "฿"}
-                    </span>
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        {/* 1. จำนวนเงิน */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">1</span> จำนวนเงิน
+          </FormLabel>
+          <Input
+            type="number"
+            step="any"
+            placeholder="0.00"
+            {...form.register("amount")}
+            value={form.watch("amount") ?? ""}
+            className={cn(selectedAccount && "pl-8", "h-12 text-lg w-full px-4")}
+            autoFocus
+            required
+            tabIndex={1}
+          />
+          {selectedAccount && (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
+              {selectedAccount.currency === "USD" ? "$" : "฿"}
+            </span>
           )}
-        />
-        <div className="flex justify-end gap-2 mt-4">
+        </div>
+        {/* 2. บัญชี */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">2</span> บัญชี
+          </FormLabel>
+          <FormField
+            control={form.control}
+            name="accountId"
+            render={({ field }) => (
+              <FormItem>
+                <HighPerfDropdown
+                  options={accounts.map((acc) => ({ value: acc.id, label: acc.name }))}
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="เลือกบัญชี..."
+                  className="w-full"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {/* 3. วันที่ */}
+        <div>
+          <FormLabel className="block mb-1 font-medium">
+            <span className="text-xs mr-1 text-muted-foreground">3</span> วันที่
+          </FormLabel>
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem>
+                <DateTimePicker value={field.value} onChange={field.onChange} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        {/* ปุ่มบันทึก/ยกเลิก */}
+        <div className="flex justify-end gap-2 pt-4">
           <Button
             type="button"
             variant="ghost"
             onClick={onCancel}
             className="h-9 px-4 text-sm font-semibold"
+            tabIndex={4}
           >
             ยกเลิก
           </Button>
-          <Button type="submit" className="h-9 px-6 text-sm font-bold">
+          <Button type="submit" className="h-9 px-6 text-sm font-bold" tabIndex={5}>
             {initialData ? "บันทึกการเปลี่ยนแปลง" : "บันทึกรายรับ"}
           </Button>
         </div>

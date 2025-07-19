@@ -34,6 +34,13 @@ export function AddTransactionModal({
   const [recipient, setRecipient] = useState("");
   const { accounts, addAccount } = useAccounts();
   const { purposes, addPurpose, templates } = useLedger();
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const filteredTemplates = templates.filter(t => t.purpose?.toLowerCase().includes(templateSearch.toLowerCase()));
+  function handleTemplateSelect(template: any) {
+    setSelectedTemplateId(template.id);
+    handleUseTemplate(template);
+  }
 
   // ให้เหลือฟังก์ชัน handleUseTemplate แค่ตัวเดียวใน component เท่านั้น
   function handleUseTemplate(template: any) {
@@ -98,28 +105,31 @@ export function AddTransactionModal({
         <DialogHeader>
           <DialogTitle>เพิ่มธุรกรรมใหม่</DialogTitle>
         </DialogHeader>
-        {/* UI เลือกเทมเพลต */}
+        {/* UI เลือกเทมเพลต (compact, responsive, search) */}
         {templates && templates.length > 0 && (
           <div className="mb-4">
             <div className="font-semibold mb-2">เลือกจากเทมเพลต</div>
-            {templates.length === 0 ? (
-              <div className="text-xs text-muted-foreground">
-                ยังไม่มีเทมเพลต
-              </div>
-            ) : (
-              <div className="flex gap-2 flex-wrap">
-                {templates.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                    onClick={() => handleUseTemplate(t)}
-                  >
-                    {t.purpose || "ไม่ระบุวัตถุประสงค์"}
-                  </button>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              placeholder="ค้นหาเทมเพลต..."
+              value={templateSearch}
+              onChange={e => setTemplateSearch(e.target.value)}
+              className="w-full px-2 py-1 rounded border text-base mb-2"
+            />
+            <div className="flex flex-wrap gap-2">
+              {filteredTemplates.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`px-3 py-1 rounded text-sm font-medium border transition-colors duration-75
+                    ${selectedTemplateId === t.id ? "bg-blue-700 text-white border-blue-700" : "bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200"}`}
+                  onClick={() => handleTemplateSelect(t)}
+                  style={{ minWidth: 0, minHeight: 0 }}
+                >
+                  {t.purpose}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">

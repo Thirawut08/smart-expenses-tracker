@@ -29,6 +29,15 @@ export function TransactionTemplates({
   const [editTarget, setEditTarget] = useState<Template | null>(null);
   const { addTemplate, editTemplate, purposes } = useLedger();
 
+  // เพิ่ม state และ logic filter
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const filteredTemplates = templates.filter(t => t.purpose?.toLowerCase().includes(search.toLowerCase()));
+  function handleSelect(template: Template) {
+    setSelectedId(template.id);
+    onUseTemplate(template);
+  }
+
   function handleAddTemplateSubmit(data: any) {
     addTemplate(data);
     setOpen(false);
@@ -60,46 +69,29 @@ export function TransactionTemplates({
         </Button>
       </CardHeader>
       <CardContent>
-        {templates.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {templates.map((template) => (
-              <div key={template.id} className="relative group">
-                <Button
-                  variant="outline"
-                  className="h-auto p-4 flex flex-col items-start justify-start text-left w-full"
-                  onClick={() => onUseTemplate(template)}
-                >
-                  <p className="text-sm text-muted-foreground">
-                    {template.purpose}
-                  </p>
-                  {template.details && (
-                    <p className="text-xs text-muted-foreground/80 truncate">
-                      "{template.details}"
-                    </p>
-                  )}
-                </Button>
-                <button
-                  className="absolute top-2 right-2 opacity-70 group-hover:opacity-100 transition-opacity bg-background rounded-full p-1 border border-muted"
-                  title="แก้ไขเทมเพลต"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditTarget(template);
-                  }}
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-            <FileText className="w-10 h-10 mb-2 opacity-60" />
-            <div className="text-base font-medium">ยังไม่มีเทมเพลต</div>
-            <div className="text-xs mt-1">
-              คุณสามารถสร้างเทมเพลตได้โดยการกดปุ่ม + ที่มุมขวาบน
-            </div>
-          </div>
-        )}
+        <div className="mb-2">
+          <input
+            type="text"
+            placeholder="ค้นหาเทมเพลต..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full px-2 py-1 rounded border text-base mb-2"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {filteredTemplates.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className={`px-3 py-1 rounded text-sm font-medium border transition-colors duration-75
+                ${selectedId === template.id ? "bg-blue-700 text-white border-blue-700" : "bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200"}`}
+              onClick={() => handleSelect(template)}
+              style={{ minWidth: 0, minHeight: 0 }}
+            >
+              {template.purpose}
+            </button>
+          ))}
+        </div>
       </CardContent>
       {/* Modal เพิ่มเทมเพลต */}
       <Dialog open={open} onOpenChange={setOpen}>
