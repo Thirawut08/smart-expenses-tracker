@@ -69,9 +69,6 @@ export function TransactionTemplates({
                   className="h-auto p-4 flex flex-col items-start justify-start text-left w-full"
                   onClick={() => onUseTemplate(template)}
                 >
-                  <p className="font-semibold">
-                    <span className="mr-1 text-xl">{template.name}</span>
-                  </p>
                   <p className="text-sm text-muted-foreground">
                     {template.purpose}
                   </p>
@@ -140,7 +137,6 @@ export function TransactionTemplates({
                 isTemplate={true}
                 availablePurposes={purposes}
                 initialData={{
-                  name: editTarget.name,
                   type: editTarget.type,
                   purpose: editTarget.purpose,
                   details: editTarget.details,
