@@ -170,7 +170,7 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
           // ถ้าไม่มีในตัวเลือกเดิมและมี onAddNew
           if (onAddNew) {
             onAddNew(search.trim());
-            setOpen(false);
+        setOpen(false);
           }
         }
         e.preventDefault();
@@ -271,4 +271,4 @@ export const HighPerfDropdown: React.FC<HighPerfDropdownProps> = ({
       )}
     </div>
   );
-};
+}; 

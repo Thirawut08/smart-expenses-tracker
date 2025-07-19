@@ -48,7 +48,7 @@ export function DashboardPage() {
     );
     return month ? month.label : "ทั้งหมด";
   }, [selectedMonth]);
-
+  
   // --- Render ---
   return (
     <div className="space-y-8 md:space-y-10 lg:space-y-12">

@@ -32,10 +32,10 @@ export function useAccounts() {
   // โหลดจาก localStorage เฉพาะฝั่ง client (หลัง mount)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
-      if (stored) {
+    const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+    if (stored) {
         try {
-          setAccounts(JSON.parse(stored));
+      setAccounts(JSON.parse(stored));
         } catch (e) {
           setAccounts([]);
         }
@@ -47,7 +47,7 @@ export function useAccounts() {
   // Save to localStorage when accounts change (หลังโหลดแล้วเท่านั้น)
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
+    localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(accounts));
     }
   }, [accounts, isLoaded]);
 
@@ -86,16 +86,16 @@ export function useAccounts() {
 
   const addAccount = useCallback(
     (account: Omit<Account, "id">) => {
-      const newAccount: Account = {
-        ...account,
-        id: Date.now().toString(),
-      };
+    const newAccount: Account = {
+      ...account,
+      id: Date.now().toString(),
+    };
       setAccounts((prev) => {
-        const updated = [...prev, newAccount];
-        setTimeout(triggerAccountsUpdated, 0);
-        return updated;
-      });
-      return true;
+      const updated = [...prev, newAccount];
+      setTimeout(triggerAccountsUpdated, 0);
+      return updated;
+    });
+    return true;
     },
     [accounts],
   );
@@ -106,7 +106,7 @@ export function useAccounts() {
         const updated = prev.map((a) =>
           a.id === id ? { ...a, ...update } : a,
         );
-        setTimeout(triggerAccountsUpdated, 0);
+      setTimeout(triggerAccountsUpdated, 0);
         setTimeout(() => {
           const stored = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
           console.log(
@@ -114,8 +114,8 @@ export function useAccounts() {
             stored,
           );
         }, 100);
-        return updated;
-      });
+      return updated;
+    });
     },
     [],
   );
@@ -136,4 +136,4 @@ export function useAccounts() {
     setAccounts, // for advanced use
     isLoaded, // เพิ่ม flag สำหรับเช็คสถานะโหลดข้อมูล
   };
-}
+} 

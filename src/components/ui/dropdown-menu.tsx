@@ -65,17 +65,17 @@ const DropdownMenuSubContent = React.forwardRef<
   }, [ref, side]);
 
   return (
-    <DropdownMenuPrimitive.SubContent
-      ref={ref}
+  <DropdownMenuPrimitive.SubContent
+    ref={ref}
       {...Object.fromEntries(
         Object.entries(rest).filter(([k]) => k !== "side"),
       )}
       side={autoSide}
-      className={cn(
+    className={cn(
         "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-lg",
         className,
-      )}
-    />
+    )}
+  />
   );
 });
 DropdownMenuSubContent.displayName =
@@ -107,20 +107,20 @@ const DropdownMenuContent = React.forwardRef<
   }, [ref, side]);
 
   return (
-    <DropdownMenuPrimitive.Portal>
-      <DropdownMenuPrimitive.Content
-        ref={ref}
+  <DropdownMenuPrimitive.Portal>
+    <DropdownMenuPrimitive.Content
+      ref={ref}
         {...Object.fromEntries(
           Object.entries(rest).filter(([k]) => k !== "side"),
         )}
-        sideOffset={sideOffset}
+      sideOffset={sideOffset}
         side={autoSide}
-        className={cn(
+      className={cn(
           "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
           className,
-        )}
-      />
-    </DropdownMenuPrimitive.Portal>
+      )}
+    />
+  </DropdownMenuPrimitive.Portal>
   );
 });
 DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;

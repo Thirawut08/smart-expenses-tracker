@@ -524,7 +524,7 @@ export function TransactionForm({
           <FormField
             control={form.control}
             name="purpose"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem>
                 <HighPerfDropdown
                   options={allPurposes
@@ -535,7 +535,9 @@ export function TransactionForm({
                   placeholder="เลือกวัตถุประสงค์..."
                   className="w-full"
                 />
-                <FormMessage />
+                {fieldState.error && fieldState.error.message && (
+                  <FormMessage />
+                )}
               </FormItem>
             )}
           />
