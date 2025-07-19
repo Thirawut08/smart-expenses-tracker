@@ -32,6 +32,14 @@ export function AddTransactionModal({
     onClose();
   }
 
+  // Reset template selection every time modal opens
+  useEffect(() => {
+    if (open) {
+      setSelectedTemplateId(null);
+      setSearch("");
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md w-full">
@@ -47,16 +55,18 @@ export function AddTransactionModal({
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full px-2 py-1 rounded border text-base mb-2"
+              tabIndex={1}
             />
             <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-2 md:grid-cols-3">
               {filteredTemplates.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  className={`px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-75 w-full text-left truncate
-                    ${selectedTemplateId === t.id ? "bg-gray-100 text-gray-900 border-gray-400" : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
+                  className={`px-2 py-1 rounded-md text-xs font-medium border border-gray-500 bg-muted/40 transition-colors duration-75 w-full text-left truncate
+                    ${selectedTemplateId === t.id ? "ring-2 ring-primary border-primary bg-primary/10 text-primary" : "hover:border-primary/40 hover:bg-muted/60"}`}
                   onClick={() => setSelectedTemplateId(t.id)}
                   style={{ minWidth: 0, minHeight: 0, maxWidth: '100%' }}
+                  tabIndex={-1}
                 >
                   <span className="font-semibold truncate block">{t.purpose}</span>
                 </button>
@@ -75,6 +85,7 @@ export function AddTransactionModal({
             amount: selectedTemplate.amount,
             date: undefined,
           } : undefined}
+          showTemplateSelector={false}
         />
       </DialogContent>
     </Dialog>

@@ -57,7 +57,9 @@ interface TransactionFormProps {
   isEditing?: boolean;
   isTemplate?: boolean;
   availablePurposes: (string | { name: string; emoji?: string })[];
-  transactions?: Transaction[]; // เพิ่ม prop นี้ (optional เพื่อไม่พังโหมดอื่น)
+  transactions?: Transaction[];
+  showTemplateSelector?: boolean;
+  templateSelector?: React.ReactNode;
 }
 
 /**
@@ -127,6 +129,8 @@ export function TransactionForm({
   isTemplate = false,
   availablePurposes = [],
   transactions = [],
+  showTemplateSelector = false,
+  templateSelector,
 }: TransactionFormProps) {
   // --- Schema ---
   const normalSchema = z.object({
@@ -244,6 +248,13 @@ export function TransactionForm({
     }
   }, [accounts.length]);
 
+  // --- Effect: Reset form when initialData changes (เช่น เลือกเทมเพลตใหม่) ---
+  useEffect(() => {
+    if (initialData) {
+      form.reset({ ...safeInitialData, ...initialData });
+    }
+  }, [JSON.stringify(initialData)]);
+
   // --- Memo: Selected account/currency ---
   const selectedAccountId = form.watch("accountId");
   const selectedAccount = useMemo(
@@ -304,6 +315,8 @@ export function TransactionForm({
           }
         }}
       >
+        {/* เทมเพลต selector (ถ้ามี) */}
+        {showTemplateSelector && templateSelector}
         {/* ประเภทธุรกรรม หรือโหมดโอน */}
         <div className="flex flex-col gap-1">
           <FormLabel className="font-medium text-xs">ประเภท</FormLabel>

@@ -85,8 +85,8 @@ export function TransactionTemplates({
             <div key={template.id} className="relative w-full">
               <button
                 type="button"
-                className={`px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-75 w-full text-left truncate
-                  ${selectedId === template.id ? "bg-gray-100 text-gray-900 border-gray-400" : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
+                className={`px-2 py-1 rounded-md text-xs font-medium border border-gray-500 bg-muted/40 transition-colors duration-75 w-full text-left truncate
+                  ${selectedId === template.id ? "ring-2 ring-primary border-primary bg-primary/10 text-primary" : "hover:border-primary/40 hover:bg-muted/60"}`}
                 onClick={() => handleSelect(template)}
                 style={{ minWidth: 0, minHeight: 0, maxWidth: '100%' }}
               >

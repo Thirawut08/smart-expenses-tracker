@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 // --- Data & State ---
 import { useLedger } from "@/hooks/use-ledger";
 import { useAccounts } from "@/hooks/use-accounts";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { thaiMonths } from "@/lib/data";
 
 // --- UI Components ---
@@ -113,6 +114,9 @@ export function DashboardPage() {
         <AccountBalances transactions={transactions} flatTable />
       </div>
 
+      {/* Account Summary Cards */}
+      <AccountSummaryCards accounts={accounts} transactions={filteredTransactions} usdToThbRate={useExchangeRate().rate} />
+
       {/* Section: Exchange Rate */}
       <div className="flex justify-center pt-2 pb-2 md:pt-4 md:pb-4">
         <a
@@ -130,6 +134,52 @@ export function DashboardPage() {
         templates={templates}
         onUseTemplate={handleUseTemplate}
       />
+    </div>
+  );
+}
+
+function AccountSummaryCards({ accounts, transactions, usdToThbRate }: { accounts: any[]; transactions: any[]; usdToThbRate: number | null }) {
+  // Filter accounts with at least 1 transaction
+  const accountsWithTx = accounts.filter(acc => transactions.some(tx => tx.account.id === acc.id));
+  if (accountsWithTx.length === 0) return null;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {accountsWithTx.map(acc => {
+        const txs = transactions.filter(tx => tx.account.id === acc.id);
+        const balance = txs.reduce((sum, tx) => sum + (tx.type === "income" ? tx.amount : -tx.amount), 0);
+        const withdraws = txs.filter(tx => tx.type === "expense");
+        const deposits = txs.filter(tx => tx.type === "income");
+        const withdrawCount = withdraws.length;
+        const withdrawSum = withdraws.reduce((sum, tx) => sum + tx.amount, 0);
+        const depositCount = deposits.length;
+        const depositSum = deposits.reduce((sum, tx) => sum + tx.amount, 0);
+        const isUSD = acc.currency === "USD";
+        return (
+          <Card key={acc.id} className="p-3 flex flex-col gap-2">
+            <CardHeader className="pb-1">
+              <CardTitle className="text-base font-bold">{acc.name} ({acc.currency})</CardTitle>
+            </CardHeader>
+            <CardDescription className="text-xs pb-1">สรุปธุรกรรมบัญชีนี้</CardDescription>
+            <div className="text-xs flex flex-col gap-1">
+              <div><b>ยอดรวม:</b> {isUSD ? `$${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `฿${balance.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`}
+                {isUSD && usdToThbRate && (
+                  <span className="ml-2 text-muted-foreground">(≈ ฿{(balance * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
+                )}
+              </div>
+              <div><b>ถอนเงิน:</b> {withdrawCount} รายการ, {isUSD ? `$${withdrawSum.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `฿${withdrawSum.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`}
+                {isUSD && usdToThbRate && (
+                  <span className="ml-2 text-muted-foreground">(≈ ฿{(withdrawSum * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
+                )}
+              </div>
+              <div><b>ฝากเงิน:</b> {depositCount} รายการ, {isUSD ? `$${depositSum.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `฿${depositSum.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`}
+                {isUSD && usdToThbRate && (
+                  <span className="ml-2 text-muted-foreground">(≈ ฿{(depositSum * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
