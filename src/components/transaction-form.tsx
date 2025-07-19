@@ -354,13 +354,18 @@ export function TransactionForm({
               name="fromAccount"
               render={({ field }) => (
                 <FormItem>
-                  <HighPerfDropdown
-                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="เลือกบัญชีต้นทาง..."
-                    className="w-full"
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    {accounts.map((acc) => (
+                      <button
+                        type="button"
+                        key={acc.id}
+                        className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
+                        onClick={() => field.onChange(acc.id)}
+                      >
+                        {acc.name} ({acc.currency})
+                      </button>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -371,13 +376,18 @@ export function TransactionForm({
               name="toAccount"
               render={({ field }) => (
                 <FormItem>
-                  <HighPerfDropdown
-                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="เลือกบัญชีปลายทาง..."
-                    className="w-full"
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    {accounts.map((acc) => (
+                      <button
+                        type="button"
+                        key={acc.id}
+                        className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
+                        onClick={() => field.onChange(acc.id)}
+                      >
+                        {acc.name} ({acc.currency})
+                      </button>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -391,13 +401,18 @@ export function TransactionForm({
               name="accountId"
               render={({ field }) => (
                 <FormItem>
-                  <HighPerfDropdown
-                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="เลือกบัญชี..."
-                    className="w-full"
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    {accounts.map((acc) => (
+                      <button
+                        type="button"
+                        key={acc.id}
+                        className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === acc.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
+                        onClick={() => field.onChange(acc.id)}
+                      >
+                        {acc.name} ({acc.currency})
+                      </button>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -425,7 +440,30 @@ export function TransactionForm({
             name="date"
             render={({ field }) => (
               <FormItem>
-                <DateTimePicker value={field.value} onChange={field.onChange} />
+                <Input
+                  type="date"
+                  value={field.value ? (typeof field.value === 'string' ? field.value : field.value.toISOString().slice(0,10)) : ''}
+                  onChange={e => field.onChange(e.target.value)}
+                  className="w-full"
+                />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">เวลา</FormLabel>
+          <FormField
+            control={form.control}
+            name="time"
+            render={({ field }) => (
+              <FormItem>
+                <Input
+                  type="time"
+                  value={field.value || ''}
+                  onChange={e => field.onChange(e.target.value)}
+                  className="w-full"
+                />
                 <FormMessage />
               </FormItem>
             )}
@@ -439,13 +477,18 @@ export function TransactionForm({
             name="purpose"
             render={({ field, fieldState }) => (
               <FormItem>
-                <HighPerfDropdown
-                  options={allPurposes.filter((p) => p && p !== "อื่นๆ").map((purpose) => ({ value: purpose, label: purpose }))}
-                  value={field.value || ""}
-                  onChange={(value) => field.onChange(value)}
-                  placeholder="เลือกวัตถุประสงค์..."
-                  className="w-full"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {allPurposes.filter((p) => p && p !== "อื่นๆ").map((purpose) => (
+                    <button
+                      type="button"
+                      key={purpose}
+                      className={`px-2 py-1 rounded border text-xs font-medium transition-colors ${field.value === purpose ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-gray-300 hover:border-primary'}`}
+                      onClick={() => field.onChange(purpose)}
+                    >
+                      {purpose}
+                    </button>
+                  ))}
+                </div>
                 {fieldState.error && fieldState.error.message && <FormMessage />}
               </FormItem>
             )}

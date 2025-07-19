@@ -28,7 +28,15 @@ export function AddTransactionModal({
   const filteredTemplates = templates.filter(t => t.purpose?.toLowerCase().includes(search.toLowerCase()));
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || undefined;
   function handleFormSubmit(data: any) {
-    onSave(data, false);
+    // รวม date+time เป็น Date object ก่อนส่งออก
+    let dateObj = undefined;
+    if (data.date && data.time) {
+      dateObj = new Date(`${data.date}T${data.time}`);
+    } else if (data.date) {
+      dateObj = new Date(data.date);
+    }
+    const out = { ...data, date: dateObj };
+    onSave(out, false);
     onClose();
   }
 
