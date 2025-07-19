@@ -148,7 +148,10 @@ export function TransactionForm({
             z.null(),
           ])
           .optional()
-      : z.union([z.coerce.number().positive("จำนวนเงินต้องเป็นบวก"), z.nan()]),
+      : z.union([
+          z.coerce.number().positive("จำนวนเงินต้องเป็นบวก"),
+          z.nan(),
+        ]),
     date: z.union([
       z.date({ required_error: "กรุณาระบุวันที่" }),
       z.undefined(),
