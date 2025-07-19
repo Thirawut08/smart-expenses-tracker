@@ -137,7 +137,7 @@ export function TransactionForm({
     accountId: z
       .string({ required_error: "กรุณาเลือกบัญชี" })
       .min(1, "กรุณาเลือกบัญชี"),
-    purpose: z.string().min(1, "วัตถุประสงค์เป็นสิ่งจำเป็น"),
+    purpose: z.string().optional(),
     customPurpose: z.string().optional(),
     amount: isTemplate
       ? z
