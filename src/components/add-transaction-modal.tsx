@@ -94,6 +94,7 @@ export function AddTransactionModal({
             date: undefined,
           } : undefined}
           showTemplateSelector={false}
+          onCancel={onClose}
         />
       </DialogContent>
     </Dialog>

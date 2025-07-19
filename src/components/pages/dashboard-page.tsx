@@ -131,6 +131,7 @@ export function DashboardPage() {
 
       {/* Transaction Templates */}
       <TransactionTemplates
+        key={templates.length + '-' + templates.map(t => t.id).join(',')}
         templates={templates}
         onUseTemplate={handleUseTemplate}
       />
@@ -174,10 +175,30 @@ function AccountSummaryCards({ accounts, transactions, usdToThbRate }: { account
                 {isUSD && usdToThbRate && (
                   <span className="ml-2 text-muted-foreground">(≈ ฿{(withdrawSum * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
                 )}
+                {/* รายละเอียดโอนระหว่างบัญชี (ฝั่งถอน) */}
+                {withdraws.some(tx => tx.purpose === "โอนออก" && tx.recipient) && (
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {withdraws.filter(tx => tx.purpose === "โอนออก" && tx.recipient).map((tx, i) => (
+                      <div key={tx.id || i}>
+                        โอนระหว่างบัญชี ({tx.account.name}) → {tx.recipient}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div><b>ฝากเงิน:</b> {depositCount} รายการ, {isUSD ? `$${depositSum.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : `฿${depositSum.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`}
                 {isUSD && usdToThbRate && (
                   <span className="ml-2 text-muted-foreground">(≈ ฿{(depositSum * usdToThbRate).toLocaleString("th-TH", { minimumFractionDigits: 2 })})</span>
+                )}
+                {/* รายละเอียดโอนระหว่างบัญชี (ฝั่งรับ) */}
+                {deposits.some(tx => tx.purpose === "โอนเข้า" && tx.sender) && (
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {deposits.filter(tx => tx.purpose === "โอนเข้า" && tx.sender).map((tx, i) => (
+                      <div key={tx.id || i}>
+                        โอนระหว่างบัญชี {tx.sender} → ({tx.account.name})
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

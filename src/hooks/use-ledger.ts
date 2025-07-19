@@ -331,11 +331,13 @@ export function useLedger() {
           recipient: toAcc.name,
         };
         updateAndSaveTransactions([...transactions, outTx, inTx]);
-        toast({
-          title: "เพิ่มธุรกรรมสำเร็จ",
-          description: "เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว",
-        });
         handleDialogClose(false);
+        setTimeout(() => {
+          toast({
+            title: "เพิ่มธุรกรรมสำเร็จ",
+            description: "เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว",
+          });
+        }, 150);
         return;
       } else if (Array.isArray(data)) {
         // กรณีโอนระหว่างบัญชี รับ array ของ Transaction หรือ UnifiedFormValues
@@ -376,11 +378,13 @@ export function useLedger() {
           })
           .filter(Boolean) as Transaction[];
         updateAndSaveTransactions([...transactions, ...newTransactions]);
-        toast({
-          title: "เพิ่มธุรกรรมสำเร็จ",
-          description: `เพิ่มรายการโอนระหว่างบัญชีเรียบร้อยแล้ว`,
-        });
         handleDialogClose(false);
+        setTimeout(() => {
+          toast({
+            title: "บันทึกธุรกรรมสำเร็จ",
+            description: "เพิ่ม/แก้ไขรายการธุรกรรมเรียบร้อยแล้ว",
+          });
+        }, 150);
         console.log("transactions after save:", [
           ...transactions,
           ...newTransactions,
@@ -459,6 +463,12 @@ export function useLedger() {
       }
 
       handleDialogClose(false);
+      setTimeout(() => {
+        toast({
+          title: "บันทึกธุรกรรมสำเร็จ",
+          description: "เพิ่ม/แก้ไขรายการธุรกรรมเรียบร้อยแล้ว",
+        });
+      }, 150);
     },
     [
       editingTransaction,
@@ -545,12 +555,15 @@ export function useLedger() {
       };
       const newTemplates = [...templates, newTemplate];
       updateAndSaveTemplates(newTemplates);
-      toast({
-        title: "เพิ่มเทมเพลตสำเร็จ",
-        description: `เพิ่มเทมเพลต "${name}" เรียบร้อยแล้ว`,
-      });
+      handleDialogClose(false);
+      setTimeout(() => {
+        toast({
+          title: "เพิ่มเทมเพลตสำเร็จ",
+          description: `เพิ่มเทมเพลต "${name}" เรียบร้อยแล้ว`,
+        });
+      }, 150);
     },
-    [templates, updateAndSaveTemplates, toast],
+    [templates, updateAndSaveTemplates, toast, handleDialogClose],
   );
 
   // เพิ่มฟังก์ชัน editTemplate
@@ -577,13 +590,30 @@ export function useLedger() {
           : t,
       );
       updateAndSaveTemplates(updatedTemplates);
-      toast({
-        title: "แก้ไขเทมเพลตสำเร็จ",
-        description: `อัปเดตเทมเพลต "${name}" เรียบร้อยแล้ว`,
-      });
+      handleDialogClose(false);
+      setTimeout(() => {
+        toast({
+          title: "แก้ไขเทมเพลตสำเร็จ",
+          description: `อัปเดตเทมเพลต "${name}" เรียบร้อยแล้ว`,
+        });
+      }, 150);
     },
-    [templates, updateAndSaveTemplates, toast],
+    [templates, updateAndSaveTemplates, toast, handleDialogClose],
   );
+
+  // เพิ่มฟังก์ชัน deleteTemplate
+  const deleteTemplate = useCallback((id: string) => {
+    const updatedTemplates = templates.filter(t => t.id !== id);
+    updateAndSaveTemplates(updatedTemplates);
+    handleDialogClose(false);
+    setTimeout(() => {
+      toast({
+        variant: "destructive",
+        title: "ลบเทมเพลตสำเร็จ",
+        description: "ลบเทมเพลตเรียบร้อยแล้ว",
+      });
+    }, 150);
+  }, [templates, updateAndSaveTemplates, toast, handleDialogClose]);
 
   return {
     transactions,
@@ -608,5 +638,6 @@ export function useLedger() {
     removePurpose,
     addTemplate, // <--- export addTemplate
     editTemplate, // <--- export editTemplate
+    deleteTemplate, // <--- export deleteTemplate
   };
 }

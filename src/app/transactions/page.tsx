@@ -150,11 +150,19 @@ export default function TransactionsPage() {
           {/* Minimal, no Card, no CardHeader, no CardContent */}
           <div className="w-full">
             <div className="text-xl font-semibold mb-2">รายการธุรกรรม</div>
-            <Tabs defaultValue="expense" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
                 <TabsTrigger value="expense">รายจ่าย</TabsTrigger>
                 <TabsTrigger value="income">รายรับ</TabsTrigger>
               </TabsList>
+              <TabsContent value="all" className="mt-4">
+                <TransactionsTable
+                  transactions={transactions}
+                  onEdit={handleEditTransaction}
+                  onDelete={handleDeleteRequest}
+                />
+              </TabsContent>
               <TabsContent value="expense" className="mt-4">
                 <TransactionsTable
                   transactions={expenseTransactions}
@@ -181,6 +189,7 @@ export default function TransactionsPage() {
         initialData={editingTransaction}
         isEditing={!!editingTransaction}
         transactions={transactions}
+        children={<span />}
       />
       <AlertDialog
         open={!!transactionToDelete}

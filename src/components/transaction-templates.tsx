@@ -8,7 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, Pencil } from "lucide-react";
+import { FileText, Plus, Pencil, Trash2 } from "lucide-react";
 import type { Template } from "@/lib/types";
 import { defaultPurposes } from "@/lib/data";
 import { useState } from "react";
@@ -16,6 +16,7 @@ import { TransactionForm } from "./transaction-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { useLedger } from "@/hooks/use-ledger";
 import { useAccounts } from "@/hooks/use-accounts";
+import { Input } from "@/components/ui/input";
 
 interface TransactionTemplatesProps {
   templates: Template[];
@@ -28,7 +29,7 @@ export function TransactionTemplates({
 }: TransactionTemplatesProps) {
   const [open, setOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Template | null>(null);
-  const { addTemplate, editTemplate, purposes } = useLedger();
+  const { addTemplate, editTemplate, deleteTemplate, purposes } = useLedger();
   const { accounts } = useAccounts();
 
   // เพิ่ม state และ logic filter
@@ -43,6 +44,7 @@ export function TransactionTemplates({
   function handleAddTemplateSubmit(data: any) {
     addTemplate(data);
     setOpen(false);
+    setTemplateName("");
   }
 
   function handleEditTemplateSubmit(data: any) {
@@ -51,6 +53,8 @@ export function TransactionTemplates({
       setEditTarget(null);
     }
   }
+
+  const [templateName, setTemplateName] = useState("");
 
   return (
     <Card>
@@ -92,7 +96,7 @@ export function TransactionTemplates({
             >
                 <span className="font-semibold truncate block">{template.purpose}</span>
               </button>
-              <div className="pl-2 pb-1 text-xs text-muted-foreground">
+              <div className="pl-2 pb-1 text-xs text-muted-foreground flex items-center gap-2">
                 <div className="flex flex-wrap gap-x-2 gap-y-0.5">
                   <span><b>ประเภท:</b> {template.type === 'income' ? 'รายรับ' : template.type === 'expense' ? 'รายจ่าย' : '-'}</span>
                   {template.accountId && accounts.length > 0 && (
@@ -102,7 +106,18 @@ export function TransactionTemplates({
                   {template.sender && <span><b>ผู้จ่าย:</b> {template.sender}</span>}
                   {template.recipient && <span><b>ผู้รับ:</b> {template.recipient}</span>}
                 </div>
+                {/* ปุ่มลบเทมเพลต */}
+                <button
+                  type="button"
+                  className="ml-auto p-1 rounded hover:bg-destructive/10 text-destructive"
+                  title="ลบเทมเพลต"
+                  onClick={(e) => { e.stopPropagation(); deleteTemplate(template.id); }}
+                  tabIndex={-1}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
+              {/* ปุ่มแก้ไขเทมเพลต (คงเดิม) */}
               <button
                 type="button"
                 className="absolute top-1 right-1 p-1 rounded hover:bg-gray-200 text-gray-500"
@@ -126,8 +141,20 @@ export function TransactionTemplates({
             <DialogTitle>เพิ่มเทมเพลตใหม่</DialogTitle>
           </DialogHeader>
           <div style={{ position: "relative" }}>
+            {/* ช่องกรอกชื่อเทมเพลต */}
+            <div className="mb-3">
+              <Input
+                value={templateName}
+                onChange={e => setTemplateName(e.target.value)}
+                placeholder="ชื่อเทมเพลต"
+                className="w-full text-base px-2 h-9"
+                maxLength={40}
+                tabIndex={1}
+                required
+              />
+            </div>
             <TransactionForm
-              onSubmit={handleAddTemplateSubmit}
+              onSubmit={data => handleAddTemplateSubmit({ ...data, name: templateName })}
               isEditing={false}
               isTemplate={true}
               availablePurposes={purposes}
@@ -160,12 +187,13 @@ export function TransactionTemplates({
                   details: editTarget.details,
                   sender: editTarget.sender,
                   recipient: editTarget.recipient,
-                  mode: "normal",
                   accountId: editTarget.accountId || "",
                   amount: undefined,
                   date: undefined,
                 }}
+                onCancel={() => setEditTarget(null)}
               />
+              {/* ลบปุ่มยกเลิกขนาดใหญ่ด้านล่างนี้ออก */}
           </div>
         )}
         </DialogContent>

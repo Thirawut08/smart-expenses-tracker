@@ -61,6 +61,7 @@ interface TransactionFormProps {
   transactions?: Transaction[];
   showTemplateSelector?: boolean;
   templateSelector?: React.ReactNode;
+  onCancel?: () => void;
 }
 
 /**
@@ -132,6 +133,7 @@ export function TransactionForm({
   transactions = [],
   showTemplateSelector = false,
   templateSelector,
+  onCancel,
 }: TransactionFormProps) {
   // --- Schema ---
   const normalSchema = z.object({
@@ -157,18 +159,10 @@ export function TransactionForm({
           z.coerce.number().positive("จำนวนเงินต้องเป็นบวก"),
           z.nan(),
         ]),
-    day: z
-      .string({ required_error: "กรุณาระบุวัน" })
-      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 31, {
-        message: "วันต้องเป็นตัวเลข 1-31",
-      }),
-    month: z
-      .string({ required_error: "กรุณาระบุเดือน" })
-      .refine((val) => /^\d{1,2}$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 12, {
-        message: "เดือนต้องเป็นตัวเลข 1-12",
-      }),
-    hour: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 23, { message: "ชั่วโมงไม่ถูกต้อง" }),
-    minute: z.string().min(1).refine(val => Number(val) >= 0 && Number(val) <= 59, { message: "นาทีไม่ถูกต้อง" }),
+    day: z.string().optional(),
+    month: z.string().optional(),
+    hour: z.string().optional(),
+    minute: z.string().optional(),
     sender: z.string().optional(),
     recipient: z.string().optional(),
     details: z.string().optional(),
@@ -334,29 +328,20 @@ export function TransactionForm({
 
   // --- Submit Handler ---
   const handleSubmit = (data: UnifiedFormValues) => {
-    if (isTransfer) {
-      const from = form.getValues("fromAccount");
-      const to = form.getValues("toAccount");
-      if (!from || !to) {
-        alert("กรุณาเลือกบัญชีต้นทางและปลายทาง");
-        return;
-      }
-      if (from === to) {
-        alert("บัญชีต้นทางและปลายทางต้องไม่เหมือนกัน");
-        return;
-      }
-    }
-    // แปลงวัน/เดือน/เวลาเป็น Date ก่อนส่งออก
-    const dateObj = parseDayMonthToDate(data.day, data.month);
+    // เติมวัน/เดือน/เวลาเป็นปัจจุบันถ้าไม่ได้กรอก
+    const now = new Date();
+    const day = data.day || now.getDate().toString().padStart(2, "0");
+    const month = data.month || (now.getMonth() + 1).toString().padStart(2, "0");
+    const hour = data.hour || now.getHours().toString().padStart(2, "0");
+    const minute = data.minute || now.getMinutes().toString().padStart(2, "0");
+    const dateObj = parseDayMonthToDate(day, month);
     if (!dateObj) {
       form.setError("day", { message: "วันหรือเดือนไม่ถูกต้อง" });
       form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
       return;
     }
-    const h = Number(data.hour);
-    const m = Number(data.minute);
-    dateObj.setHours(h, m, 0, 0);
-    const finalData = { ...data, date: dateObj };
+    dateObj.setHours(Number(hour), Number(minute), 0, 0);
+    const finalData = { ...data, day, month, hour, minute, date: dateObj };
     if (finalData.purpose === "อื่นๆ" && customPurpose.trim()) {
       finalData.purpose = customPurpose.trim();
     }
@@ -381,7 +366,7 @@ export function TransactionForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-4 p-4 max-w-md w-full mx-auto flex flex-col"
+        className="space-y-4 p-4 max-w-2xl w-full mx-auto flex flex-col"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             window.dispatchEvent(new CustomEvent("close-transaction-dialog"));
@@ -424,7 +409,7 @@ export function TransactionForm({
         {/* โหมดโอน: บัญชีต้นทาง/ปลายทาง หรือบัญชีเดียว */}
         {isTransfer ? (
           <div className="flex flex-col gap-1">
-            <FormLabel className="font-medium text-xs">บัญชีต้นทาง</FormLabel>
+            <FormLabel className="font-medium text-xs">บัญชีต้นทาง<span className="text-red-500 text-xs align-super">*</span></FormLabel>
             <FormField
               control={form.control}
               name="fromAccount"
@@ -439,7 +424,7 @@ export function TransactionForm({
                         onClick={() => field.onChange(acc.id)}
                         tabIndex={6}
                       >
-                        {acc.name} ({acc.currency})
+                        {acc.name}
                       </button>
                     ))}
                   </div>
@@ -447,7 +432,7 @@ export function TransactionForm({
                 </FormItem>
               )}
             />
-            <FormLabel className="font-medium text-xs">บัญชีปลายทาง</FormLabel>
+            <FormLabel className="font-medium text-xs">บัญชีปลายทาง<span className="text-red-500 text-xs align-super">*</span></FormLabel>
             <FormField
               control={form.control}
               name="toAccount"
@@ -462,7 +447,7 @@ export function TransactionForm({
                         onClick={() => field.onChange(acc.id)}
                         tabIndex={7}
                       >
-                        {acc.name} ({acc.currency})
+                        {acc.name}
                       </button>
                     ))}
                   </div>
@@ -473,7 +458,7 @@ export function TransactionForm({
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            <FormLabel className="font-medium text-xs">บัญชี</FormLabel>
+            <FormLabel className="font-medium text-xs">บัญชี<span className="text-red-500 text-xs align-super">*</span></FormLabel>
             <FormField
               control={form.control}
               name="accountId"
@@ -488,7 +473,7 @@ export function TransactionForm({
                         onClick={() => field.onChange(acc.id)}
                         tabIndex={8}
                       >
-                        {acc.name} ({acc.currency})
+                        {acc.name}
                       </button>
                     ))}
                   </div>
@@ -512,96 +497,98 @@ export function TransactionForm({
           />
         </div>
         {/* วันที่ + เวลา (แนวเดียวกัน) */}
-        <div className="flex flex-row gap-2">
-          <div className="flex flex-row gap-2 flex-1 items-end">
-            <div className="flex-1">
-              <FormLabel className="font-medium text-xs">วัน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
-              <FormField
-                control={form.control}
-                name="day"
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <Input
-                      type="text"
-                      placeholder="DD"
-                      maxLength={2}
-                      {...field}
-                      className={cn("w-full", fieldState.invalid && "border-red-500")}
-                      tabIndex={10}
-                    />
-                    {/* ไม่ต้องแสดง <FormMessage /> */}
-                  </FormItem>
-                )}
-              />
+        {!isTemplate && (
+          <div className="flex flex-row gap-2">
+            <div className="flex flex-row gap-2 flex-1 items-end">
+              <div className="flex-1">
+                <FormLabel className="font-medium text-xs">วัน</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="day"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <Input
+                        type="text"
+                        placeholder=""
+                        maxLength={2}
+                        {...field}
+                        className={cn("w-full", fieldState.invalid && "border-red-500")}
+                        tabIndex={10}
+                      />
+                      {/* ไม่ต้องแสดง <FormMessage /> */}
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex-1">
+                <FormLabel className="font-medium text-xs">เดือน</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="month"
+                  render={({ field, fieldState }) => (
+                    <FormItem>
+                      <Input
+                        type="text"
+                        placeholder=""
+                        maxLength={2}
+                        {...field}
+                        className={cn("w-full", fieldState.invalid && "border-red-500")}
+                        tabIndex={11}
+                      />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex-1 flex flex-col justify-end">
+                <FormLabel className="font-medium text-xs opacity-60">ปี</FormLabel>
+                <Input
+                  type="text"
+                  value={new Date().getFullYear()}
+                  readOnly
+                  tabIndex={-1}
+                  className="w-full bg-muted text-muted-foreground cursor-not-allowed"
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <FormLabel className="font-medium text-xs">เดือน<span className="text-red-500 text-xs align-super">*</span></FormLabel>
-              <FormField
-                control={form.control}
-                name="month"
-                render={({ field, fieldState }) => (
-                  <FormItem>
+            {/* เวลา */}
+            <div className="flex flex-col gap-1">
+              <FormLabel className="font-medium text-xs">เวลา</FormLabel>
+              <div className="flex flex-row gap-2">
+                <FormField
+                  control={form.control}
+                  name="hour"
+                  render={({ field }) => (
                     <Input
-                      type="text"
+                      {...field}
+                      type="number"
+                      min={0}
+                      max={23}
+                      placeholder="HH"
+                      className={cn("w-16 text-center", form.formState.errors.hour && "border-red-500")}
+                      tabIndex={12}
+                    />
+                  )}
+                />
+                <span className="self-center">:</span>
+                <FormField
+                  control={form.control}
+                  name="minute"
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type="number"
+                      min={0}
+                      max={59}
                       placeholder="MM"
-                      maxLength={2}
-                      {...field}
-                      className={cn("w-full", fieldState.invalid && "border-red-500")}
-                      tabIndex={11}
+                      className={cn("w-16 text-center", form.formState.errors.minute && "border-red-500")}
+                      tabIndex={13}
                     />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="flex-1 flex flex-col justify-end">
-              <FormLabel className="font-medium text-xs opacity-60">ปี</FormLabel>
-              <Input
-                type="text"
-                value={new Date().getFullYear()}
-                readOnly
-                tabIndex={-1}
-                className="w-full bg-muted text-muted-foreground cursor-not-allowed"
-              />
+                  )}
+                />
+              </div>
             </div>
           </div>
-          {/* เวลา */}
-          <div className="flex flex-col gap-1">
-            <FormLabel className="font-medium text-xs">เวลา<span className="text-red-500 text-xs align-super">*</span></FormLabel>
-            <div className="flex flex-row gap-2">
-              <FormField
-                control={form.control}
-                name="hour"
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    min={0}
-                    max={23}
-                    placeholder="HH"
-                    className={cn("w-16 text-center", form.formState.errors.hour && "border-red-500")}
-                    tabIndex={12}
-                  />
-                )}
-              />
-              <span className="self-center">:</span>
-              <FormField
-                control={form.control}
-                name="minute"
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    type="number"
-                    min={0}
-                    max={59}
-                    placeholder="MM"
-                    className={cn("w-16 text-center", form.formState.errors.minute && "border-red-500")}
-                    tabIndex={13}
-                  />
-                )}
-              />
-            </div>
-          </div>
-        </div>
+        )}
         {/* วัตถุประสงค์ */}
         <div className="flex flex-col gap-1">
           <FormLabel className="font-medium text-xs">วัตถุประสงค์<span className="text-red-500 text-xs align-super">*</span></FormLabel>
@@ -695,7 +682,7 @@ export function TransactionForm({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
+              onClick={onCancel ? onCancel : () => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
               tabIndex={18}
             >
               ยกเลิก

@@ -36,6 +36,7 @@ import { useEffect, useMemo } from "react";
 import { HighPerfDropdown } from "./ui/high-perf-dropdown";
 import { DateTimePicker } from "./date-time-picker";
 import { parseDayMonthToDate, isValidTime24h } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const incomeFormSchema = z.object({
   day: z
@@ -86,6 +87,7 @@ export function AddIncomeForm({
   onCancel,
 }: AddIncomeFormProps) {
   const { accounts } = useAccounts();
+  const { toast } = useToast();
   const todayStr = format(new Date(), "dd/MM/yyyy");
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
@@ -144,16 +146,22 @@ export function AddIncomeForm({
   );
 
   const handleSubmit = (data: IncomeFormValues) => {
-    const dateObj = parseDayMonthToDate(data.day, data.month);
+    // เติมวัน/เดือน/เวลาเป็นปัจจุบันถ้าไม่ได้กรอก
+    const now = new Date();
+    const day = data.day || now.getDate().toString().padStart(2, "0");
+    const month = data.month || (now.getMonth() + 1).toString().padStart(2, "0");
+    const hour = data.hour || now.getHours().toString().padStart(2, "0");
+    const minute = data.minute || now.getMinutes().toString().padStart(2, "0");
+    const dateObj = parseDayMonthToDate(day, month);
     if (!dateObj) {
       form.setError("day", { message: "วันหรือเดือนไม่ถูกต้อง" });
       form.setError("month", { message: "วันหรือเดือนไม่ถูกต้อง" });
       return;
     }
-    const [h, m] = [data.hour, data.minute].map(Number);
-    dateObj.setHours(h, m, 0, 0);
-    const finalData = { ...data, date: dateObj };
+    dateObj.setHours(Number(hour), Number(minute), 0, 0);
+    const finalData = { ...data, day, month, hour, minute, date: dateObj };
     onSubmit(finalData as any);
+    toast({ title: "บันทึกรายรับสำเร็จ", description: "เพิ่มรายการรายรับเรียบร้อยแล้ว" });
   };
 
   // กำหนด tabIndex อัตโนมัติด้วยตัวแปร counter เพื่อรองรับการเพิ่ม/ลบฟิลด์ในอนาคต
@@ -163,7 +171,7 @@ export function AddIncomeForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-5 p-4 max-w-md mx-auto"
+        className="space-y-5 p-4 max-w-2xl w-full mx-auto"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             onCancel();
@@ -208,7 +216,7 @@ export function AddIncomeForm({
                       onClick={() => field.onChange(acc.id)}
                       tabIndex={tabIndexCounter++}
                     >
-                      {acc.name} ({acc.currency})
+                      {acc.name}
                     </button>
                   ))}
                 </div>
@@ -229,7 +237,7 @@ export function AddIncomeForm({
                   <FormItem>
                     <Input
                       type="text"
-                      placeholder="DD"
+                      placeholder=""
                       maxLength={2}
                       {...field}
                       className={cn("w-full", fieldState.invalid && "border-red-500")}
@@ -248,7 +256,7 @@ export function AddIncomeForm({
                   <FormItem>
                     <Input
                       type="text"
-                      placeholder="MM"
+                      placeholder=""
                       maxLength={2}
                       {...field}
                       className={cn("w-full", fieldState.invalid && "border-red-500")}

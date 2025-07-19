@@ -133,6 +133,7 @@ export function AddTransactionDialog({
             }
             availablePurposes={purposes}
             transactions={transactions}
+            onCancel={handleClose}
           />
         ) : (
           <Tabs
