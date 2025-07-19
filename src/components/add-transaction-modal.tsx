@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { DateTimePicker } from "./date-time-picker";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useLedger } from "@/hooks/use-ledger";
+import { TransactionForm } from "./transaction-form";
 import { Switch } from "./ui/switch";
 import { HighPerfDropdown } from "./ui/high-perf-dropdown";
 import { useRef } from "react";
@@ -13,7 +14,7 @@ import { useEffect } from "react";
 interface AddTransactionModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any, isEditing: boolean) => void;
 }
 
 export function AddTransactionModal({
@@ -21,81 +22,13 @@ export function AddTransactionModal({
   onClose,
   onSave,
 }: AddTransactionModalProps) {
-  const [amount, setAmount] = useState("");
-  const [type, setType] = useState<"income" | "expense">("expense");
-  const [date, setDate] = useState<Date>(new Date());
-  const [account, setAccount] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [isTransfer, setIsTransfer] = useState(false);
-  const [fromAccount, setFromAccount] = useState("");
-  const [toAccount, setToAccount] = useState("");
-  const [details, setDetails] = useState("");
-  const [sender, setSender] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const { accounts, addAccount } = useAccounts();
-  const { purposes, addPurpose, templates } = useLedger();
-  const [templateSearch, setTemplateSearch] = useState("");
+  const { purposes, transactions, templates } = useLedger();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const filteredTemplates = templates.filter(t => t.purpose?.toLowerCase().includes(templateSearch.toLowerCase()));
-  function handleTemplateSelect(template: any) {
-    setSelectedTemplateId(template.id);
-    handleUseTemplate(template);
-  }
-
-  // ให้เหลือฟังก์ชัน handleUseTemplate แค่ตัวเดียวใน component เท่านั้น
-  function handleUseTemplate(template: any) {
-    setAmount(template.amount ? String(template.amount) : "");
-    setType(template.type || "expense");
-    setAccount(template.accountId || "");
-    setPurpose(template.purpose || "");
-    setDetails(template.details || "");
-    setSender(template.sender || "");
-    setRecipient(template.recipient || "");
-    // ไม่ set date, ไม่ set isTransfer (template ปกติ)
-  }
-
-  useEffect(() => {
-    if (isTransfer) {
-      const fromAccObj = accounts.find((acc) => acc.id === fromAccount);
-      const toAccObj = accounts.find((acc) => acc.id === toAccount);
-      setSender(fromAccObj ? fromAccObj.name : "");
-      setRecipient(toAccObj ? toAccObj.name : "");
-    }
-  }, [isTransfer, fromAccount, toAccount, accounts]);
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!amount || (isTransfer ? !fromAccount || !toAccount : !account)) return;
-    // เตรียมข้อมูลสำหรับโอนระหว่างบัญชี
-    if (isTransfer) {
-      const fromAccObj = accounts.find((acc) => acc.id === fromAccount);
-      const toAccObj = accounts.find((acc) => acc.id === toAccount);
-      const transferDetails = "โอนระหว่างบัญชี";
-      const transferSender = fromAccObj ? fromAccObj.name : "";
-      const transferRecipient = toAccObj ? toAccObj.name : "";
-      onSave({
-        amount: Number(amount),
-        date,
-        purpose,
-        details: transferDetails,
-        sender: transferSender, // override ด้วยชื่อบัญชีต้นทาง
-        recipient: transferRecipient, // override ด้วยชื่อบัญชีปลายทาง
-        fromAccount,
-        toAccount,
-        type: "transfer",
-      });
-    } else {
-      onSave({
-        amount: Number(amount),
-        date,
-        purpose,
-        details,
-        sender,
-        recipient,
-        type,
-        accountId: account,
-      });
-    }
+  const [search, setSearch] = useState("");
+  const filteredTemplates = templates.filter(t => t.purpose?.toLowerCase().includes(search.toLowerCase()));
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || undefined;
+  function handleFormSubmit(data: any) {
+    onSave(data, false);
     onClose();
   }
 
@@ -105,182 +38,46 @@ export function AddTransactionModal({
         <DialogHeader>
           <DialogTitle>เพิ่มธุรกรรมใหม่</DialogTitle>
         </DialogHeader>
-        {/* UI เลือกเทมเพลต (compact, responsive, search) */}
         {templates && templates.length > 0 && (
           <div className="mb-4">
             <div className="font-semibold mb-2">เลือกจากเทมเพลต</div>
             <input
               type="text"
               placeholder="ค้นหาเทมเพลต..."
-              value={templateSearch}
-              onChange={e => setTemplateSearch(e.target.value)}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
               className="w-full px-2 py-1 rounded border text-base mb-2"
             />
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-2 md:grid-cols-3">
               {filteredTemplates.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  className={`px-3 py-1 rounded text-sm font-medium border transition-colors duration-75
-                    ${selectedTemplateId === t.id ? "bg-blue-700 text-white border-blue-700" : "bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200"}`}
-                  onClick={() => handleTemplateSelect(t)}
-                  style={{ minWidth: 0, minHeight: 0 }}
+                  className={`px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-75 w-full text-left truncate
+                    ${selectedTemplateId === t.id ? "bg-gray-100 text-gray-900 border-gray-400" : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
+                  onClick={() => setSelectedTemplateId(t.id)}
+                  style={{ minWidth: 0, minHeight: 0, maxWidth: '100%' }}
                 >
-                  {t.purpose}
+                  <span className="font-semibold truncate block">{t.purpose}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Switch
-              checked={isTransfer}
-              onCheckedChange={setIsTransfer}
-              id="toggle-transfer-mode"
-            />
-            <label
-              htmlFor="toggle-transfer-mode"
-              className="cursor-pointer select-none text-sm font-medium"
-            >
-              โอนระหว่างบัญชี
-            </label>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">จำนวนเงิน</label>
-            <Input
-              type="number"
-              step="any"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="h-14 text-3xl px-4 w-full"
-              autoFocus
-              required
-            />
-          </div>
-          {!isTransfer && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={type === "expense" ? "secondary" : "outline"}
-                className="flex-1"
-                onClick={() => setType("expense")}
-              >
-                รายจ่าย
-              </Button>
-              <Button
-                type="button"
-                variant={type === "income" ? "secondary" : "outline"}
-                className="flex-1"
-                onClick={() => setType("income")}
-              >
-                รายรับ
-              </Button>
-            </div>
-          )}
-          <div>
-            <label className="block mb-1 font-medium">วันที่และเวลา</label>
-            <DateTimePicker
-              value={date}
-              onChange={(d) => {
-                if (d) setDate(d);
-              }}
-            />
-          </div>
-          {isTransfer ? (
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="block mb-1 font-medium">บัญชีต้นทาง</label>
-                <HighPerfDropdown
-                  options={accounts.map((acc) => ({
-                    value: acc.id,
-                    label: `${acc.name} (${acc.currency})`,
-                  }))}
-                  value={fromAccount}
-                  onChange={setFromAccount}
-                  placeholder="เลือกบัญชีต้นทาง..."
-                  className="w-full"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="block mb-1 font-medium">บัญชีปลายทาง</label>
-                <HighPerfDropdown
-                  options={accounts.map((acc) => ({
-                    value: acc.id,
-                    label: `${acc.name} (${acc.currency})`,
-                  }))}
-                  value={toAccount}
-                  onChange={setToAccount}
-                  placeholder="เลือกบัญชีปลายทาง..."
-                  className="w-full"
-                />
-              </div>
-            </div>
-          ) : (
-            <div>
-              <label className="block mb-1 font-medium">บัญชี</label>
-              <HighPerfDropdown
-                options={accounts.map((acc) => ({
-                  value: acc.id,
-                  label: `${acc.name} (${acc.currency})`,
-                }))}
-                value={account}
-                onChange={setAccount}
-                placeholder="เลือกบัญชี..."
-                className="w-full"
-              />
-            </div>
-          )}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block mb-1 font-medium">ผู้จ่าย (ถ้ามี)</label>
-              <Input
-                placeholder="ชื่อผู้จ่าย"
-                value={sender}
-                onChange={(e) => setSender(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block mb-1 font-medium">ผู้รับ (ถ้ามี)</label>
-              <Input
-                placeholder="ชื่อผู้รับ"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="w-full"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">รายละเอียด (ถ้ามี)</label>
-            <textarea
-              placeholder="บันทึกรายละเอียดเพิ่มเติมพิมพ์เทิม"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              className="w-full h-20 px-4 py-2 rounded border text-base bg-background resize-none"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">วัตถุประสงค์</label>
-            <HighPerfDropdown
-              options={purposes.map((p) => ({ value: p, label: p }))}
-              value={purpose}
-              onChange={setPurpose}
-              placeholder="เลือกวัตถุประสงค์..."
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              ยกเลิก
-            </Button>
-            <Button type="submit" className="font-bold">
-              บันทึก
-            </Button>
-          </div>
-        </form>
+        <TransactionForm
+          onSubmit={handleFormSubmit}
+          isEditing={false}
+          isTemplate={false}
+          availablePurposes={purposes}
+          transactions={transactions}
+          initialData={selectedTemplate ? {
+            ...selectedTemplate,
+            amount: selectedTemplate.amount,
+            date: undefined,
+          } : undefined}
+        />
       </DialogContent>
     </Dialog>
   );
 }
+ 

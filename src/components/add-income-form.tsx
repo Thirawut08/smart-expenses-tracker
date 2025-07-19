@@ -48,10 +48,10 @@ type IncomeFormValues = z.infer<typeof incomeFormSchema>;
 
 interface AddIncomeFormProps {
   initialData?: {
-    id: string;
-    date: Date;
-    amount: number;
-    accountId: string;
+      id: string;
+      date: Date;
+      amount: number;
+      accountId: string;
   } | null;
   onSubmit: (data: IncomeFormValues) => void;
   onCancel: () => void;
@@ -82,7 +82,7 @@ export function AddIncomeForm({
       amount: initialData?.amount ?? undefined,
     },
   });
-
+  
   // Reset form when initialData changes
   useEffect(() => {
     form.reset({
@@ -93,7 +93,7 @@ export function AddIncomeForm({
   }, [initialData, form]);
 
   const selectedAccountId = form.watch("accountId");
-
+  
   const selectedAccount = useMemo(
     () => accounts.find((acc) => acc.id === selectedAccountId),
     [selectedAccountId, accounts],
@@ -132,7 +132,7 @@ export function AddIncomeForm({
               {selectedAccount.currency === "USD" ? "$" : "฿"}
             </span>
           )}
-        </div>
+                    </div>
         {/* 2. บัญชี */}
         <div>
           <FormLabel className="block mb-1 font-medium">
@@ -160,16 +160,16 @@ export function AddIncomeForm({
           <FormLabel className="block mb-1 font-medium">
             <span className="text-xs mr-1 text-muted-foreground">3</span> วันที่
           </FormLabel>
-          <FormField
-            control={form.control}
+        <FormField
+          control={form.control}
             name="date"
-            render={({ field }) => (
-              <FormItem>
+          render={({ field }) => (
+            <FormItem>
                 <DateTimePicker value={field.value} onChange={field.onChange} />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         </div>
         {/* ปุ่มบันทึก/ยกเลิก */}
         <div className="flex justify-end gap-2 pt-4">

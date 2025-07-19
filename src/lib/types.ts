@@ -28,6 +28,7 @@ export type Template = {
   sender?: string;
   recipient?: string;
   details?: string;
+  amount?: number;
 };
 
 export interface Income {

@@ -240,148 +240,173 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
     return /^([01]\d|2[0-3]):[0-5]\d$/.test(val);
   }
 
+  // Utility: select all on focus
+  const handleSelectAll: React.FocusEventHandler<HTMLInputElement> = (e) => {
+    e.target.select();
+  };
+
+  // Utility: validate hour/minute input (only on blur or paste)
+  function filterHour(val: string) {
+    let n = parseInt(val.replace(/[^0-9]/g, ""), 10);
+    if (isNaN(n)) return "";
+    if (n > 23) n = 23;
+    if (n < 0) n = 0;
+    return n.toString().padStart(2, "0").slice(-2);
+  }
+  function filterMinute(val: string) {
+    let n = parseInt(val.replace(/[^0-9]/g, ""), 10);
+    if (isNaN(n)) return "";
+    if (n > 59) n = 59;
+    if (n < 0) n = 0;
+    return n.toString().padStart(2, "0").slice(-2);
+  }
+
   return (
     <div className="w-full max-w-xs mx-auto">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between">
-            <span className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {value
-                ? format(value, "PPP HH:mm", { locale: th })
-                : "เลือกวันที่-เวลา"}
-            </span>
-            <ChevronDown className="w-4 h-4" />
+          <Button
+            variant="outline"
+            className="w-full justify-start text-left font-normal text-xs h-8 px-2 py-1"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <CalendarIcon className="mr-2 h-3 w-3" />
+            {value ? format(value, "dd MMMM yyyy HH:mm", { locale: th }) : <span className="text-muted-foreground">เลือกวันและเวลา...</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          className="w-[350px] p-4 rounded-xl shadow-lg bg-background border border-border"
-          align="start"
-        >
-          <div className="flex flex-col gap-3">
-            {/* Date calendar only, no date input */}
-            <div className="flex flex-col items-center">
-              <div className="flex-1 w-full">
-                <div className="flex items-center justify-between mb-2">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full"
-                    onClick={handlePrevMonth}
-                    type="button"
-                  >
-                    <ChevronLeft />
-                  </Button>
-                  <select
-                    value={calendarMonth}
-                    onChange={handleMonthChange}
-                    className="mx-1 rounded px-2 py-1 border border-border bg-background"
-                  >
-                    {MONTHS.map((m, i) => (
-                      <option key={m} value={i}>
-                        {m}
-                      </option>
+        <PopoverContent className="w-auto p-0" align="start">
+          <div className="p-2" style={{ minWidth: 220 }}>
+            <div className="flex flex-col gap-3">
+              {/* Date calendar only, no date input */}
+              <div className="flex flex-col items-center">
+                <div className="flex-1 w-full">
+                  <div className="flex items-center justify-between mb-1">
+                    <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-6 w-6 p-0">
+                      <ChevronLeft className="h-3 w-3" />
+                    </Button>
+                    <select
+                      className="mx-1 rounded border px-1 py-0.5 text-xs"
+                      value={calendarMonth}
+                      onChange={handleMonthChange}
+                    >
+                      {MONTHS.map((m, i) => (
+                        <option key={m} value={i}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="mx-1 rounded border px-1 py-0.5 text-xs"
+                      value={calendarYear}
+                      onChange={handleYearChange}
+                    >
+                      {YEARS.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                    <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-6 w-6 p-0">
+                      <ChevronRight className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-0.5 mb-1">
+                    {["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."].map((d) => (
+                      <div key={d}>{d}</div>
                     ))}
-                  </select>
-                  <select
-                    value={calendarYear}
-                    onChange={handleYearChange}
-                    className="mx-1 rounded px-2 py-1 border border-border bg-background"
-                  >
-                    {YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full"
-                    onClick={handleNextMonth}
-                    type="button"
-                  >
-                    <ChevronRight />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium mb-1">
-                  {["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."].map((d) => (
-                    <div key={d}>{d}</div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarGrid.map((d, i) => {
-                    const isCurrentMonth =
-                      d.getMonth() === calendarMonth &&
-                      d.getFullYear() === calendarYear;
-                    const isSelected =
-                      selectedDate && isSameDay(d, selectedDate);
-                    const isTodayCell = isToday(d);
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        className={
-                          "w-9 h-9 rounded-md flex items-center justify-center transition-all " +
-                          (isCurrentMonth
-                            ? isSelected
-                              ? "bg-primary text-primary-foreground font-bold shadow"
-                              : isTodayCell
-                                ? "border border-primary font-bold"
-                                : "bg-background text-foreground hover:bg-accent"
-                            : "bg-muted text-muted-foreground opacity-60")
-                        }
-                        onClick={() =>
-                          isCurrentMonth && handleCalendarSelect(new Date(d))
-                        }
-                        disabled={!isCurrentMonth}
-                        tabIndex={isCurrentMonth ? 0 : -1}
-                      >
-                        {d.getDate()}
-                      </button>
-                    );
-                  })}
+                  </div>
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {calendarGrid.map((d, i) => {
+                      const isCurrentMonth =
+                        d.getMonth() === calendarMonth &&
+                        d.getFullYear() === calendarYear;
+                      const isSelected =
+                        selectedDate && isSameDay(d, selectedDate);
+                      const isTodayCell = isToday(d);
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          className={
+                            "w-9 h-9 rounded-md flex items-center justify-center transition-all " +
+                            (isCurrentMonth
+                              ? isSelected
+                                ? "bg-primary text-primary-foreground font-bold shadow"
+                                : isTodayCell
+                                  ? "border border-primary font-bold"
+                                  : "bg-background text-foreground hover:bg-accent"
+                              : "bg-muted text-muted-foreground opacity-60")
+                          }
+                          onClick={() =>
+                            isCurrentMonth && handleCalendarSelect(new Date(d))
+                          }
+                          disabled={!isCurrentMonth}
+                          tabIndex={isCurrentMonth ? 0 : -1}
+                        >
+                          {d.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-            {/* Time input: แยกช่อง ชั่วโมง/นาที */}
-            <div className="flex gap-2 items-center mt-1">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={hour}
-                onChange={(e) => {
-                  let val = e.target.value.replace(/[^0-9]/g, "");
-                  if (val.length > 2) val = val.slice(0, 2);
-                  setHour(val);
-                }}
-                className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-primary w-[50px] text-center"
-                placeholder="00"
-                pattern="[0-2][0-9]"
-                inputMode="numeric"
-                lang="th"
-                maxLength={2}
-                autoComplete="off"
-                aria-label="ชั่วโมง"
-              />
-              <span>:</span>
-              <input
-                type="text"
-                value={minute}
-                onChange={(e) => {
-                  let val = e.target.value.replace(/[^0-9]/g, "");
-                  if (val.length > 2) val = val.slice(0, 2);
-                  setMinute(val);
-                }}
-                className="border rounded px-2 py-1 text-base focus:ring-2 focus:ring-primary w-[50px] text-center"
-                placeholder="00"
-                pattern="[0-5][0-9]"
-                inputMode="numeric"
-                lang="th"
-                maxLength={2}
-                autoComplete="off"
-                aria-label="นาที"
-              />
+              {/* Time input: แยกช่อง ชั่วโมง/นาที */}
+              <div className="flex gap-1 items-center mt-1">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={hour}
+                  onFocus={handleSelectAll}
+                  onChange={(e) => {
+                    // allow up to 2 digits, only numbers
+                    let hourVal = e.target.value.replace(/[^0-9]/g, "").slice(0,2);
+                    setHour(hourVal);
+                  }}
+                  onBlur={(e) => {
+                    setHour(filterHour(e.target.value));
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData("text/plain");
+                    setHour(filterHour(text));
+                  }}
+                  className="border rounded px-1 py-0.5 text-xs focus:ring-2 focus:ring-primary w-[50px] text-center"
+                  placeholder="00"
+                  pattern="[0-2][0-9]"
+                  inputMode="numeric"
+                  lang="th"
+                  maxLength={2}
+                  autoComplete="off"
+                  aria-label="ชั่วโมง"
+                />
+                <span>:</span>
+                <input
+                  type="text"
+                  value={minute}
+                  onFocus={handleSelectAll}
+                  onChange={(e) => {
+                    // allow up to 2 digits, only numbers
+                    let minuteVal = e.target.value.replace(/[^0-9]/g, "").slice(0,2);
+                    setMinute(minuteVal);
+                  }}
+                  onBlur={(e) => {
+                    setMinute(filterMinute(e.target.value));
+                  }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const text = e.clipboardData.getData("text/plain");
+                    setMinute(filterMinute(text));
+                  }}
+                  className="border rounded px-1 py-0.5 text-xs focus:ring-2 focus:ring-primary w-[50px] text-center"
+                  placeholder="00"
+                  pattern="[0-5][0-9]"
+                  inputMode="numeric"
+                  lang="th"
+                  maxLength={2}
+                  autoComplete="off"
+                  aria-label="นาที"
+                />
+              </div>
             </div>
           </div>
         </PopoverContent>

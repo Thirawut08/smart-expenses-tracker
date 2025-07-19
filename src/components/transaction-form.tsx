@@ -293,82 +293,120 @@ export function TransactionForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-5 p-4 max-w-md mx-auto"
+        className="space-y-4 p-4 max-w-md w-full mx-auto flex flex-col"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
-            if (isEditing) {
-              window.dispatchEvent(new CustomEvent("close-transaction-dialog"));
-            }
+            window.dispatchEvent(new CustomEvent("close-transaction-dialog"));
+          }
+          if (e.key === "Enter" && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+            // กด Enter ที่ input ทั่วไป = submit
+            (e.target as HTMLFormElement).form?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
           }
         }}
       >
-        {/* 1. ประเภท */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">1</span> ประเภท
-          </FormLabel>
-          <RadioGroup
-            value={form.watch("type")}
-            onValueChange={(val) => form.setValue("type", val)}
-            className="flex gap-4"
-            name="type"
-          >
-            <RadioGroupItem value="expense" id="type-expense" />
-            <label htmlFor="type-expense" className="mr-4 cursor-pointer">
-              รายจ่าย
-            </label>
-            <RadioGroupItem value="income" id="type-income" />
-            <label htmlFor="type-income" className="cursor-pointer">
-              รายรับ
-            </label>
-          </RadioGroup>
+        {/* ประเภทธุรกรรม หรือโหมดโอน */}
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">ประเภท</FormLabel>
+          <div className="flex gap-2 items-center">
+            <RadioGroup
+              value={form.watch("type")}
+              onValueChange={(val) => form.setValue("type", val)}
+              className="flex gap-2"
+              name="type"
+              tabIndex={1}
+            >
+              <RadioGroupItem value="expense" id="type-expense" className="scale-90" />
+              <label htmlFor="type-expense" className="mr-2 cursor-pointer text-xs">รายจ่าย</label>
+              <RadioGroupItem value="income" id="type-income" className="scale-90" />
+              <label htmlFor="type-income" className="cursor-pointer text-xs">รายรับ</label>
+            </RadioGroup>
+            <div className="flex-1 flex items-center justify-end">
+              <Switch
+                checked={isTransfer}
+                onCheckedChange={setIsTransfer}
+                id="toggle-transfer-mode"
+                tabIndex={2}
+                className="scale-90"
+              />
+              <label htmlFor="toggle-transfer-mode" className="ml-2 cursor-pointer select-none text-xs font-medium">โอนระหว่างบัญชี</label>
+            </div>
+          </div>
         </div>
-        {/* 2. จำนวนเงิน */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">2</span> จำนวนเงิน
-          </FormLabel>
+        {/* โหมดโอน: บัญชีต้นทาง/ปลายทาง */}
+        {isTransfer ? (
+          <div className="flex flex-col gap-1">
+            <FormLabel className="font-medium text-xs">บัญชีต้นทาง</FormLabel>
+            <FormField
+              control={form.control}
+              name="fromAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <HighPerfDropdown
+                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="เลือกบัญชีต้นทาง..."
+                    className="w-full"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="font-medium text-xs">บัญชีปลายทาง</FormLabel>
+            <FormField
+              control={form.control}
+              name="toAccount"
+              render={({ field }) => (
+                <FormItem>
+                  <HighPerfDropdown
+                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="เลือกบัญชีปลายทาง..."
+                    className="w-full"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <FormLabel className="font-medium text-xs">บัญชี</FormLabel>
+            <FormField
+              control={form.control}
+              name="accountId"
+              render={({ field }) => (
+                <FormItem>
+                  <HighPerfDropdown
+                    options={accounts.map((acc) => ({ value: acc.id, label: `${acc.name} (${acc.currency})` }))}
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    placeholder="เลือกบัญชี..."
+                    className="w-full"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+        {/* จำนวนเงิน */}
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">จำนวนเงิน</FormLabel>
           <Input
             type="number"
             step="any"
             placeholder="0.00"
             {...form.register("amount")}
-            className="h-14 text-3xl px-4 w-full"
-            autoFocus
+            className="h-10 text-base px-2 w-full rounded-md"
             required={!isTemplate && !isTransfer}
-            tabIndex={2}
+            tabIndex={5}
           />
         </div>
-        {/* 3. บัญชี */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">3</span> บัญชี
-          </FormLabel>
-          <FormField
-            control={form.control}
-            name={isTransfer ? "fromAccount" : "accountId"}
-            render={({ field }) => (
-              <FormItem>
-                <HighPerfDropdown
-                  options={accounts.map((acc) => ({
-                    value: acc.id,
-                    label: `${acc.name} (${acc.currency})`,
-                  }))}
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                  placeholder={isTransfer ? "เลือกบัญชีต้นทาง..." : "เลือกบัญชี..."}
-                  className="w-full"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        {/* 4. วันที่ */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">4</span> วันที่
-          </FormLabel>
+        {/* วันที่ */}
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">วันที่</FormLabel>
           <FormField
             control={form.control}
             name="date"
@@ -380,11 +418,29 @@ export function TransactionForm({
             )}
           />
         </div>
-        {/* 5. รายละเอียด */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">5</span> รายละเอียด (ถ้ามี)
-          </FormLabel>
+        {/* วัตถุประสงค์ */}
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">วัตถุประสงค์</FormLabel>
+          <FormField
+            control={form.control}
+            name="purpose"
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <HighPerfDropdown
+                  options={allPurposes.filter((p) => p && p !== "อื่นๆ").map((purpose) => ({ value: purpose, label: purpose }))}
+                  value={field.value || ""}
+                  onChange={(value) => field.onChange(value)}
+                  placeholder="เลือกวัตถุประสงค์..."
+                  className="w-full"
+                />
+                {fieldState.error && fieldState.error.message && <FormMessage />}
+              </FormItem>
+            )}
+          />
+        </div>
+        {/* รายละเอียด */}
+        <div className="flex flex-col gap-1">
+          <FormLabel className="font-medium text-xs">รายละเอียด (ถ้ามี)</FormLabel>
           <FormField
             control={form.control}
             name="details"
@@ -394,60 +450,68 @@ export function TransactionForm({
                   placeholder="บันทึกรายละเอียดเพิ่มเติม..."
                   {...field}
                   value={field.value ?? ""}
-                  className="w-full h-20 px-4 py-2 rounded border text-base bg-background resize-none"
-                  tabIndex={5}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      (e.target as HTMLTextAreaElement).form?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-                    }
-                  }}
+                  className="w-full h-14 px-2 py-1 rounded-md border text-xs bg-background resize-none"
+                  tabIndex={8}
                 />
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        {/* 6. วัตถุประสงค์ */}
-        <div>
-          <FormLabel className="block mb-1 font-medium">
-            <span className="text-xs mr-1 text-muted-foreground">6</span> วัตถุประสงค์
-          </FormLabel>
-          <FormField
-            control={form.control}
-            name="purpose"
-            render={({ field, fieldState }) => (
-              <FormItem>
-                <HighPerfDropdown
-                  options={allPurposes
-                    .filter((p) => p && p !== "อื่นๆ")
-                    .map((purpose) => ({ value: purpose, label: purpose }))}
-                  value={field.value || ""}
-                  onChange={(value) => field.onChange(value)}
-                  placeholder="เลือกวัตถุประสงค์..."
-                  className="w-full"
-                  // (ถ้า HighPerfDropdown รองรับ prop สำหรับตำแหน่ง search ให้ส่ง prop เช่น searchPosition="bottom")
-                />
-                {fieldState.error && fieldState.error.message && (
+        {/* ผู้จ่าย/ผู้รับ (2 columns) */}
+        <div className="flex flex-col sm:flex-row gap-1">
+          <div className="flex-1 flex flex-col gap-1">
+            <FormLabel className="font-medium text-xs">ผู้จ่าย (ถ้ามี)</FormLabel>
+            <FormField
+              control={form.control}
+              name="sender"
+              render={({ field }) => (
+                <FormItem>
+                  <Input
+                    placeholder="ชื่อผู้จ่าย..."
+                    {...field}
+                    value={field.value ?? ""}
+                    className="w-full px-2 py-1 rounded-md border text-xs bg-background"
+                    tabIndex={9}
+                  />
                   <FormMessage />
-                )}
-              </FormItem>
-            )}
-          />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-1">
+            <FormLabel className="font-medium text-xs">ผู้รับ (ถ้ามี)</FormLabel>
+            <FormField
+              control={form.control}
+              name="recipient"
+              render={({ field }) => (
+                <FormItem>
+                  <Input
+                    placeholder="ชื่อผู้รับ..."
+                    {...field}
+                    value={field.value ?? ""}
+                    className="w-full px-2 py-1 rounded-md border text-xs bg-background"
+                    tabIndex={10}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         {/* ปุ่มบันทึก/ยกเลิก */}
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2 pt-2">
           {isEditing && (
             <Button
               type="button"
               variant="ghost"
               onClick={() => window.dispatchEvent(new CustomEvent("close-transaction-dialog"))}
-              tabIndex={7}
+              tabIndex={12}
             >
               ยกเลิก
             </Button>
           )}
-          <Button type="submit" className="font-bold" tabIndex={8}>
+          <Button type="submit" className="font-bold text-xs h-8 px-4" tabIndex={11}>
             {isEditing ? "บันทึก" : "เพิ่มธุรกรรม"}
           </Button>
         </div>

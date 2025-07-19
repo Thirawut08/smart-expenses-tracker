@@ -62,7 +62,7 @@ export function AddTransactionDialog({
   const [extractedData, setExtractedData] = useState<SlipData | null>(null);
   const [activeTab, setActiveTab] = useState("manual");
   const { purposes } = useLedger();
-
+  
   useEffect(() => {
     if (open) {
       setActiveTab("manual");
@@ -81,11 +81,11 @@ export function AddTransactionDialog({
     }
     handleClose();
   };
-
+  
   const handleClose = () => {
     onOpenChange(false);
   };
-
+  
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
     if (!isOpen) {
@@ -140,8 +140,8 @@ export function AddTransactionDialog({
             onValueChange={(v) => setActiveTab(v as "manual" | "slip")}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manual">กรอกข้อมูลเอง</TabsTrigger>
               <TabsTrigger
                 value="slip"
                 disabled={
@@ -150,9 +150,9 @@ export function AddTransactionDialog({
               >
                 อัปโหลดสลิป
               </TabsTrigger>
-            </TabsList>
-            <TabsContent value="manual">
-              <TransactionForm
+          </TabsList>
+          <TabsContent value="manual">
+            <TransactionForm
                 key={
                   JSON.stringify(initialData ?? extractedData) || "manual-form"
                 }
@@ -170,19 +170,19 @@ export function AddTransactionDialog({
                       }
                     : getInitialFormData(initialData)
                 }
-                onSubmit={handleFormSubmit}
-                isEditing={isEditing}
+              onSubmit={handleFormSubmit}
+              isEditing={isEditing}
                 isTemplate={
                   !!initialData?.purpose && !initialData?.id && !isEditing
                 }
-                availablePurposes={purposes}
+              availablePurposes={purposes}
                 transactions={transactions}
-              />
-            </TabsContent>
-            <TabsContent value="slip">
-              <SlipUploader onExtractionComplete={setExtractedData} />
-            </TabsContent>
-          </Tabs>
+            />
+          </TabsContent>
+          <TabsContent value="slip">
+             <SlipUploader onExtractionComplete={setExtractedData} />
+          </TabsContent>
+        </Tabs>
         )}
       </DialogContent>
     </Dialog>

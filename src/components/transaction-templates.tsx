@@ -15,6 +15,7 @@ import { useState } from "react";
 import { TransactionForm } from "./transaction-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { useLedger } from "@/hooks/use-ledger";
+import { useAccounts } from "@/hooks/use-accounts";
 
 interface TransactionTemplatesProps {
   templates: Template[];
@@ -28,6 +29,7 @@ export function TransactionTemplates({
   const [open, setOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Template | null>(null);
   const { addTemplate, editTemplate, purposes } = useLedger();
+  const { accounts } = useAccounts();
 
   // เพิ่ม state และ logic filter
   const [search, setSearch] = useState("");
@@ -54,10 +56,10 @@ export function TransactionTemplates({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>เทมเพลตของฉัน</CardTitle>
-          <CardDescription>
-            ใช้เทมเพลตเพื่อเพิ่มธุรกรรมที่เกิดขึ้นบ่อยได้อย่างรวดเร็ว
-          </CardDescription>
+        <CardTitle>เทมเพลตของฉัน</CardTitle>
+        <CardDescription>
+          ใช้เทมเพลตเพื่อเพิ่มธุรกรรมที่เกิดขึ้นบ่อยได้อย่างรวดเร็ว
+        </CardDescription>
         </div>
         <Button
           size="icon"
@@ -81,14 +83,28 @@ export function TransactionTemplates({
         <div className="flex flex-wrap gap-2">
           {filteredTemplates.map((template) => (
             <button
-              key={template.id}
+                key={template.id}
               type="button"
               className={`px-3 py-1 rounded text-sm font-medium border transition-colors duration-75
-                ${selectedId === template.id ? "bg-blue-700 text-white border-blue-700" : "bg-blue-100 text-blue-900 border-blue-200 hover:bg-blue-200"}`}
+                ${selectedId === template.id
+                  ? "bg-gray-100 text-gray-900 border-gray-400"
+                  : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
               onClick={() => handleSelect(template)}
-              style={{ minWidth: 0, minHeight: 0 }}
+              style={{ minWidth: 0, minHeight: 0, textAlign: "left", maxWidth: 260 }}
             >
-              {template.purpose}
+              <div className="font-semibold truncate">{template.purpose}</div>
+              <div className="text-xs text-muted-foreground whitespace-normal break-words">
+                {template.type && <div><b>ประเภท:</b> {template.type === "income" ? "รายรับ" : "รายจ่าย"}</div>}
+                {template.amount !== undefined && template.amount !== null && !isNaN(Number(template.amount)) && (
+                  <div><b>จำนวนเงิน:</b> {template.amount}</div>
+                )}
+                {template.accountId && (
+                  <div><b>บัญชี:</b> {accounts.find(acc => acc.id === template.accountId)?.name || template.accountId}</div>
+                )}
+                {template.sender && <div><b>ผู้จ่าย:</b> {template.sender}</div>}
+                {template.recipient && <div><b>ผู้รับ:</b> {template.recipient}</div>}
+                {template.details && <div><b>หมายเหตุ:</b> {template.details}</div>}
+              </div>
             </button>
           ))}
         </div>
@@ -105,7 +121,7 @@ export function TransactionTemplates({
               isEditing={false}
               isTemplate={true}
               availablePurposes={purposes}
-              initialData={{ accountId: "", date: undefined }}
+              initialData={{ accountId: "", date: undefined, sender: "", recipient: "" }}
             />
           </div>
         </DialogContent>
@@ -140,8 +156,8 @@ export function TransactionTemplates({
                   date: undefined,
                 }}
               />
-            </div>
-          )}
+          </div>
+        )}
         </DialogContent>
       </Dialog>
     </Card>
