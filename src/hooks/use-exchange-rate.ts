@@ -1,7 +1,6 @@
+"use client";
 
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useExchangeRate() {
   const [rate, setRate] = useState<number | null>(null);

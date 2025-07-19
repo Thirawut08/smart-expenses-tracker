@@ -1,5 +1,5 @@
-"use client"
- 
+"use client";
+
 import {
   FieldError as FieldErrorPrimitive,
   FieldErrorProps,
@@ -7,13 +7,13 @@ import {
   LabelProps,
   Text as TextPrimitive,
   TextProps,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
- 
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
+
 const labelStyles = tv({
   base: "text-sm font-medium text-foreground",
-})
- 
+});
+
 const Label = (props: LabelProps) => {
   return (
     <LabelPrimitive
@@ -22,13 +22,13 @@ const Label = (props: LabelProps) => {
         className: props.className,
       })}
     />
-  )
-}
- 
+  );
+};
+
 const descriptionStyles = tv({
   base: "text-sm text-muted-foreground",
-})
- 
+});
+
 const Description = (props: TextProps) => {
   return (
     <TextPrimitive
@@ -38,13 +38,13 @@ const Description = (props: TextProps) => {
         className: props.className,
       })}
     />
-  )
-}
- 
+  );
+};
+
 const fieldErrorStyles = tv({
   base: "text-sm text-destructive",
-})
- 
+});
+
 const FieldError = (props: FieldErrorProps) => {
   return (
     <FieldErrorPrimitive
@@ -53,7 +53,7 @@ const FieldError = (props: FieldErrorProps) => {
         className: props.className,
       })}
     />
-  )
-}
- 
-export { Label, Description, FieldError }
+  );
+};
+
+export { Label, Description, FieldError };

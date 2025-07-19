@@ -1,55 +1,78 @@
-'use client';
+"use client";
+// --- React & Hooks ---
+import { useState, useMemo } from "react";
 
-import { useState, useMemo } from 'react';
-import { useLedger } from '@/hooks/use-ledger';
-import { useAccounts } from '@/hooks/use-accounts';
-import { thaiMonths } from '@/lib/data';
-import { HighPerfDropdown } from '../ui/high-perf-dropdown';
-import { AccountBalances } from '@/components/account-balances';
-import { TransactionTemplates } from '@/components/transaction-templates';
-import { UnifiedDashboardChart } from '@/components/unified-dashboard-chart';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+// --- Data & State ---
+import { useLedger } from "@/hooks/use-ledger";
+import { useAccounts } from "@/hooks/use-accounts";
+import { thaiMonths } from "@/lib/data";
 
+// --- UI Components ---
+import { HighPerfDropdown } from "../ui/high-perf-dropdown";
+import { AccountBalances } from "@/components/account-balances";
+import { TransactionTemplates } from "@/components/transaction-templates";
+import { UnifiedDashboardChart } from "@/components/unified-dashboard-chart";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
+/**
+ * DashboardPage - หน้าหลักแสดงภาพรวมการเงิน, กราฟ, บัญชี, เทมเพลต ฯลฯ
+ * - กรองธุรกรรมตามเดือน/โหมด
+ * - แสดงยอดคงเหลือ, กราฟ, เทมเพลต
+ */
 export function DashboardPage() {
+  // --- State ---
   const { transactions, templates, handleUseTemplate } = useLedger();
   const { accounts } = useAccounts();
-  const allAccountTypes = useMemo(() => {
-    const types = accounts.flatMap(a => Array.isArray(a.types) ? a.types : [a.types]).filter(Boolean);
-    return ['all', ...Array.from(new Set(types))];
-  }, [accounts]);
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [selectedMode, setSelectedMode] = useState<'total' | 'invest' | 'save'>('total');
-  const [selectedAccountType, setSelectedAccountType] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedMode, setSelectedMode] = useState<"total" | "invest" | "save">(
+    "total",
+  );
 
+  // --- Memoized Data ---
   const filteredTransactions = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return transactions;
-    }
-    return transactions.filter(t => new Date(t.date).getMonth().toString() === selectedMonth);
+    if (selectedMonth === "all") return transactions;
+    return transactions.filter(
+      (t) => new Date(t.date).getMonth().toString() === selectedMonth,
+    );
   }, [transactions, selectedMonth]);
 
   const currentMonthLabel = useMemo(() => {
-    if (selectedMonth === 'all') {
-      return 'ทั้งหมด';
-    }
-    const month = thaiMonths.find(m => m.value === parseInt(selectedMonth, 10));
-    return month ? month.label : 'ทั้งหมด';
+    if (selectedMonth === "all") return "ทั้งหมด";
+    const month = thaiMonths.find(
+      (m) => m.value === parseInt(selectedMonth, 10),
+    );
+    return month ? month.label : "ทั้งหมด";
   }, [selectedMonth]);
-  
+
+  // --- Render ---
   return (
     <div className="space-y-8 md:space-y-10 lg:space-y-12">
-      {/* Section: Header + Filter + Mode */}
+      {/* Header + Filter + Mode */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 pb-2 md:pb-4">
         <div className="flex items-center gap-3 md:gap-5">
-          <h1 className="text-2xl md:text-3xl font-bold font-headline">แดชบอร์ด</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-headline">
+            แดชบอร์ด
+          </h1>
           <span className="text-sm text-muted-foreground border rounded px-2 py-1 bg-muted/50">
-            {new Date().toLocaleDateString('th-TH')}
+            {new Date().toLocaleDateString("th-TH")}
           </span>
         </div>
         <div className="flex gap-2 items-center">
           <HighPerfDropdown
-            options={[{ value: 'all', label: 'ทุกเดือน' }, ...thaiMonths.map(month => ({ value: month.value.toString(), label: month.label + (month.value === new Date().getMonth() ? ' (ปัจจุบัน)' : '') }))]}
+            options={[
+              { value: "all", label: "ทุกเดือน" },
+              ...thaiMonths.map((month) => ({
+                value: month.value.toString(),
+                label:
+                  month.label +
+                  (month.value === new Date().getMonth() ? " (ปัจจุบัน)" : ""),
+              })),
+            ]}
             value={selectedMonth}
             onChange={setSelectedMonth}
             placeholder="เลือกเดือน"
@@ -57,17 +80,23 @@ export function DashboardPage() {
           />
           <div className="flex gap-1 ml-2">
             <button
-              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'total' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
-              onClick={() => setSelectedMode('total')}
-            >ทั้งหมด</button>
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === "total" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+              onClick={() => setSelectedMode("total")}
+            >
+              ทั้งหมด
+            </button>
             <button
-              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'invest' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
-              onClick={() => setSelectedMode('invest')}
-            >ลงทุน</button>
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === "invest" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+              onClick={() => setSelectedMode("invest")}
+            >
+              ลงทุน
+            </button>
             <button
-              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === 'save' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'}`}
-              onClick={() => setSelectedMode('save')}
-            >ออม</button>
+              className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${selectedMode === "save" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+              onClick={() => setSelectedMode("save")}
+            >
+              ออม
+            </button>
           </div>
         </div>
       </div>
@@ -96,10 +125,11 @@ export function DashboardPage() {
         </a>
       </div>
 
-      {/* Section: Templates (minimal, ไม่มี Card) */}
-      <div className="p-0">
-        <TransactionTemplates templates={templates} onUseTemplate={handleUseTemplate} />
-      </div>
+      {/* Transaction Templates */}
+      <TransactionTemplates
+        templates={templates}
+        onUseTemplate={handleUseTemplate}
+      />
     </div>
   );
 }

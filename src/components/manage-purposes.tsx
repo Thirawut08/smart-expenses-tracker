@@ -1,41 +1,78 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useLedger } from '@/hooks/use-ledger';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2, Ban, PlusCircle } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useState } from "react";
+import { useLedger } from "@/hooks/use-ledger";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Pencil, Trash2, Ban, PlusCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export function ManagePurposes() {
-  const { purposes, addPurpose, editPurpose, removePurpose, transactions } = useLedger();
+  const { purposes, addPurpose, editPurpose, removePurpose, transactions } =
+    useLedger();
   const { toast } = useToast();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newPurposeToAdd, setNewPurposeToAdd] = useState('');
+  const [newPurposeToAdd, setNewPurposeToAdd] = useState("");
 
   const [purposeToEdit, setPurposeToEdit] = useState<string | null>(null);
-  const [newPurposeName, setNewPurposeName] = useState('');
+  const [newPurposeName, setNewPurposeName] = useState("");
 
   const [purposeToDelete, setPurposeToDelete] = useState<string | null>(null);
-  const [deleteAction, setDeleteAction] = useState<'reclassify' | 'deleteAll'>('reclassify');
+  const [deleteAction, setDeleteAction] = useState<"reclassify" | "deleteAll">(
+    "reclassify",
+  );
 
   const editablePurposes: string[] = purposes;
 
   const handleAddNewPurpose = () => {
     if (!newPurposeToAdd.trim()) {
-      toast({ variant: 'destructive', title: 'ชื่อวัตถุประสงค์ว่างเปล่า' });
+      toast({ variant: "destructive", title: "ชื่อวัตถุประสงค์ว่างเปล่า" });
       return;
     }
     addPurpose(newPurposeToAdd.trim());
-    setNewPurposeToAdd('');
+    setNewPurposeToAdd("");
     setIsAddDialogOpen(false);
   };
 
@@ -46,18 +83,20 @@ export function ManagePurposes() {
 
   const handleSaveEdit = () => {
     if (!purposeToEdit || !newPurposeName.trim()) return;
-    if (purposes.some(p => p === newPurposeName.trim() && p !== purposeToEdit)) {
+    if (
+      purposes.some((p) => p === newPurposeName.trim() && p !== purposeToEdit)
+    ) {
       toast({
-        variant: 'destructive',
-        title: 'ชื่อวัตถุประสงค์ซ้ำ',
-        description: 'มีวัตถุประสงค์นี้อยู่แล้ว',
+        variant: "destructive",
+        title: "ชื่อวัตถุประสงค์ซ้ำ",
+        description: "มีวัตถุประสงค์นี้อยู่แล้ว",
       });
       return;
     }
     editPurpose(purposeToEdit, newPurposeName.trim());
-    toast({ title: 'แก้ไขวัตถุประสงค์สำเร็จ' });
+    toast({ title: "แก้ไขวัตถุประสงค์สำเร็จ" });
     setPurposeToEdit(null);
-    setNewPurposeName('');
+    setNewPurposeName("");
   };
 
   const handleDeleteRequest = (purpose: string) => {
@@ -66,8 +105,13 @@ export function ManagePurposes() {
 
   const confirmDelete = () => {
     if (purposeToDelete) {
-      const hasTransactions = transactions.some(t => t.purpose === purposeToDelete);
-      removePurpose(purposeToDelete, hasTransactions ? deleteAction : undefined);
+      const hasTransactions = transactions.some(
+        (t) => t.purpose === purposeToDelete,
+      );
+      removePurpose(
+        purposeToDelete,
+        hasTransactions ? deleteAction : undefined,
+      );
       setPurposeToDelete(null);
     }
   };
@@ -108,11 +152,17 @@ export function ManagePurposes() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(purpose)}>
-                            <Pencil className="w-4 h-4 mr-2" />แก้ไข
+                          <DropdownMenuItem
+                            onClick={() => handleEditClick(purpose)}
+                          >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            แก้ไข
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteRequest(purpose)}>
-                            <Trash2 className="w-4 h-4 mr-2" />ลบ
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteRequest(purpose)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            ลบ
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -141,7 +191,9 @@ export function ManagePurposes() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="new-purpose-name" className="text-right col-span-1">ชื่อ</Label>
+            <Label htmlFor="new-purpose-name" className="text-right col-span-1">
+              ชื่อ
+            </Label>
             <Input
               id="new-purpose-name"
               value={newPurposeToAdd}
@@ -151,21 +203,36 @@ export function ManagePurposes() {
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsAddDialogOpen(false)}>ยกเลิก</Button>
-            <Button type="submit" onClick={handleAddNewPurpose}>บันทึก</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button type="submit" onClick={handleAddNewPurpose}>
+              บันทึก
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Purpose Dialog */}
-      <Dialog open={!!purposeToEdit} onOpenChange={open => { if (!open) setPurposeToEdit(null); }}>
+      <Dialog
+        open={!!purposeToEdit}
+        onOpenChange={(open) => {
+          if (!open) setPurposeToEdit(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>แก้ไขวัตถุประสงค์</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="purpose-name" className="text-right col-span-1">ชื่อ</Label>
+              <Label htmlFor="purpose-name" className="text-right col-span-1">
+                ชื่อ
+              </Label>
               <Input
                 id="purpose-name"
                 value={newPurposeName}
@@ -175,26 +242,44 @@ export function ManagePurposes() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setPurposeToEdit(null)}>ยกเลิก</Button>
-            <Button type="submit" onClick={handleSaveEdit}>บันทึกการเปลี่ยนแปลง</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setPurposeToEdit(null)}
+            >
+              ยกเลิก
+            </Button>
+            <Button type="submit" onClick={handleSaveEdit}>
+              บันทึกการเปลี่ยนแปลง
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       {/* Delete Purpose Dialog */}
-      <AlertDialog open={!!purposeToDelete} onOpenChange={open => { if (!open) setPurposeToDelete(null); }}>
+      <AlertDialog
+        open={!!purposeToDelete}
+        onOpenChange={(open) => {
+          if (!open) setPurposeToDelete(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>คุณแน่ใจหรือไม่ว่าจะลบ "{purposeToDelete}"?</AlertDialogTitle>
+            <AlertDialogTitle>
+              คุณแน่ใจหรือไม่ว่าจะลบ "{purposeToDelete}"?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              การกระทำนี้ไม่สามารถย้อนกลับได้ ธุรกรรมทั้งหมดที่ใช้วัตถุประสงค์นี้จะถูกลบออกจากระบบถาวร
+              การกระทำนี้ไม่สามารถย้อนกลับได้
+              ธุรกรรมทั้งหมดที่ใช้วัตถุประสงค์นี้จะถูกลบออกจากระบบถาวร
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPurposeToDelete(null)}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setPurposeToDelete(null)}>
+              ยกเลิก
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (purposeToDelete) {
-                  removePurpose(purposeToDelete, 'deleteAll');
+                  removePurpose(purposeToDelete, "deleteAll");
                   setPurposeToDelete(null);
                 }
               }}

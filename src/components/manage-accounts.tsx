@@ -1,59 +1,106 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, Trash2, Ban, PlusCircle, XCircle } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useLedger } from '@/hooks/use-ledger';
-import { useAccounts } from '@/hooks/use-accounts';
-import type { Account } from '@/lib/types';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Ban,
+  PlusCircle,
+  XCircle,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useLedger } from "@/hooks/use-ledger";
+import { useAccounts } from "@/hooks/use-accounts";
+import type { Account } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const ACCOUNTS_STORAGE_KEY = 'ledger-ai-accounts';
-const ACCOUNT_TYPES_STORAGE_KEY = 'ledger-ai-account-types';
+const ACCOUNTS_STORAGE_KEY = "ledger-ai-accounts";
+const ACCOUNT_TYPES_STORAGE_KEY = "ledger-ai-account-types";
 
 function getDefaultAccounts(): Account[] {
   return [
-    { id: '1', name: 'เงินสด', currency: 'THB', types: ['ทั่วไป'] },
-    { id: '2', name: 'KBANK', currency: 'THB', types: ['ทั่วไป'] },
-    { id: '3', name: 'SCB', currency: 'THB', types: ['ทั่วไป'] },
+    { id: "1", name: "เงินสด", currency: "THB", types: ["ทั่วไป"] },
+    { id: "2", name: "KBANK", currency: "THB", types: ["ทั่วไป"] },
+    { id: "3", name: "SCB", currency: "THB", types: ["ทั่วไป"] },
   ];
 }
 
-const DEFAULT_ACCOUNT_TYPES = ['ทั่วไป', 'ลงทุน', 'ออม'];
+const DEFAULT_ACCOUNT_TYPES = ["ทั่วไป", "ลงทุน", "ออม"];
 
 export function ManageAccounts() {
   const { transactions } = useLedger();
-  const { accounts, addAccount, editAccount, deleteAccount, isLoaded } = useAccounts();
+  const { accounts, addAccount, editAccount, deleteAccount, isLoaded } =
+    useAccounts();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editAccountState, setEditAccountState] = useState<Account | null>(null);
+  const [editAccountState, setEditAccountState] = useState<Account | null>(
+    null,
+  );
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
   // Form state
-  const [name, setName] = useState('');
-  const [currency, setCurrency] = useState<'THB' | 'USD'>('THB');
-  const [types, setTypes] = useState<string[]>(['ทั่วไป']);
+  const [name, setName] = useState("");
+  const [currency, setCurrency] = useState<"THB" | "USD">("THB");
+  const [types, setTypes] = useState<string[]>(["ทั่วไป"]);
   const [accountTypes, setAccountTypes] = useState<string[]>(() => {
     // โหลดจาก localStorage ถ้ามี
-    const stored = typeof window !== 'undefined' ? localStorage.getItem(ACCOUNT_TYPES_STORAGE_KEY) : null;
+    const stored =
+      typeof window !== "undefined"
+        ? localStorage.getItem(ACCOUNT_TYPES_STORAGE_KEY)
+        : null;
     if (stored) return JSON.parse(stored);
     // รวมประเภทจากบัญชีที่มีอยู่และ default
-    const all = [...DEFAULT_ACCOUNT_TYPES, ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)];
+    const all = [
+      ...DEFAULT_ACCOUNT_TYPES,
+      ...accounts
+        .flatMap((a) => (Array.isArray(a.types) ? a.types : []))
+        .filter(Boolean),
+    ];
     return Array.from(new Set(all));
   });
-  const [newType, setNewType] = useState('');
+  const [newType, setNewType] = useState("");
 
   useEffect(() => {
     // sync accountTypes เมื่อ accounts เปลี่ยน
-    const newTypes = Array.from(new Set([
-      ...DEFAULT_ACCOUNT_TYPES,
-      ...accounts.flatMap(a => Array.isArray(a.types) ? a.types : []).filter(Boolean)
-    ]));
-    setAccountTypes(prev => {
+    const newTypes = Array.from(
+      new Set([
+        ...DEFAULT_ACCOUNT_TYPES,
+        ...accounts
+          .flatMap((a) => (Array.isArray(a.types) ? a.types : []))
+          .filter(Boolean),
+      ]),
+    );
+    setAccountTypes((prev) => {
       // ถ้า prev มีประเภทที่ user เพิ่มไว้แต่ไม่มีใน newTypes ให้คงไว้
       const merged = Array.from(new Set([...newTypes, ...prev]));
       return merged;
@@ -62,25 +109,28 @@ export function ManageAccounts() {
 
   // บันทึก accountTypes ลง localStorage ทุกครั้งที่เปลี่ยน
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ACCOUNT_TYPES_STORAGE_KEY, JSON.stringify(accountTypes));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        ACCOUNT_TYPES_STORAGE_KEY,
+        JSON.stringify(accountTypes),
+      );
     }
   }, [accountTypes]);
 
   const resetForm = () => {
-    setName('');
-    setCurrency('THB');
-    setTypes(['ทั่วไป']);
-    setNewType('');
+    setName("");
+    setCurrency("THB");
+    setTypes(["ทั่วไป"]);
+    setNewType("");
   };
 
   const handleAdd = () => {
     if (!name.trim()) return;
-    console.log('[DEBUG] handleAdd called', { name, currency, types });
+    console.log("[DEBUG] handleAdd called", { name, currency, types });
     addAccount({
       name: name.trim(),
       currency,
-      types: types.length ? types : ['ทั่วไป'],
+      types: types.length ? types : ["ทั่วไป"],
     });
     setIsAddDialogOpen(false);
     resetForm();
@@ -93,7 +143,7 @@ export function ManageAccounts() {
     editAccount(editAccountState.id, {
       name: name.trim(),
       currency,
-      types: selectedTypes.length ? selectedTypes : ['ทั่วไป'],
+      types: selectedTypes.length ? selectedTypes : ["ทั่วไป"],
     });
     setIsEditDialogOpen(false);
     setEditAccountState(null);
@@ -102,9 +152,9 @@ export function ManageAccounts() {
 
   const handleDelete = () => {
     if (!accountToDelete) return;
-    const used = transactions.some(t => t.account.id === accountToDelete.id);
+    const used = transactions.some((t) => t.account.id === accountToDelete.id);
     if (used) {
-      alert('บัญชีนี้ถูกใช้งานในธุรกรรม ไม่สามารถลบได้');
+      alert("บัญชีนี้ถูกใช้งานในธุรกรรม ไม่สามารถลบได้");
       setAccountToDelete(null);
       return;
     }
@@ -116,18 +166,24 @@ export function ManageAccounts() {
     setEditAccountState(account);
     setName(account.name);
     setCurrency(account.currency);
-    setTypes(Array.isArray(account.types) && account.types.length ? account.types : ['ทั่วไป']);
+    setTypes(
+      Array.isArray(account.types) && account.types.length
+        ? account.types
+        : ["ทั่วไป"],
+    );
     setIsEditDialogOpen(true);
   };
 
   // ลบประเภทบัญชีออกจาก accountTypes และจากบัญชีทุกบัญชี
   const handleRemoveAccountType = (typeToRemove: string) => {
-    setAccountTypes(prev => prev.filter(t => t !== typeToRemove));
-    setTypes(prev => prev.filter(t => t !== typeToRemove));
+    setAccountTypes((prev) => prev.filter((t) => t !== typeToRemove));
+    setTypes((prev) => prev.filter((t) => t !== typeToRemove));
     // ลบประเภทนี้ออกจากบัญชีทุกบัญชี (editAccount แบบ batch)
-    accounts.forEach(acc => {
+    accounts.forEach((acc) => {
       if (Array.isArray(acc.types) && acc.types.includes(typeToRemove)) {
-        editAccount(acc.id, { types: acc.types.filter(t => t !== typeToRemove) });
+        editAccount(acc.id, {
+          types: acc.types.filter((t) => t !== typeToRemove),
+        });
       }
     });
   };
@@ -147,9 +203,16 @@ export function ManageAccounts() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>บัญชีของฉัน</CardTitle>
-          <CardDescription>เพิ่ม แก้ไข หรือลบบัญชี เลือกสกุลเงิน และกำหนดประเภทบัญชี</CardDescription>
+          <CardDescription>
+            เพิ่ม แก้ไข หรือลบบัญชี เลือกสกุลเงิน และกำหนดประเภทบัญชี
+          </CardDescription>
         </div>
-        <Button onClick={() => { setIsAddDialogOpen(true); resetForm(); }}>
+        <Button
+          onClick={() => {
+            setIsAddDialogOpen(true);
+            resetForm();
+          }}
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           เพิ่มบัญชี
         </Button>
@@ -170,7 +233,11 @@ export function ManageAccounts() {
                 <TableRow key={acc.id}>
                   <TableCell className="font-medium">{acc.name}</TableCell>
                   <TableCell>{acc.currency}</TableCell>
-                  <TableCell>{(Array.isArray(acc.types) ? acc.types : [acc.types]).join(', ') || 'ทั่วไป'}</TableCell>
+                  <TableCell>
+                    {(Array.isArray(acc.types) ? acc.types : [acc.types]).join(
+                      ", ",
+                    ) || "ทั่วไป"}
+                  </TableCell>
                   <TableCell className="text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -184,7 +251,10 @@ export function ManageAccounts() {
                           <Pencil className="mr-2 h-4 w-4" />
                           <span>แก้ไข</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setAccountToDelete(acc)} className="text-red-600 focus:text-red-600">
+                        <DropdownMenuItem
+                          onClick={() => setAccountToDelete(acc)}
+                          className="text-red-600 focus:text-red-600"
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           <span>ลบ</span>
                         </DropdownMenuItem>
@@ -209,35 +279,59 @@ export function ManageAccounts() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>เพิ่มบัญชีใหม่</DialogTitle>
-            <DialogDescription>กรอกชื่อบัญชี เลขบัญชี สกุลเงิน และประเภทบัญชี</DialogDescription>
+            <DialogDescription>
+              กรอกชื่อบัญชี เลขบัญชี สกุลเงิน และประเภทบัญชี
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account-name" className="text-right">ชื่อบัญชี</Label>
-              <Input id="account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+              <Label htmlFor="account-name" className="text-right">
+                ชื่อบัญชี
+              </Label>
+              <Input
+                id="account-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account-currency" className="text-right">สกุลเงิน</Label>
-              <select id="account-currency" value={currency} onChange={e => setCurrency(e.target.value as 'THB' | 'USD')} className="col-span-2 border rounded px-2 py-1">
+              <Label htmlFor="account-currency" className="text-right">
+                สกุลเงิน
+              </Label>
+              <select
+                id="account-currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "THB" | "USD")}
+                className="col-span-2 border rounded px-2 py-1"
+              >
                 <option value="THB">THB</option>
                 <option value="USD">USD</option>
               </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account-type" className="text-right">ประเภทบัญชี</Label>
+              <Label htmlFor="account-type" className="text-right">
+                ประเภทบัญชี
+              </Label>
               <div className="col-span-3 flex flex-wrap gap-2">
-                {accountTypes.map(t => (
+                {accountTypes.map((t) => (
                   <label key={t} className="flex items-center gap-1">
                     <Checkbox
                       checked={types.includes(t)}
-                      onCheckedChange={checked => {
-                        setTypes(prev => checked ? [...prev, t] : prev.filter(x => x !== t));
+                      onCheckedChange={(checked) => {
+                        setTypes((prev) =>
+                          checked ? [...prev, t] : prev.filter((x) => x !== t),
+                        );
                       }}
                       id={`add-type-${t}`}
                     />
                     <span>{t}</span>
                     {DEFAULT_ACCOUNT_TYPES.includes(t) ? null : (
-                      <button type="button" onClick={() => handleRemoveAccountType(t)} className="ml-1 text-red-500 hover:text-red-700">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAccountType(t)}
+                        className="ml-1 text-red-500 hover:text-red-700"
+                      >
                         <XCircle className="w-4 h-4" />
                       </button>
                     )}
@@ -247,21 +341,32 @@ export function ManageAccounts() {
               <Input
                 placeholder="เพิ่มประเภทใหม่..."
                 value={newType}
-                onChange={e => setNewType(e.target.value)}
+                onChange={(e) => setNewType(e.target.value)}
                 onBlur={() => {
-                  if (newType.trim() && !accountTypes.includes(newType.trim())) {
-                    setAccountTypes(types => [...types, newType.trim()]);
-                    setTypes(prev => [...prev, newType.trim()]);
+                  if (
+                    newType.trim() &&
+                    !accountTypes.includes(newType.trim())
+                  ) {
+                    setAccountTypes((types) => [...types, newType.trim()]);
+                    setTypes((prev) => [...prev, newType.trim()]);
                   }
-                  setNewType('');
+                  setNewType("");
                 }}
                 className="col-span-3 mt-2"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsAddDialogOpen(false)}>ยกเลิก</Button>
-            <Button type="submit" onClick={handleAdd}>บันทึก</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button type="submit" onClick={handleAdd}>
+              บันทึก
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -274,31 +379,53 @@ export function ManageAccounts() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-account-name" className="text-right">ชื่อบัญชี</Label>
-              <Input id="edit-account-name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" />
+              <Label htmlFor="edit-account-name" className="text-right">
+                ชื่อบัญชี
+              </Label>
+              <Input
+                id="edit-account-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="col-span-3"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-account-currency" className="text-right">สกุลเงิน</Label>
-              <select id="edit-account-currency" value={currency} onChange={e => setCurrency(e.target.value as 'THB' | 'USD')} className="col-span-2 border rounded px-2 py-1">
+              <Label htmlFor="edit-account-currency" className="text-right">
+                สกุลเงิน
+              </Label>
+              <select
+                id="edit-account-currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as "THB" | "USD")}
+                className="col-span-2 border rounded px-2 py-1"
+              >
                 <option value="THB">THB</option>
                 <option value="USD">USD</option>
               </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-account-type" className="text-right">ประเภทบัญชี</Label>
+              <Label htmlFor="edit-account-type" className="text-right">
+                ประเภทบัญชี
+              </Label>
               <div className="col-span-3 flex flex-wrap gap-2">
-                {accountTypes.map(t => (
+                {accountTypes.map((t) => (
                   <label key={t} className="flex items-center gap-1">
                     <Checkbox
                       checked={types.includes(t)}
-                      onCheckedChange={checked => {
-                        setTypes(prev => checked ? [...prev, t] : prev.filter(x => x !== t));
+                      onCheckedChange={(checked) => {
+                        setTypes((prev) =>
+                          checked ? [...prev, t] : prev.filter((x) => x !== t),
+                        );
                       }}
                       id={`edit-type-${t}`}
                     />
                     <span>{t}</span>
                     {DEFAULT_ACCOUNT_TYPES.includes(t) ? null : (
-                      <button type="button" onClick={() => handleRemoveAccountType(t)} className="ml-1 text-red-500 hover:text-red-700">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAccountType(t)}
+                        className="ml-1 text-red-500 hover:text-red-700"
+                      >
                         <XCircle className="w-4 h-4" />
                       </button>
                     )}
@@ -308,41 +435,67 @@ export function ManageAccounts() {
               <Input
                 placeholder="เพิ่มประเภทใหม่..."
                 value={newType}
-                onChange={e => setNewType(e.target.value)}
+                onChange={(e) => setNewType(e.target.value)}
                 onBlur={() => {
-                  if (newType.trim() && !accountTypes.includes(newType.trim())) {
-                    setAccountTypes(types => [...types, newType.trim()]);
-                    setTypes(prev => [...prev, newType.trim()]);
+                  if (
+                    newType.trim() &&
+                    !accountTypes.includes(newType.trim())
+                  ) {
+                    setAccountTypes((types) => [...types, newType.trim()]);
+                    setTypes((prev) => [...prev, newType.trim()]);
                   }
-                  setNewType('');
+                  setNewType("");
                 }}
                 className="col-span-3 mt-2"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setIsEditDialogOpen(false)}>ยกเลิก</Button>
-            <Button type="submit" onClick={handleEdit}>บันทึกการเปลี่ยนแปลง</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button type="submit" onClick={handleEdit}>
+              บันทึกการเปลี่ยนแปลง
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={!!accountToDelete} onOpenChange={open => !open && setAccountToDelete(null)}>
+      <Dialog
+        open={!!accountToDelete}
+        onOpenChange={(open) => !open && setAccountToDelete(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>ลบบัญชี</DialogTitle>
-            <DialogDescription>คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีนี้?</DialogDescription>
+            <DialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีนี้?
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p>ชื่อบัญชี: <b>{accountToDelete?.name}</b></p>
+            <p>
+              ชื่อบัญชี: <b>{accountToDelete?.name}</b>
+            </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setAccountToDelete(null)}>ยกเลิก</Button>
-            <Button type="submit" variant="destructive" onClick={handleDelete}>ลบ</Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setAccountToDelete(null)}
+            >
+              ยกเลิก
+            </Button>
+            <Button type="submit" variant="destructive" onClick={handleDelete}>
+              ลบ
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
   );
-} 
+}

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Table,
@@ -7,9 +7,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { CardContent } from '@/components/ui/card';
-import { monthDetails } from '@/lib/data';
+} from "@/components/ui/table";
+import { CardContent } from "@/components/ui/card";
+import { monthDetails } from "@/lib/data";
 
 export function MonthInfoTable() {
   const currentMonth = new Date().getMonth() + 1; // 1-based
@@ -29,7 +29,11 @@ export function MonthInfoTable() {
           {monthDetails.map((month) => (
             <TableRow
               key={month.order}
-              className={month.order === currentMonth ? 'bg-blue-900/40 text-blue-400 font-bold' : ''}
+              className={
+                month.order === currentMonth
+                  ? "bg-blue-900/40 text-blue-400 font-bold"
+                  : ""
+              }
             >
               <TableCell>{month.order}</TableCell>
               <TableCell>{month.engFull}</TableCell>

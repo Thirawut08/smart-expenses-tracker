@@ -1,16 +1,15 @@
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useLedger } from '@/hooks/use-ledger';
-import { investmentAccountNames } from '@/lib/data';
-import { InvestmentTransactionsTable } from '@/components/investment-transactions-table';
+import { useMemo } from "react";
+import { useLedger } from "@/hooks/use-ledger";
+import { InvestmentTransactionsTable } from "@/components/investment-transactions-table";
 
 export default function InvestmentsPage() {
-  const { transactions, handleEditTransaction, handleDeleteRequest } = useLedger();
+  const { transactions, handleEditTransaction, handleDeleteRequest } =
+    useLedger();
 
-  const investmentTransactions = useMemo(() => {
-    return transactions.filter(t => investmentAccountNames.includes(t.account.name));
-  }, [transactions]);
+  // ใช้ transactions ทั้งหมด (ถ้าอยาก filter เฉพาะ investment แจ้ง logic ใหม่ได้)
+  const investmentTransactions = transactions;
 
   return (
     <div className="space-y-8">

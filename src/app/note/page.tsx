@@ -36,7 +36,7 @@ export default function NotePage() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     // ถ้า selectedId ไม่อยู่ใน notes ให้เลือก note แรก
-    if (selectedId && !notes.find(n => n.id === selectedId)) {
+    if (selectedId && !notes.find((n) => n.id === selectedId)) {
       setSelectedId(notes.length > 0 ? notes[0].id : null);
     }
   }, [notes]);
@@ -48,14 +48,14 @@ export default function NotePage() {
       content: "",
       updated: Date.now(),
     };
-    setNotes(prev => [newNote, ...prev]);
+    setNotes((prev) => [newNote, ...prev]);
     setSelectedId(newNote.id);
   };
 
   // Delete note
   const handleDelete = (id: string) => {
-    setNotes(prev => {
-      const filtered = prev.filter(n => n.id !== id);
+    setNotes((prev) => {
+      const filtered = prev.filter((n) => n.id !== id);
       if (selectedId === id) {
         setSelectedId(filtered.length > 0 ? filtered[0].id : null);
       }
@@ -65,11 +65,15 @@ export default function NotePage() {
 
   // Autosave note content
   const handleChange = (val: string) => {
-    setNotes(prev => prev.map(n => n.id === selectedId ? { ...n, content: val, updated: Date.now() } : n));
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === selectedId ? { ...n, content: val, updated: Date.now() } : n,
+      ),
+    );
   };
 
   // Get selected note
-  const selectedNote = notes.find(n => n.id === selectedId);
+  const selectedNote = notes.find((n) => n.id === selectedId);
 
   // Show preview (first line or 30 chars)
   const getPreview = (content: string) => {
@@ -86,15 +90,22 @@ export default function NotePage() {
       <div className="w-full md:w-1/3 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b-0">
           <span className="font-bold text-lg">โน้ต</span>
-          <Button size="icon" variant="outline" onClick={handleAdd} title="เพิ่มโน้ตใหม่">
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={handleAdd}
+            title="เพิ่มโน้ตใหม่"
+          >
             <Plus />
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto">
           {sortedNotes.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">ยังไม่มีโน้ต</div>
+            <div className="text-center text-muted-foreground py-8">
+              ยังไม่มีโน้ต
+            </div>
           )}
-          {sortedNotes.map(note => (
+          {sortedNotes.map((note) => (
             <div
               key={note.id}
               className={`px-4 py-3 cursor-pointer hover:bg-muted ${selectedId === note.id ? "bg-muted" : ""}`}
@@ -102,15 +113,30 @@ export default function NotePage() {
             >
               <div className="flex justify-between items-center gap-2">
                 {getPreview(note.content).trim() !== "" ? (
-                  <span className="truncate font-medium text-sm">{getPreview(note.content)}</span>
+                  <span className="truncate font-medium text-sm">
+                    {getPreview(note.content)}
+                  </span>
                 ) : (
-                  <span className="italic text-muted-foreground">(ไม่มีข้อความ)</span>
+                  <span className="italic text-muted-foreground">
+                    (ไม่มีข้อความ)
+                  </span>
                 )}
-                <Button size="icon" variant="ghost" className="ml-2" onClick={e => { e.stopPropagation(); handleDelete(note.id); }} title="ลบโน้ต">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="ml-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(note.id);
+                  }}
+                  title="ลบโน้ต"
+                >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>
-              <div className="text-xs text-muted-foreground mt-1">{new Date(note.updated).toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {new Date(note.updated).toLocaleString()}
+              </div>
             </div>
           ))}
         </div>
@@ -125,7 +151,7 @@ export default function NotePage() {
             <div className="flex-1 p-4 flex flex-col gap-4">
               <Textarea
                 value={selectedNote.content}
-                onChange={e => handleChange(e.target.value)}
+                onChange={(e) => handleChange(e.target.value)}
                 placeholder="เขียนบันทึก..."
                 className="h-64 md:h-full resize-none"
                 autoFocus
@@ -133,9 +159,11 @@ export default function NotePage() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">เลือกหรือเพิ่มโน้ตใหม่</div>
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            เลือกหรือเพิ่มโน้ตใหม่
+          </div>
         )}
       </div>
     </div>
   );
-} 
+}

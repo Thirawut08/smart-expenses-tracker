@@ -1,9 +1,9 @@
-import type { UnifiedFormValues } from '@/components/transaction-form';
+import type { UnifiedFormValues } from "@/components/transaction-form";
 
 export interface Account {
   id: string;
   name: string;
-  currency: 'THB' | 'USD';
+  currency: "THB" | "USD";
   types: string[]; // ประเภทบัญชีหลายประเภท เช่น ['ทั่วไป', 'ลงทุน']
 }
 
@@ -13,7 +13,7 @@ export interface Transaction {
   purpose: string;
   amount: number;
   date: Date;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   sender?: string;
   recipient?: string;
   details?: string;
@@ -22,7 +22,7 @@ export interface Transaction {
 export type Template = {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   purpose: string;
   accountId?: string; // เพิ่ม accountId
   sender?: string;
@@ -31,8 +31,8 @@ export type Template = {
 };
 
 export interface Income {
-    id: string;
-    date: Date;
-    account: Account;
-    amount: number;
+  id: string;
+  date: Date;
+  account: Account;
+  amount: number;
 }
