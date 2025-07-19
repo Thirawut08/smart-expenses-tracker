@@ -82,30 +82,29 @@ export function TransactionTemplates({
         </div>
         <div className="flex flex-wrap gap-2">
           {filteredTemplates.map((template) => (
-            <button
-                key={template.id}
-              type="button"
-              className={`px-3 py-1 rounded text-sm font-medium border transition-colors duration-75
-                ${selectedId === template.id
-                  ? "bg-gray-100 text-gray-900 border-gray-400"
-                  : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
-              onClick={() => handleSelect(template)}
-              style={{ minWidth: 0, minHeight: 0, textAlign: "left", maxWidth: 260 }}
-            >
-              <div className="font-semibold truncate">{template.purpose}</div>
-              <div className="text-xs text-muted-foreground whitespace-normal break-words">
-                {template.type && <div><b>ประเภท:</b> {template.type === "income" ? "รายรับ" : "รายจ่าย"}</div>}
-                {template.amount !== undefined && template.amount !== null && !isNaN(Number(template.amount)) && (
-                  <div><b>จำนวนเงิน:</b> {template.amount}</div>
-                )}
-                {template.accountId && (
-                  <div><b>บัญชี:</b> {accounts.find(acc => acc.id === template.accountId)?.name || template.accountId}</div>
-                )}
-                {template.sender && <div><b>ผู้จ่าย:</b> {template.sender}</div>}
-                {template.recipient && <div><b>ผู้รับ:</b> {template.recipient}</div>}
-                {template.details && <div><b>หมายเหตุ:</b> {template.details}</div>}
-              </div>
-            </button>
+            <div key={template.id} className="relative w-full">
+              <button
+                type="button"
+                className={`px-2 py-1 rounded-md text-xs font-medium border transition-colors duration-75 w-full text-left truncate
+                  ${selectedId === template.id ? "bg-gray-100 text-gray-900 border-gray-400" : "bg-white text-gray-800 border-gray-300 hover:bg-gray-50"}`}
+                onClick={() => handleSelect(template)}
+                style={{ minWidth: 0, minHeight: 0, maxWidth: '100%' }}
+              >
+                <span className="font-semibold truncate block">{template.purpose}</span>
+              </button>
+              <button
+                type="button"
+                className="absolute top-1 right-1 p-1 rounded hover:bg-gray-200 text-gray-500"
+                title="แก้ไขเทมเพลต"
+                onClick={(e) => { e.stopPropagation(); setEditTarget(template); }}
+                tabIndex={-1}
+              >
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14.7 2.29a1 1 0 0 1 1.42 0l1.59 1.59a1 1 0 0 1 0 1.42l-9.3 9.3-2.12.71.71-2.12 9.3-9.3z" fill="currentColor"/>
+                  <path d="M3 17h14v2H3v-2z" fill="currentColor"/>
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
       </CardContent>
